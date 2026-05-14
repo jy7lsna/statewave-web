@@ -75,8 +75,11 @@ describe('public/llms.txt', () => {
       'Compiler',
       'Ranking',
     ]) {
+      // Match the term as a definition list item, with or without bold:
+      //   - **Subject** — ...
+      //   - Subject — ...
       expect(llms, `llms.txt should mention "${term}"`).toMatch(
-        new RegExp(`\\*\\*${term}\\*\\*`),
+        new RegExp(`(?:^|\\n)[-*]\\s+(?:\\*\\*)?${term}(?:\\*\\*)?\\s+—`),
       )
     }
   })
