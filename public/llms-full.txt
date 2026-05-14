@@ -1,0 +1,490 @@
+# Statewave — Full Reference
+
+> Statewave is an open-source memory runtime for AI agents. It records events, compiles them into semantic and episodic memories, and retrieves compact, ranked context bundles for LLM applications.
+
+This document is the long-form, LLM-readable reference for Statewave. For the short index, see [llms.txt](https://statewave.ai/llms.txt). For human docs, see the [statewave-docs repository](https://github.com/smaramwbc/statewave-docs).
+
+Statewave is a self-hostable memory runtime for LLM apps and agents. It records raw events as immutable episodes, compiles them into typed semantic and episodic memories with provenance, and assembles ranked, token-bounded context bundles ready to splice into any prompt. Storage is Postgres with the pgvector extension. Compilation runs locally with a heuristic compiler or through LiteLLM (100+ providers, including self-hosted Ollama and vLLM).
+
+## Core concepts
+
+- **Subject** — anything Statewave remembers around: a user, account, agent, repo, project, or session.
+- **Episode** — an immutable, append-only event record (a conversation turn, tool call, decision, or observation) attached to a subject.
+- **Memory** — a typed fact compiled from episodes. Kinds: `profile_fact`, `preference`, `procedure`, `episode_summary`. Each memory carries confidence, optional validity window (`valid_from` / `valid_to`), embedding vector, and provenance back to its source episodes.
+- **Context bundle** — the runtime output: a deterministic, ranked, token-bounded set of memories and episodes ready for the LLM. Sections cover task, facts, procedures, history, and episodes, plus provenance metadata.
+- **Compiler** — the layer that turns episodes into memories. Heuristic (fully local) or LLM-backed (via LiteLLM).
+- **Ranking** — deterministic, inspectable scoring over kind priority, recency, task relevance (word overlap or cosine similarity), and temporal validity. Items are packed into the configured token budget by composite score.
+
+## Architecture lifecycle
+
+1. **Record.** Episodes are written as immutable, append-only rows. They are the ground truth and are never mutated.
+2. **Compile.** A pluggable compiler derives typed memories with provenance and embeddings. Compilation is idempotent — recompiling only processes uncompiled episodes — and runs in a single transaction. Sync by default; v0.5 added a Postgres-backed async job queue (`async: true`) for large subjects.
+3. **Store.** Episodes, memories, embeddings, and provenance live in Postgres + pgvector. The `memories` table holds kind, content, summary, confidence, validity window, source episode IDs, status, and the embedding vector.
+4. **Retrieve.** Semantic search uses pgvector's `<=>` cosine-distance operator (HNSW-indexed). Policy filters apply first; then deterministic scoring; then items are packed section-by-section into the token budget.
+5. **Return.** The bundle includes `assembled_context` (a pre-formatted markdown string ready to inject into the system prompt) plus a `provenance` block with the fact, summary, procedure, and episode IDs that backed the response.
+
+## Compiler modes
+
+**Heuristic compiler (default).** Pattern-based extraction of profile facts, procedures, and per-episode summaries. No external calls; fully local. Deterministic output. Confidence scores 0.6–0.8. Covers name, company, location, preferences, repeated procedures, conversational summaries.
+
+```
+STATEWAVE_COMPILER_TYPE=heuristic
+```
+
+**LLM compiler.** Calls the configured model via LiteLLM. Batches episodes (~6000 chars per batch); concurrency capped at 4 in-flight requests. Runs in a thread pool to avoid blocking the async event loop. On any provider error it falls back to the heuristic compiler so episodes are never silently dropped.
+
+```
+STATEWAVE_COMPILER_TYPE=llm
+STATEWAVE_LITELLM_MODEL=gpt-4o-mini                      # OpenAI
+# STATEWAVE_LITELLM_MODEL=anthropic/claude-3-haiku-20240307
+# STATEWAVE_LITELLM_MODEL=ollama/llama3                  # local
+# STATEWAVE_LITELLM_MODEL=vertex_ai/gemini-1.5-flash
+```
+
+Any LiteLLM identifier works. Self-hosted models (Ollama, vLLM) keep compilation local.
+
+## Ranking
+
+**Policy filter (first gate).** If the tenant has activated a sensitivity-label policy, each memory is evaluated against rules using the call's `caller_id` and `caller_type`. Deny rules remove memories before scoring; redact rules keep the memory but redact content.
+
+**Core signals (always applied):**
+
+| Signal | Range | Notes |
+| --- | --- | --- |
+| Kind priority | 3–10 | profile_fact=10, procedure=8, episode_summary=5, raw_episode=3 |
+| Recency | 0–5 | Linear; most recent gets max |
+| Task relevance | 0–5 (text) / 0–8 (semantic) | Word-overlap fraction, or pgvector cosine when embeddings exist |
+| Temporal validity | -4 to +3 | Currently valid = +3; expired = -4 |
+
+**Support-agent signals (added when relevant context exists):** active-session boost +6.0, resolved-session penalty -5.0, open-issue boost +4.0, action-step boost +2.0, urgency boost +2.0, idle-chatter penalty -2.0, repeat-issue boost +4.0 (or +6.0 if the prior issue was resolved).
+
+**Token budget.** The assembler packs by composite score until the budget is exhausted, reserving 10 tokens of header per section. Content is not truncated mid-item.
+
+**Validity windows.** Each memory has optional `valid_from` and `valid_to`. When `valid_to` is null or in the future, the memory scores +3; once expired, it scores -4 and is heavily down-ranked.
+
+**What is configurable.** Weights and thresholds are constants in `server/services/context.py`. There is no per-tenant or per-call override today.
+
+## Privacy and data flow
+
+| Layer | Where it runs | What leaves your network |
+| --- | --- | --- |
+| Storage | Your infrastructure (Postgres + pgvector) | Nothing |
+| Retrieval / ranking | Your infrastructure | Nothing |
+| Compilation — heuristic | Your infrastructure | Nothing |
+| Compilation — LLM | Configured provider via LiteLLM | Episode batches (~6000 chars each) |
+| Embeddings | Configured provider | Episode and memory text |
+| Your agent's LLM | Wherever you host it | Your agent controls what it sends |
+
+**Configurations:**
+
+- **Fully local.** Heuristic compiler + self-hosted embeddings (or text-only retrieval). Nothing leaves the box.
+- **Local extract, hosted vectors.** Heuristic compiler + hosted embedding provider. Only embedding text leaves.
+- **Hosted extract, local vectors.** LLM compiler against a self-hosted model + self-hosted embeddings. Nothing leaves if both run in your VPC.
+- **Default cloud setup.** LLM compiler + hosted embeddings. Episode batches and embedding text leave for the configured provider(s).
+
+## REST API v1
+
+Base URL: `http://localhost:8100` (default Docker Compose). All endpoints accept and return JSON.
+
+**Authentication.** When `STATEWAVE_API_KEY` is set, include the header `X-API-Key: <key>`. When unset, the API is open (development default).
+
+### POST /v1/episodes
+
+Create an immutable episode.
+
+```json
+{
+  "subject_id": "user-42",
+  "source": "chat",
+  "type": "conversation",
+  "payload": { "messages": [{"role": "user", "content": "Hello"}] },
+  "metadata": {},
+  "provenance": {}
+}
+```
+
+Response `201`:
+
+```json
+{
+  "id": "550e8400-...",
+  "subject_id": "user-42",
+  "source": "chat",
+  "type": "conversation",
+  "payload": { "...": "..." },
+  "metadata": {},
+  "provenance": {},
+  "created_at": "2026-04-24T12:00:00Z"
+}
+```
+
+### POST /v1/memories/compile
+
+Compile memories from uncompiled episodes. Idempotent.
+
+Synchronous (default):
+
+```json
+{ "subject_id": "user-42" }
+```
+
+Response `200`:
+
+```json
+{
+  "subject_id": "user-42",
+  "memories_created": 3,
+  "memories": [ { "...": "..." } ]
+}
+```
+
+Asynchronous (recommended for large subjects):
+
+```json
+{ "subject_id": "user-42", "async": true }
+```
+
+Response `202`:
+
+```json
+{ "job_id": "a1b2c3d4", "status": "pending", "subject_id": "user-42" }
+```
+
+### GET /v1/memories/compile/{job_id}
+
+Poll an async compile job. Statuses: `pending`, `running`, `completed`, `failed`. Jobs retained 7 days by default.
+
+```json
+{
+  "job_id": "a1b2c3d4",
+  "status": "completed",
+  "subject_id": "user-42",
+  "memories_created": 5
+}
+```
+
+### GET /v1/memories/search
+
+Query string parameters: `subject_id` (required), `kind` (optional), `q` (optional), `semantic` (default `false`), `limit` (default 20, max 100).
+
+```json
+{ "memories": [ { "...": "..." } ] }
+```
+
+### POST /v1/context
+
+Assemble a ranked, token-bounded context bundle.
+
+```json
+{
+  "subject_id": "user-42",
+  "task": "Help the user with billing",
+  "max_tokens": 4000,
+  "session_id": "sess-xyz",
+  "emit_receipt": true,
+  "caller_id": "agent-7",
+  "caller_type": "support_agent"
+}
+```
+
+Response `200`:
+
+```json
+{
+  "subject_id": "user-42",
+  "task": "Help the user with billing",
+  "facts": [ { "...": "..." } ],
+  "episodes": [ { "...": "..." } ],
+  "procedures": [ { "...": "..." } ],
+  "provenance": {
+    "fact_ids": ["..."],
+    "summary_ids": ["..."],
+    "procedure_ids": ["..."],
+    "episode_ids": ["..."]
+  },
+  "assembled_context": "## Task\nHelp the user...\n\n## About this user\n- ...",
+  "token_estimate": 312,
+  "receipt_id": "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+  "receipt_emitted": true
+}
+```
+
+### GET /v1/timeline
+
+Full chronological timeline for a subject. Query: `subject_id` (required).
+
+```json
+{ "subject_id": "user-42", "episodes": [], "memories": [] }
+```
+
+### GET /v1/subjects/{subject_id}/health
+
+Explainable customer health score. States: `healthy` (≥70), `watch` (40–69), `at_risk` (<40).
+
+```json
+{
+  "subject_id": "user-42",
+  "score": 55,
+  "state": "watch",
+  "factors": [
+    { "signal": "unresolved_issues", "impact": -15, "detail": "1 open session(s)" }
+  ]
+}
+```
+
+### GET /v1/subjects/{subject_id}/sla
+
+SLA metrics — first-response time, resolution time, breach flags per session. Query: `first_response_threshold_minutes` (default 5.0), `resolution_threshold_hours` (default 24.0).
+
+### POST /v1/handoff
+
+Generate a compact handoff pack for escalation.
+
+```json
+{
+  "subject_id": "user-42",
+  "session_id": "sess-abc",
+  "reason": "escalation to billing specialist",
+  "max_tokens": 4000
+}
+```
+
+Returns a structured pack with `customer_summary`, `active_issue`, `attempted_steps`, `key_facts`, `resolution_history`, `recent_context`, and a ready-to-paste `handoff_notes` markdown block.
+
+### DELETE /v1/subjects/{subject_id}
+
+Permanent deletion of all episodes and memories for a subject.
+
+```json
+{ "subject_id": "user-42", "episodes_deleted": 5, "memories_deleted": 12 }
+```
+
+### GET /healthz and GET /readyz
+
+Liveness and readiness probes. `/readyz` returns per-component checks: database, queue, LLM provider.
+
+## Python SDK
+
+Install:
+
+```
+pip install statewave
+```
+
+Client:
+
+```python
+from statewave import StatewaveClient
+
+sw = StatewaveClient("http://localhost:8100")
+# or with auth and tenant
+sw = StatewaveClient(
+    "http://localhost:8100",
+    api_key="your-key",
+    tenant_id="acme",
+)
+```
+
+Main methods:
+
+- `create_episode(subject_id, source, type, payload, metadata={}, provenance={})`
+- `create_episodes_batch(episodes: list[dict])` — up to 100 per call
+- `compile_memories(subject_id)` — returns `CompileResult` with `memories_created` and `memories`
+- `get_context(subject_id, task, max_tokens, session_id=None, emit_receipt=False, caller_id=None, caller_type=None)` — returns `ContextBundle`
+- `search_memories(subject_id, kind=None, q=None, semantic=False, limit=20)`
+- `list_subjects()`
+- `get_timeline(subject_id)`
+- `delete_subject(subject_id)`
+
+Governance (v0.8):
+
+- `get_receipt(receipt_id)` — fetch the immutable audit receipt for a context call
+- `list_receipts(subject_id, limit=50, since=None, until=None, cursor=None)` — cursor-paginated
+- `set_memory_labels(memory_id, labels: list[str])` — sensitivity labels (normalized, capped at 32)
+
+Async client mirrors the same API:
+
+```python
+from statewave import AsyncStatewaveClient
+
+async with AsyncStatewaveClient("http://localhost:8100") as sw:
+    ctx = await sw.get_context("user-42", task="Help with billing")
+```
+
+## TypeScript SDK
+
+Install:
+
+```
+npm install @statewavedev/sdk
+```
+
+Client:
+
+```typescript
+import { StatewaveClient } from "@statewavedev/sdk";
+
+const sw = new StatewaveClient("http://localhost:8100");
+// or with auth and tenant
+const swAuth = new StatewaveClient({
+  baseUrl: "http://localhost:8100",
+  apiKey: "your-key",
+  tenantId: "acme",
+});
+```
+
+Main methods (camelCase): `createEpisode`, `createEpisodesBatch`, `compileMemories`, `getContext`, `searchMemories`, `listSubjects`, `getTimeline`, `deleteSubject`, `getReceipt`, `listReceipts`, `setMemoryLabels`.
+
+Example:
+
+```typescript
+import { StatewaveClient } from "@statewavedev/sdk";
+
+const sw = new StatewaveClient("http://localhost:8100");
+
+await sw.createEpisode({
+  subject_id: "user-42",
+  source: "support-chat",
+  type: "conversation",
+  payload: {
+    messages: [
+      { role: "user", content: "My name is Alice and I work at Globex." },
+      { role: "assistant", content: "Welcome Alice!" },
+    ],
+  },
+});
+
+const result = await sw.compileMemories("user-42");
+const ctx = await sw.getContext({
+  subject_id: "user-42",
+  task: "Help with billing",
+  max_tokens: 400,
+});
+console.log(ctx.assembled_context);
+```
+
+## How to integrate Statewave into an agent
+
+This is the full loop — record turns, compile memories, retrieve a ranked bundle, splice it into the LLM prompt. Adapted from [statewave-examples/support-agent-llm/support_agent_llm.py](https://github.com/smaramwbc/statewave-examples/blob/main/support-agent-llm/support_agent_llm.py).
+
+```python
+import os
+import textwrap
+from litellm import completion
+from statewave import StatewaveClient
+
+SUBJECT_ID = "user-alice"
+LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini")
+
+SYSTEM_PROMPT = (
+    "You are a helpful support agent. Be concise, friendly, and specific. "
+    "Use any context provided to personalise your response. "
+    "Do not ask for information you already have."
+)
+
+# Past interaction history (the agent's long-term context source).
+EPISODES = [
+    {"messages": [
+        {"role": "user", "content": "Hi, I'm Alice Chen from Globex Corp. We're on the Enterprise plan."},
+        {"role": "assistant", "content": "Welcome Alice! How can I help?"},
+    ]},
+    {"messages": [
+        {"role": "user", "content": "We set up SSO via Okta. 12 team members are signed in."},
+        {"role": "assistant", "content": "SAML SSO is enabled for Globex."},
+    ]},
+    {"messages": [
+        {"role": "user", "content": "I prefer short, direct responses — no fluff."},
+        {"role": "assistant", "content": "Noted — I'll keep things concise."},
+    ]},
+]
+
+CUSTOMER_MESSAGE = "Hi, I need help adding a new team member to our account"
+
+
+def ask(model: str, system: str, user: str) -> str:
+    resp = completion(
+        model=model,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+        max_tokens=150,
+    )
+    return resp.choices[0].message.content.strip()
+
+
+def main() -> None:
+    sw = StatewaveClient(
+        base_url=os.getenv("STATEWAVE_URL", "http://localhost:8100"),
+        api_key=os.getenv("STATEWAVE_API_KEY"),
+    )
+
+    # (a) Record each turn as an episode.
+    for ep in EPISODES:
+        sw.create_episode(
+            subject_id=SUBJECT_ID,
+            source="support-chat",
+            type="conversation",
+            payload=ep,
+        )
+
+    # (b) Compile memories from uncompiled episodes. Idempotent — safe to recall.
+    result = sw.compile_memories(SUBJECT_ID)
+    print(f"Compiled {result.memories_created} memories from {len(EPISODES)} episodes")
+
+    # (c) Retrieve a ranked, token-bounded bundle for the current task.
+    bundle = sw.get_context(
+        SUBJECT_ID,
+        task="Help this customer with their question",
+        max_tokens=400,
+    )
+
+    # (d) Splice the assembled context into the LLM system prompt.
+    answer = ask(
+        LLM_MODEL,
+        f"{SYSTEM_PROMPT}\n\n{bundle.assembled_context}",
+        CUSTOMER_MESSAGE,
+    )
+    print(textwrap.fill(answer, width=72))
+
+    # (e) Record the new turn so the next call sees it.
+    sw.create_episode(
+        subject_id=SUBJECT_ID,
+        source="support-chat",
+        type="conversation",
+        payload={"messages": [
+            {"role": "user", "content": CUSTOMER_MESSAGE},
+            {"role": "assistant", "content": answer},
+        ]},
+    )
+
+
+if __name__ == "__main__":
+    main()
+```
+
+Key integration points:
+
+1. The payload shape `{"messages": [{"role": ..., "content": ...}]}` matches the conversation format LLMs already use; no transformation is needed at record time.
+2. `compile_memories` is idempotent, so it is safe to call after every turn, on a schedule, or only when a session ends.
+3. `get_context` takes a `task` string; the assembler ranks memories against it (word overlap or cosine, depending on the embedding configuration).
+4. `bundle.assembled_context` is a pre-formatted markdown block — splice it straight into the system prompt; no extra prompt engineering required.
+5. The bundle includes `provenance` (fact, summary, procedure, episode IDs) so any decision can be traced to the source episodes that backed it.
+
+## Source repositories
+
+- [statewave](https://github.com/smaramwbc/statewave) — core server.
+- [statewave-py](https://github.com/smaramwbc/statewave-py) — Python SDK (`pip install statewave`).
+- [statewave-ts](https://github.com/smaramwbc/statewave-ts) — TypeScript SDK (`npm install @statewavedev/sdk`).
+- [statewave-connectors](https://github.com/smaramwbc/statewave-connectors) — connector ecosystem (`@statewavedev/connectors-*`).
+- [statewave-docs](https://github.com/smaramwbc/statewave-docs) — docs, architecture, API contracts, ADRs.
+- [statewave-examples](https://github.com/smaramwbc/statewave-examples) — runnable end-to-end examples and evaluation flows.
+- [statewave-admin](https://github.com/smaramwbc/statewave-admin) — read-only operator console.
+- [statewave-web](https://github.com/smaramwbc/statewave-web) — marketing site.
+
+## Scope
+
+- Statewave is self-hosted. There is no managed Statewave cloud today.
+- The most rigorously evaluated workflow is support-agent memory: handoff packs, health scoring, SLA tracking, repeat-issue detection. Other use cases run on the same primitives but ship fewer pre-built helpers.
+- Ranking weights are currently fixed; per-call weight overrides are not yet exposed.
+- Horizontal scaling is supported by design (stateless API, Postgres-backed compile queue, webhook DLQ, distributed rate limiting) but not yet load-tested at high RPS by the project — see the horizontal-scaling deployment guide for the operator-facing detail.
