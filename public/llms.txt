@@ -1,68 +1,63 @@
 # Statewave
 
-> Statewave is an open-source memory runtime for AI agents. It retrieves the right semantic and episodic memories for each question and returns them as compact, ranked context so LLM apps can remember decisions, users, projects, and sessions.
+> Statewave is an open-source memory runtime for AI agents. It records events, compiles them into semantic and episodic memories, and retrieves compact, ranked context bundles for LLM applications.
 
-Statewave is a self-hostable memory runtime for LLM applications. It records raw events as immutable episodes, compiles them into typed semantic and episodic memories with provenance, and assembles ranked, token-bounded context bundles ready to splice into any prompt. The storage layer is Postgres with the pgvector extension; compilation goes through LiteLLM (100+ providers) or a fully local heuristic compiler. The Statewave server is open source under AGPL-3.0; the SDKs and marketing site are Apache-2.0.
+Statewave is a self-hostable memory runtime for LLM apps and agents. It helps applications remember users, decisions, projects, sessions, tool calls, and prior interactions without relying on prompt stuffing or naive chat history.
 
-## Core concepts
+Statewave stores immutable episodes, compiles them into typed memories with provenance, and retrieves deterministic, token-bounded context bundles that can be inserted into prompts, tools, copilots, agents, or MCP-style workflows.
 
-- **Subject** — anything Statewave remembers around: a user, account, agent, repo, project, or session.
-- **Episode** — an immutable, append-only event record (a conversation turn, tool call, decision, or observation) attached to a subject.
-- **Memory** — a typed fact compiled from episodes. Kinds include profile_fact, preference, procedure, and episode_summary. Each memory carries a confidence score, optional validity window, embedding, and provenance back to its source episodes.
-- **Context bundle** — the runtime output: a deterministic, ranked, token-bounded set of memories and episodes ready for the LLM. Sections cover task, facts, procedures, history, and episodes, with provenance metadata.
-- **Compiler** — the layer that turns episodes into memories. Two modes ship today: a heuristic compiler (fully local, no LLM) and an LLM compiler (LiteLLM-backed, supports OpenAI, Anthropic, Bedrock, Vertex, Mistral, Groq, Ollama, vLLM, and more).
-- **Ranking** — deterministic, inspectable scoring over kind priority, recency, task relevance (word overlap or cosine similarity), and temporal validity. Items are packed into the configured token budget by composite score.
+## Primary links
 
-## Public site
-
-- [Statewave home](https://statewave.ai/): positioning, FAQ, primary CTAs.
-- [How It Works](https://statewave.ai/product): the runtime data lifecycle — record, compile, retrieve, govern. Includes the privacy/data-flow table and the scoring model.
-- [Why Statewave](https://statewave.ai/why): the manifesto plus a technical comparison vs. prompt stuffing and naive RAG.
-- [Use Cases](https://statewave.ai/use-cases): support agents, coding copilots, account intelligence, voice continuity, multi-agent infrastructure, plus connector and bootstrap patterns.
-- [Connectors](https://statewave.ai/connectors): modular packages that feed real-world events (GitHub, Markdown/ADRs, MCP, Slack, Discord, Zendesk, Intercom, Freshdesk, Notion, Gmail, n8n, Zapier) into Statewave as normalized episodes — install only what you need.
-- [Developers](https://statewave.ai/developers): SDK install, links to docs, API reference, and examples.
+- [Website](https://statewave.ai/) — product overview, positioning, FAQ, and launch information.
+- [How It Works](https://statewave.ai/product) — lifecycle: record, compile, retrieve, govern.
+- [Why Statewave](https://statewave.ai/why) — comparison with prompt stuffing, naive RAG, and temporary chat history.
+- [Use Cases](https://statewave.ai/use-cases) — support agents, coding copilots, account intelligence, voice continuity, and multi-agent systems.
+- [Connectors](https://statewave.ai/connectors) — GitHub, Markdown/ADRs, MCP, Slack, Discord, Zendesk, Intercom, Freshdesk, Notion, Gmail, n8n, Zapier.
+- [Developers](https://statewave.ai/developers) — SDKs, docs, API reference, and examples.
 
 ## Documentation
 
-- [Getting Started (10 minutes)](https://github.com/smaramwbc/statewave-docs/blob/main/getting-started.md)
-- [REST API v1 contract](https://github.com/smaramwbc/statewave-docs/blob/main/api/v1-contract.md)
-- [Architecture overview](https://github.com/smaramwbc/statewave-docs/blob/main/architecture/overview.md)
-- [Compiler modes — heuristic vs. LLM](https://github.com/smaramwbc/statewave-docs/blob/main/architecture/compiler-modes.md)
-- [Ranking and retrieval](https://github.com/smaramwbc/statewave-docs/blob/main/architecture/ranking.md)
-- [Privacy and data flow](https://github.com/smaramwbc/statewave-docs/blob/main/architecture/privacy-and-data-flow.md)
-- [Deployment guide (Docker Compose, Fly.io, Railway)](https://github.com/smaramwbc/statewave-docs/blob/main/deployment/guide.md)
-- [Roadmap](https://github.com/smaramwbc/statewave-docs/blob/main/roadmap.md)
+- [Getting Started](https://github.com/smaramwbc/statewave-docs/blob/main/getting-started.md) — 10-minute setup.
+- [REST API v1](https://github.com/smaramwbc/statewave-docs/blob/main/api/v1-contract.md) — API contract.
+- [Architecture](https://github.com/smaramwbc/statewave-docs/blob/main/architecture/overview.md) — system overview.
+- [Compiler Modes](https://github.com/smaramwbc/statewave-docs/blob/main/architecture/compiler-modes.md) — heuristic compiler and LLM compiler.
+- [Ranking and Retrieval](https://github.com/smaramwbc/statewave-docs/blob/main/architecture/ranking.md) — deterministic scoring and context assembly.
+- [Privacy and Data Flow](https://github.com/smaramwbc/statewave-docs/blob/main/architecture/privacy-and-data-flow.md) — storage, processing, and data boundaries.
+- [Deployment](https://github.com/smaramwbc/statewave-docs/blob/main/deployment/guide.md) — Docker Compose, Fly.io, Railway.
+- [Roadmap](https://github.com/smaramwbc/statewave-docs/blob/main/roadmap.md) — planned capabilities.
 
-## Install and run
+## Repositories
 
-- Server: clone <https://github.com/smaramwbc/statewave> and run `docker compose up -d` — full local stack on `http://localhost:8100`.
-- Python SDK: `pip install statewave` — source at <https://github.com/smaramwbc/statewave-py>.
-- TypeScript SDK: `npm install @statewavedev/sdk` — source at <https://github.com/smaramwbc/statewave-ts>.
-- Connectors: `@statewavedev/connectors-*` for GitHub, Markdown/docs, MCP server, and more — modular packages, install only what you need; source at <https://github.com/smaramwbc/statewave-connectors>.
-- Examples (quickstart, support agent, coding agent, eval suite, benchmarks): <https://github.com/smaramwbc/statewave-examples>.
-
-## Integrations
-
-- LLM providers — any provider supported by LiteLLM, including OpenAI, Anthropic, Azure OpenAI, AWS Bedrock, Google Vertex, Mistral, Groq, Together, Ollama, and vLLM.
-- Embeddings — OpenAI, Cohere, sentence-transformers, or any custom embedding service. Heuristic / text-only retrieval also supported for fully local mode.
-- Frameworks — framework-neutral. Statewave returns context bundles via REST or SDK; integrate by splicing the bundle into your prompt or tool result. Works with custom agents, MCP-style servers, copilots, and assistant frameworks.
-- Storage — Postgres 14+ with the pgvector extension. No managed-cloud dependency.
-- Observability — optional OpenTelemetry instrumentation.
-
-## Source repositories
-
-- <https://github.com/smaramwbc/statewave> — core server (AGPL-3.0).
-- <https://github.com/smaramwbc/statewave-py> — Python SDK, published as `statewave` on PyPI (Apache-2.0).
-- <https://github.com/smaramwbc/statewave-ts> — TypeScript SDK, published as `@statewavedev/sdk` on npm (Apache-2.0).
-- <https://github.com/smaramwbc/statewave-connectors> — connector ecosystem, published under the `@statewavedev/*` npm scope (Apache-2.0).
-- <https://github.com/smaramwbc/statewave-docs> — architecture, API contracts, ADRs.
-- [statewave-examples](https://github.com/smaramwbc/statewave-examples) — runnable end-to-end examples.
+- [statewave](https://github.com/smaramwbc/statewave) — core server.
+- [statewave-py](https://github.com/smaramwbc/statewave-py) — Python SDK.
+- [statewave-ts](https://github.com/smaramwbc/statewave-ts) — TypeScript SDK.
+- [statewave-connectors](https://github.com/smaramwbc/statewave-connectors) — connector ecosystem.
+- [statewave-docs](https://github.com/smaramwbc/statewave-docs) — docs, architecture, API contracts, ADRs.
+- [statewave-examples](https://github.com/smaramwbc/statewave-examples) — runnable examples and evaluation flows.
 - [statewave-admin](https://github.com/smaramwbc/statewave-admin) — read-only operator console.
-- [statewave-web](https://github.com/smaramwbc/statewave-web) — this marketing site (Apache-2.0).
+- [statewave-web](https://github.com/smaramwbc/statewave-web) — marketing site.
 
-## Honest scope
+## Core concepts
 
-- Statewave is a self-hosted runtime. There is no managed Statewave cloud.
-- Support-agent workflows are the most rigorously evaluated today (handoff packs, health scoring, SLA tracking, repeat-issue detection). Other use cases work on the same primitives but ship fewer pre-built helpers.
-- Ranking weights are currently fixed; per-call weight overrides are not yet exposed.
-- Horizontal scaling of the server is not yet supported.
+- Subject — user, account, agent, repo, project, or session Statewave remembers around.
+- Episode — immutable event record such as a conversation turn, tool call, decision, or observation.
+- Memory — typed fact compiled from episodes, with confidence, validity, embedding, and provenance.
+- Context bundle — ranked, token-bounded runtime output for LLM prompts.
+- Compiler — heuristic or LLM-backed process that turns episodes into memories.
+- Ranking — deterministic scoring based on priority, recency, relevance, validity, and token budget.
+
+## Install
+
+- Server: clone `https://github.com/smaramwbc/statewave` and run `docker compose up -d`.
+- Python SDK: `pip install statewave`.
+- TypeScript SDK: `npm install @statewavedev/sdk`.
+
+## Scope
+
+Statewave is self-hosted. There is currently no managed Statewave cloud.
+
+The strongest evaluated workflow today is support-agent memory, including handoff packs, health scoring, SLA tracking, and repeat-issue detection. Other use cases use the same primitives but may have fewer pre-built helpers.
+
+Ranking weights are currently fixed. Per-call ranking overrides are not yet exposed.
+
+Horizontal scaling is supported by design through a stateless API and Postgres-backed infrastructure, but high-RPS load testing is still in progress.
