@@ -2,6 +2,8 @@
 
 > Statewave is an open-source memory runtime for AI agents. It records events, compiles them into semantic and episodic memories, and retrieves compact, ranked context bundles for LLM applications.
 
+For the long-form reference (full REST API, SDK usage, and a complete agent integration flow), see https://statewave.ai/llms-full.txt.
+
 Statewave is a self-hostable memory runtime for LLM apps and agents. It helps applications remember users, decisions, projects, sessions, tool calls, and prior interactions without relying on prompt stuffing or naive chat history.
 
 Statewave stores immutable episodes, compiles them into typed memories with provenance, and retrieves deterministic, token-bounded context bundles that can be inserted into prompts, tools, copilots, agents, or MCP-style workflows.
