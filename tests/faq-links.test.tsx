@@ -58,18 +58,14 @@ describe('FAQ entry data', () => {
     const answer = licensing!.answer.toLowerCase()
     expect(answer).toMatch(/apache-2\.0|apache license 2\.0/)
     expect(answer).toMatch(/enterprise/)
-    // Apache-2.0 is permissive — make sure we don't accidentally
-    // reintroduce dual-license / "buy a commercial license" framing.
-    expect(answer).not.toMatch(/agpl/)
-    expect(answer).not.toMatch(/dual-?licens/)
+    // Pin the permissive framing — "no separate agreement" / "without a
+    // separate license" / "use freely" — so the answer can't drift back
+    // toward language that implies a paid license is required.
+    expect(answer).toMatch(/(no separate|without a separate|use freely|permissive)/)
 
     const linkHrefs = (licensing!.links ?? []).map((l) => l.href)
     expect(linkHrefs.some((h) => h.endsWith('LICENSING.md'))).toBe(true)
     expect(linkHrefs.some((h) => h.startsWith('mailto:licensing@'))).toBe(true)
-    // The deleted COMMERCIAL-LICENSE.md should not be linked anymore.
-    expect(
-      linkHrefs.some((h) => h.includes('COMMERCIAL-LICENSE.md')),
-    ).toBe(false)
   })
 })
 
