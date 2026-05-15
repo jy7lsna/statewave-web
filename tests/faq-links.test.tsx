@@ -50,19 +50,26 @@ describe('FAQ entry data', () => {
     }
   })
 
-  it('the licensing entry surfaces both AGPL and the commercial path', () => {
+  it('the licensing entry surfaces Apache-2.0 and the enterprise-support path', () => {
     const licensing = FAQ_ENTRIES.find((e) =>
       /open source.*commercial use|licens/i.test(e.question),
     )
     expect(licensing, 'No licensing entry found').toBeDefined()
     const answer = licensing!.answer.toLowerCase()
-    expect(answer).toMatch(/agplv3|agpl-3/)
-    expect(answer).toMatch(/commercial license/)
+    expect(answer).toMatch(/apache-2\.0|apache license 2\.0/)
     expect(answer).toMatch(/enterprise/)
+    // Apache-2.0 is permissive — make sure we don't accidentally
+    // reintroduce dual-license / "buy a commercial license" framing.
+    expect(answer).not.toMatch(/agpl/)
+    expect(answer).not.toMatch(/dual-?licens/)
 
     const linkHrefs = (licensing!.links ?? []).map((l) => l.href)
     expect(linkHrefs.some((h) => h.endsWith('LICENSING.md'))).toBe(true)
     expect(linkHrefs.some((h) => h.startsWith('mailto:licensing@'))).toBe(true)
+    // The deleted COMMERCIAL-LICENSE.md should not be linked anymore.
+    expect(
+      linkHrefs.some((h) => h.includes('COMMERCIAL-LICENSE.md')),
+    ).toBe(false)
   })
 })
 

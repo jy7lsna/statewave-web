@@ -89,18 +89,18 @@ export const FAQ_ENTRIES: readonly FaqEntry[] = [
   {
     question: 'Is Statewave open source? What about commercial use?',
     answer:
-      'Yes. The Statewave server is dual-licensed: AGPLv3 for open-source and community use, plus a separate Statewave Commercial License for proprietary, SaaS, embedded, hosted, or enterprise use that conflicts with AGPL §13. A startup-friendly commercial tier is available for early-stage companies, and an enterprise tier covers SLA, indemnity, support, and procurement. The Python and TypeScript SDKs and this marketing site are Apache-2.0. Contact licensing@statewave.ai for commercial terms.',
+      'Yes. Statewave is open source under the Apache License 2.0 — server, Python and TypeScript SDKs, connectors, and this site. Apache-2.0 is permissive and includes an explicit patent grant, so you can use, modify, distribute, self-host, and build proprietary or commercial products with Statewave without a separate agreement. Optional enterprise support — SLA, indemnity, procurement, managed hosting, architecture review — is available as a services contract: contact licensing@statewave.ai.',
     links: [
       {
-        label: 'Licensing overview (open source + commercial)',
+        label: 'Licensing overview',
         href: 'https://github.com/smaramwbc/statewave/blob/main/LICENSING.md',
       },
       {
-        label: 'Statewave Commercial License',
-        href: 'https://github.com/smaramwbc/statewave/blob/main/COMMERCIAL-LICENSE.md',
+        label: 'Apache-2.0 license',
+        href: 'https://github.com/smaramwbc/statewave/blob/main/LICENSE',
       },
       {
-        label: 'Email licensing@statewave.ai',
+        label: 'Enterprise support — licensing@statewave.ai',
         href: 'mailto:licensing@statewave.ai',
       },
     ],

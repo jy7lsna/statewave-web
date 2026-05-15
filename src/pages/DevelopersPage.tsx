@@ -92,7 +92,7 @@ export function DevelopersPage() {
             },
             {
               title: 'GitHub Repository',
-              desc: 'Source code, issues, discussions. AGPL-3.0 licensed.',
+              desc: 'Source code, issues, discussions. Apache-2.0 licensed.',
               href: 'https://github.com/smaramwbc/statewave',
               tag: 'Source',
             },

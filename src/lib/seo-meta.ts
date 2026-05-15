@@ -182,7 +182,7 @@ export function softwareApplicationJsonLd(): JsonLd {
     description:
       'Open-source memory runtime for AI agents — durable episodic and semantic memory, ranked retrieval, and token-bounded context bundles for LLM applications.',
     url: BASE_URL,
-    license: 'https://www.gnu.org/licenses/agpl-3.0.html',
+    license: 'https://www.apache.org/licenses/LICENSE-2.0',
     codeRepository: REPOS.core,
     softwareHelp: REPOS.docs,
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },

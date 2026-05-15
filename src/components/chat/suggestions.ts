@@ -181,7 +181,7 @@ export const SUGGESTIONS: Record<
       { text: "How is Statewave different from Mem0?",
         anchors: ['Mem0'] },
       { text: "What license is the core server under?",
-        anchors: ['AGPL-3.0'] },
+        anchors: ['Apache-2.0'] },
     ],
     [
       { text: "What data leaves the box during heuristic compilation?",

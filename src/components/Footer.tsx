@@ -20,7 +20,7 @@ export function Footer() {
             </Link>
             <p className="mt-4 text-sm text-theme-muted leading-relaxed">
               Open-source memory runtime for AI agents.<br />
-              Self-hosted on Postgres. AGPL-3.0.
+              Self-hosted on Postgres. Apache-2.0.
             </p>
           </div>
 
@@ -66,7 +66,7 @@ export function Footer() {
 
         <div className="mt-12 pt-8 border-t border-theme-border flex flex-col md:flex-row md:justify-between md:items-center gap-3 md:gap-4">
           <p className="text-xs text-theme-muted">
-            © {new Date().getFullYear()} Statewave. Open source under AGPL-3.0.
+            © {new Date().getFullYear()} Statewave. Open source under Apache-2.0.
             <span className="mx-2 text-theme-border">·</span>
             <Link to="/cookies" className="hover:text-theme-primary transition-colors">
               Cookies
