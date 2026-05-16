@@ -762,10 +762,10 @@ function CapabilitiesSection() {
 
 function ProofSection() {
   const stats = [
-    { value: '232', label: 'Unit tests' },
-    { value: '54', label: 'Eval assertions' },
-    { value: '9/9', label: 'Support workflow score' },
-    { value: '2/9', label: 'Naive approach score' },
+    { value: '680', label: 'Unit tests' },
+    { value: '55', label: 'Eval assertions' },
+    { value: '8/8', label: 'Support workflow score' },
+    { value: '2/8', label: 'Naive approach score' },
   ]
 
   return (
@@ -776,7 +776,7 @@ function ProofSection() {
         </Heading>
         <p className="mt-4 text-theme-muted max-w-2xl mx-auto">
           Every claim is backed by automated evals and benchmarks that run in CI.
-          Statewave scores 9/9 on support workflow criteria where naive approaches score 2/9.
+          Statewave scores 8/8 on support workflow criteria where naive approaches score 2/8.
         </p>
       </div>
 
