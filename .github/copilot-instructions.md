@@ -5,29 +5,6 @@ repository. They reflect deliberate UI/UX decisions, not stylistic preferences.
 
 ---
 
-## Workspace guardrails (apply before the web-specific rules below)
-
-This is a public, visitor-first marketing surface, so these matter most here.
-Full rationale and the rest of the rules: `statewave-docs/AGENTS.md`.
-
-- **No maturity overclaiming.** Never "GA", "production-ready",
-  "enterprise-ready", "hardened", "battle-tested". Canonical phrase:
-  "first stable public developer release." Benchmark/perf claims must be
-  source-backed and caveated.
-- **Proof figures are mirrored — do not hand-edit one number.** Test counts,
-  eval assertion/test counts and the support-workflow benchmark score have a
-  single source of truth (`statewave-docs/tools/_proof_figures.py`); the marketing
-  mirror is `src/lib/proof-stats.ts`. A release-time gate
-  (`check-proof-figures.py`) fails on drift. Change the SSoT, not one surface.
-- **Neutral brand voice.** No personal/founder names in copy; the brand is the
-  identity. Sign off as "Statewave team" or not at all.
-- **Versions are independent per package** — a core `0.9.x` beside an SDK
-  `0.10.x` is correct, not drift. Don't reconcile version numbers.
-- **Respect the v1.0 launch freeze** — no version bumps/releases; copy and
-  consistency fixes are fine.
-
----
-
 ## Heading anchors (mandatory for all section titles)
 
 Every `<h1>` / `<h2>` / `<h3>` that introduces a navigable section of a page
