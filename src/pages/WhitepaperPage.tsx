@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { Section } from '../components/Section'
 import { Heading } from '../components/Heading'
 import { Button } from '../components/Button'
@@ -29,6 +30,23 @@ export function WhitepaperPage() {
     description:
       'Compiled Memory: a technical white paper on Statewave\'s approach to long-horizon AI agent memory — deterministic, provenance-traced, token-bounded context bundles. Free PDF.',
   })
+
+  const viewerRef = useRef<HTMLDivElement>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(document.fullscreenElement === viewerRef.current)
+    document.addEventListener('fullscreenchange', onChange)
+    return () => document.removeEventListener('fullscreenchange', onChange)
+  }, [])
+
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen?.()
+    } else {
+      void viewerRef.current?.requestFullscreen?.()
+    }
+  }
 
   return (
     <>
@@ -95,14 +113,28 @@ export function WhitepaperPage() {
 
       <Section className="bg-surface-1/40">
         <div className="mx-auto max-w-4xl">
-          <Heading id="read" className="text-2xl font-bold text-theme-primary mb-6">
-            Read it here
-          </Heading>
-          <div className="overflow-hidden rounded-2xl border border-theme-border bg-surface-1">
+          <div className="mb-6 flex items-center justify-between gap-3">
+            <Heading id="read" className="text-2xl font-bold text-theme-primary">
+              Read it here
+            </Heading>
+            <button
+              type="button"
+              onClick={toggleFullscreen}
+              aria-label={isFullscreen ? 'Exit full screen' : 'View full screen'}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-theme-border bg-surface-2 px-3 py-1.5 text-xs font-medium text-theme-primary hover:bg-surface-3 transition-colors"
+            >
+              {isFullscreen ? 'Exit full screen' : 'Full screen'}
+              <span aria-hidden="true">⤢</span>
+            </button>
+          </div>
+          <div
+            ref={viewerRef}
+            className="overflow-hidden rounded-2xl border border-theme-border bg-surface-1 h-[80vh] min-h-[480px] [&:fullscreen]:h-screen [&:fullscreen]:rounded-none [&:fullscreen]:border-0"
+          >
             <object
               data={PDF_PATH}
               type="application/pdf"
-              className="w-full h-[80vh] min-h-[480px]"
+              className="w-full h-full"
               aria-label="Compiled Memory white paper (PDF)"
             >
               <div className="p-6 text-sm text-theme-secondary">
