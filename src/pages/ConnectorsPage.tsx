@@ -34,6 +34,38 @@ const CONNECTORS: ReadonlyArray<ConnectorCard> = [
     href: `${DOCS}/connectors/github.md`,
   },
   {
+    source: 'GitLab',
+    shape: 'Repo memory',
+    description:
+      'GitLab project activity — issues, merge requests, and comments — from SaaS or self-managed, under repo:group/project.',
+    status: 'available',
+    href: `${CONNECTORS_REPO}/blob/main/packages/gitlab/README.md`,
+  },
+  {
+    source: 'Bitbucket',
+    shape: 'Repo memory',
+    description:
+      'Bitbucket Cloud repository activity — pull requests and comments — under repo:workspace/repo.',
+    status: 'available',
+    href: `${CONNECTORS_REPO}/blob/main/packages/bitbucket/README.md`,
+  },
+  {
+    source: 'Gitea / Forgejo',
+    shape: 'Repo memory',
+    description:
+      'Self-hosted Gitea or Forgejo repository activity — issues, pull requests, and comments — under repo:owner/repo.',
+    status: 'available',
+    href: `${CONNECTORS_REPO}/blob/main/packages/gitea/README.md`,
+  },
+  {
+    source: 'Azure DevOps',
+    shape: 'Repo memory',
+    description:
+      'Pull requests, comments, reviews, and work items from Azure DevOps — under repo:organization/project/repository.',
+    status: 'available',
+    href: `${CONNECTORS_REPO}/blob/main/packages/azure-devops/README.md`,
+  },
+  {
     source: 'Markdown / docs',
     shape: 'Decision memory',
     description:
