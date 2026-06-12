@@ -175,7 +175,9 @@ const INSTALL_WIN  = 'irm https://www.statewave.ai/install.ps1 | iex'
 const NPX_FALLBACK = 'npx @statewavedev/connectors-cli quickstart'
 
 function QuickstartCommand() {
-  const [os, setOs] = useState<'unix' | 'windows'>('unix')
+  const [os, setOs] = useState<'unix' | 'windows'>(() =>
+    typeof navigator !== 'undefined' && /Win/i.test(navigator.userAgent) ? 'windows' : 'unix'
+  )
   const cmd = os === 'unix' ? INSTALL_UNIX : INSTALL_WIN
   const prompt = os === 'unix' ? '$' : '>'
   return (
