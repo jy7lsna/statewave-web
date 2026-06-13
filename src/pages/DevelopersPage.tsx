@@ -171,7 +171,7 @@ export function DevelopersPage() {
  * /install.ps1 → statewave-connectors/scripts/bootstrap.ps1  (Windows)
  * Both are Vercel redirects — no Node.js required on the visitor's machine. */
 const INSTALL_UNIX = 'curl -fsSL https://www.statewave.ai/install | sh'
-const INSTALL_WIN  = 'irm https://www.statewave.ai/install.ps1 | iex'
+const INSTALL_WIN  = 'powershell -Command "irm https://www.statewave.ai/install.ps1 | iex"'
 const NPX_FALLBACK = 'npx @statewavedev/connectors-cli quickstart'
 
 function QuickstartCommand() {
