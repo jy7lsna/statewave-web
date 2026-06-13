@@ -9,7 +9,7 @@
  */
 
 export const SITE_NAME = 'Statewave'
-export const BASE_URL = 'https://statewave.ai'
+export const BASE_URL = 'https://www.statewave.ai'
 export const DEFAULT_LOCALE = 'en_US'
 export const DEFAULT_LANG = 'en'
 export const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`
@@ -44,9 +44,13 @@ export type RouteKey =
   | '/use-cases'
   | '/connectors'
   | '/developers'
+  | '/about'
+  | '/blog'
 
 /** Canonical, indexable public routes. Order matters — used to render the
- *  sitemap and the llms.txt index. */
+ *  sitemap and the llms.txt index. /blog/<slug> entries are appended to
+ *  the sitemap dynamically at build time (see scripts/generate-sitemap.mjs);
+ *  the index page itself is enumerated here. */
 export const PUBLIC_ROUTES: readonly RouteKey[] = [
   '/',
   '/product',
@@ -54,6 +58,8 @@ export const PUBLIC_ROUTES: readonly RouteKey[] = [
   '/use-cases',
   '/connectors',
   '/developers',
+  '/about',
+  '/blog',
 ] as const
 
 export interface PageMeta {
@@ -132,6 +138,24 @@ export const PAGE_META: Record<RouteKey, PageMeta> = {
     priority: 0.8,
     changefreq: 'monthly',
   },
+  '/about': {
+    title: 'About Statewave — Open-Source Memory Runtime for AI Agents',
+    description:
+      'Statewave is an open-source, self-hosted memory runtime for AI agents — durable episodic and semantic memory with provenance, deterministic ranking, and token-bounded context bundles. Apache-2.0, framework-neutral, no managed cloud.',
+    breadcrumbLabel: 'About',
+    ogType: 'website',
+    priority: 0.6,
+    changefreq: 'monthly',
+  },
+  '/blog': {
+    title: 'Blog — Notes from the Statewave project',
+    description:
+      'How agent memory works under the hood, deployment patterns, and the design choices behind a Postgres-only self-hosted memory runtime for AI agents.',
+    breadcrumbLabel: 'Blog',
+    ogType: 'website',
+    priority: 0.7,
+    changefreq: 'weekly',
+  },
 }
 
 /** Look up metadata for an arbitrary path. Falls back to home metadata if the
@@ -183,9 +207,77 @@ export function softwareApplicationJsonLd(): JsonLd {
       'Open-source memory runtime for AI agents — durable episodic and semantic memory, ranked retrieval, and token-bounded context bundles for LLM applications.',
     url: BASE_URL,
     license: 'https://www.apache.org/licenses/LICENSE-2.0',
-    codeRepository: REPOS.core,
+    // No codeRepository here — it's a SoftwareSourceCode property, not a
+    // SoftwareApplication one, and Google's validator flags it as unrecognised.
+    // The repo is already linked from the Organization node's sameAs.
     softwareHelp: REPOS.docs,
+    featureList: [
+      'Episodic and semantic memory',
+      'Ranked, deterministic retrieval',
+      'Token-bounded context bundles',
+      'Full provenance tracking',
+      'Self-hosted on Postgres + pgvector',
+    ],
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  }
+}
+
+/** HowTo for the install / quickstart. Google retired HowTo rich results in
+ *  2023, but answer engines still consume the structured data, and it's a
+ *  natural fit for the /developers quickstart. Emitted on that route only —
+ *  not site-wide — so it isn't attached to pages that have no instructions.
+ *  Steps mirror statewave-docs/getting-started.md (port 8100 is what the
+ *  published docker-compose binds to). Recompute together if the quickstart
+ *  changes. */
+export function howToJsonLd(): JsonLd {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: 'Install and run Statewave locally with Docker Compose',
+    description:
+      'Self-host the Statewave memory runtime in about five minutes — clone the repository, boot the stack, store a memory, and retrieve it.',
+    totalTime: 'PT5M',
+    supply: [
+      {
+        '@type': 'HowToSupply',
+        name: 'A machine with Docker Engine 24+ and Git',
+      },
+    ],
+    tool: [
+      { '@type': 'HowToTool', name: 'Docker' },
+      { '@type': 'HowToTool', name: 'Git' },
+      { '@type': 'HowToTool', name: 'curl' },
+    ],
+    step: [
+      {
+        '@type': 'HowToStep',
+        position: 1,
+        name: 'Start the server',
+        text: 'git clone https://github.com/smaramwbc/statewave.git && cd statewave && docker compose up -d. The compose stack boots the Statewave API on port 8100 and a Postgres-with-pgvector instance.',
+        url: `${REPOS.docs}/blob/main/getting-started.md#step-1--start-the-server`,
+      },
+      {
+        '@type': 'HowToStep',
+        position: 2,
+        name: 'Verify the server is up',
+        text: 'curl http://localhost:8100/healthz returns {"status":"ok"} once the API process is ready. /readyz reports per-dependency status, including the Postgres handshake.',
+        url: `${REPOS.docs}/blob/main/getting-started.md#step-2--verify-it-is-running`,
+      },
+      {
+        '@type': 'HowToStep',
+        position: 3,
+        name: 'Store a memory',
+        text: 'POST an episode to /v1/episodes (subject + event payload), then POST to /v1/memories/compile to turn that episode into a compiled, ranked memory with provenance back to the source episode.',
+        url: `${REPOS.docs}/blob/main/getting-started.md#step-3--store-a-memory`,
+      },
+      {
+        '@type': 'HowToStep',
+        position: 4,
+        name: 'Retrieve a context bundle',
+        text: 'POST to /v1/context with a subject and a token budget. Statewave returns a ranked, token-bounded bundle of memories and episodes ready to drop into a prompt — with the same provenance IDs the compile step recorded.',
+        url: `${REPOS.docs}/blob/main/getting-started.md#step-4--retrieve-it`,
+      },
+    ],
   }
 }
 

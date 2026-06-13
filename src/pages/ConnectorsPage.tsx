@@ -34,6 +34,38 @@ const CONNECTORS: ReadonlyArray<ConnectorCard> = [
     href: `${DOCS}/connectors/github.md`,
   },
   {
+    source: 'GitLab',
+    shape: 'Repo memory',
+    description:
+      'GitLab project activity — issues, merge requests, and comments — from SaaS or self-managed, under repo:group/project.',
+    status: 'available',
+    href: `${CONNECTORS_REPO}/blob/main/packages/gitlab/README.md`,
+  },
+  {
+    source: 'Bitbucket',
+    shape: 'Repo memory',
+    description:
+      'Bitbucket Cloud repository activity — pull requests and comments — under repo:workspace/repo.',
+    status: 'available',
+    href: `${CONNECTORS_REPO}/blob/main/packages/bitbucket/README.md`,
+  },
+  {
+    source: 'Gitea / Forgejo',
+    shape: 'Repo memory',
+    description:
+      'Self-hosted Gitea or Forgejo repository activity — issues, pull requests, and comments — under repo:owner/repo.',
+    status: 'available',
+    href: `${CONNECTORS_REPO}/blob/main/packages/gitea/README.md`,
+  },
+  {
+    source: 'Azure DevOps',
+    shape: 'Repo memory',
+    description:
+      'Pull requests, comments, reviews, and work items from Azure DevOps — under repo:organization/project/repository.',
+    status: 'available',
+    href: `${CONNECTORS_REPO}/blob/main/packages/azure-devops/README.md`,
+  },
+  {
     source: 'Markdown / docs',
     shape: 'Decision memory',
     description:
@@ -112,6 +144,22 @@ const CONNECTORS: ReadonlyArray<ConnectorCard> = [
       'Messages matching a required Gmail search query, scoped per counterparty (relationship:<email>). OAuth 2.0 refresh-token auth; gmail.readonly scope; never "ingest the whole inbox".',
     status: 'available',
     href: 'https://github.com/smaramwbc/statewave-connectors/blob/main/packages/gmail/README.md',
+  },
+  {
+    source: 'Jira',
+    shape: 'Project memory',
+    description:
+      'Jira Cloud issues and (opt-in) comments scoped per project (project:<KEY>). Cloud REST v3, API-token auth, pull-mode; project allowlist; users by display name, never email. Preview.',
+    status: 'available',
+    href: 'https://github.com/smaramwbc/statewave-connectors/blob/main/packages/jira/README.md',
+  },
+  {
+    source: 'Database',
+    shape: 'Records memory',
+    description:
+      'Selected rows from PostgreSQL, MySQL, MariaDB, or MSSQL — read-only, allowlisted table or SELECT, chosen columns, capped rows. A source connector into Statewave memory, not a Statewave storage backend. Preview.',
+    status: 'available',
+    href: 'https://github.com/smaramwbc/statewave-connectors/blob/main/packages/database/README.md',
   },
 ]
 
@@ -195,9 +243,9 @@ function ConnectorsHero() {
           </motion.div>
 
           <motion.p variants={fadeUp} className="mt-4 text-xs text-theme-muted/85">
-            Modular packages — install only what you need. Phase-1 packages
-            (core, CLI, MCP server, GitHub, Markdown) are landing in the open;
-            npm publication is a follow-up.
+            Modular packages — install only what you need. The full connector
+            lineup — including the new Jira and database source connectors — is
+            published on npm.
           </motion.p>
         </motion.div>
       </div>
@@ -352,6 +400,8 @@ function PackageModelSection() {
           </div>
           <pre className="text-theme-secondary overflow-x-auto -mx-1 px-1"><code>{`# Pick what you need — every package is independent
 npm install @statewavedev/connectors-github
+npm install @statewavedev/connectors-jira
+npm install @statewavedev/connectors-database
 npm install @statewavedev/connectors-markdown
 npm install @statewavedev/connectors-slack
 npm install @statewavedev/connectors-n8n

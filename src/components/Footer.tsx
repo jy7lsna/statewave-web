@@ -51,6 +51,7 @@ export function Footer() {
               <li><a href="https://github.com/smaramwbc/statewave-docs/blob/main/api/v1-contract.md" target="_blank" rel="noopener noreferrer" className="text-sm text-theme-muted hover:text-theme-primary transition-colors">API Reference</a></li>
               <li><a href="https://github.com/smaramwbc/statewave-py" target="_blank" rel="noopener noreferrer" className="text-sm text-theme-muted hover:text-theme-primary transition-colors">Python SDK</a></li>
               <li><a href="https://github.com/smaramwbc/statewave-ts" target="_blank" rel="noopener noreferrer" className="text-sm text-theme-muted hover:text-theme-primary transition-colors">TypeScript SDK</a></li>
+              <li><Link to="/whitepaper" className="text-sm text-theme-muted hover:text-theme-primary transition-colors">White paper</Link></li>
             </ul>
           </div>
 
@@ -60,7 +61,9 @@ export function Footer() {
               <li><a href="https://github.com/smaramwbc/statewave" target="_blank" rel="noopener noreferrer" className="text-sm text-theme-muted hover:text-theme-primary transition-colors">GitHub</a></li>
               <li><a href="https://github.com/smaramwbc/statewave-examples" target="_blank" rel="noopener noreferrer" className="text-sm text-theme-muted hover:text-theme-primary transition-colors">Examples</a></li>
               <li><a href="https://github.com/smaramwbc/statewave-docs/blob/main/roadmap.md" target="_blank" rel="noopener noreferrer" className="text-sm text-theme-muted hover:text-theme-primary transition-colors">Roadmap</a></li>
-              <li><Link to="/launch" className="text-sm text-theme-muted hover:text-theme-primary transition-colors">Launch waitlist</Link></li>
+              <li><Link to="/blog" className="text-sm text-theme-muted hover:text-theme-primary transition-colors">Blog</Link></li>
+              <li><Link to="/about" className="text-sm text-theme-muted hover:text-theme-primary transition-colors">About</Link></li>
+              <li><Link to="/launch" className="text-sm text-theme-muted hover:text-theme-primary transition-colors">Newsletter</Link></li>
               <li><Link to="/press" className="text-sm text-theme-muted hover:text-theme-primary transition-colors">Press kit</Link></li>
             </ul>
           </div>

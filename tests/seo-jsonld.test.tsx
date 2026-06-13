@@ -7,6 +7,7 @@ import App from '../src/App'
 import {
   breadcrumbJsonLd,
   faqPageJsonLd,
+  howToJsonLd,
   organizationJsonLd,
   softwareApplicationJsonLd,
   websiteJsonLd,
@@ -49,7 +50,7 @@ describe('JSON-LD builders', () => {
     expect(node['@context']).toBe('https://schema.org')
     expect(node['@type']).toBe('Organization')
     expect(node.name).toBe('Statewave')
-    expect(node.url).toBe('https://statewave.ai')
+    expect(node.url).toBe('https://www.statewave.ai')
     expect(Array.isArray(node.sameAs)).toBe(true)
   })
 
@@ -63,7 +64,20 @@ describe('JSON-LD builders', () => {
     const node = softwareApplicationJsonLd()
     expect(node['@type']).toBe('SoftwareApplication')
     expect(node.applicationCategory).toBe('DeveloperApplication')
-    expect(node.codeRepository).toBe('https://github.com/smaramwbc/statewave')
+    // codeRepository is a SoftwareSourceCode property, not a valid
+    // SoftwareApplication one — Google's validator flags it. Keep it out.
+    expect(node.codeRepository).toBeUndefined()
+  })
+
+  it('HowTo is valid schema.org HowTo with ordered steps', () => {
+    const node = howToJsonLd()
+    expect(node['@type']).toBe('HowTo')
+    const steps = node.step as Array<{ '@type': string; position: number }>
+    expect(steps.length).toBeGreaterThan(0)
+    steps.forEach((s, i) => {
+      expect(s['@type']).toBe('HowToStep')
+      expect(s.position).toBe(i + 1)
+    })
   })
 
   it('BreadcrumbList builds valid ListItem entries', () => {
@@ -83,11 +97,11 @@ describe('JSON-LD builders', () => {
       '@type': 'ListItem',
       position: 1,
       name: 'Home',
-      item: 'https://statewave.ai',
+      item: 'https://www.statewave.ai',
     })
     expect(items[1]).toMatchObject({
       position: 2,
-      item: 'https://statewave.ai/use-cases',
+      item: 'https://www.statewave.ai/use-cases',
     })
   })
 
@@ -110,14 +124,28 @@ describe('JSON-LD builders', () => {
 })
 
 describe('Per-page injected JSON-LD', () => {
-  it('homepage injects Organization, WebSite, SoftwareApplication, FAQPage', async () => {
+  it('homepage injects SoftwareApplication + FAQPage (route-specific), not the site-wide entities', async () => {
     renderApp('/')
     await waitFor(() => {
       const types = readManagedJsonLd().map((n) => n['@type'])
-      expect(types).toContain('Organization')
-      expect(types).toContain('WebSite')
-      expect(types).toContain('SoftwareApplication')
       expect(types).toContain('FAQPage')
+      expect(types).toContain('SoftwareApplication')
+    })
+    // Organization / WebSite are the site-wide entities and live statically in
+    // index.html; the SPA must not re-emit them (that would duplicate them).
+    const types = readManagedJsonLd().map((n) => n['@type'])
+    expect(types).not.toContain('Organization')
+    expect(types).not.toContain('WebSite')
+    // The homepage FAQPage carries the full entry list.
+    const faq = readManagedJsonLd().find((n) => n['@type'] === 'FAQPage')
+    expect((faq?.mainEntity as unknown[]).length).toBe(FAQ_ENTRIES.length)
+  })
+
+  it('the /developers route injects a HowTo', async () => {
+    renderApp('/developers')
+    await waitFor(() => {
+      const types = readManagedJsonLd().map((n) => n['@type'])
+      expect(types).toContain('HowTo')
     })
   })
 

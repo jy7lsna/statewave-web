@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, useState } from 'react'
+import React, { useRef, useEffect, useCallback, useState } from 'react'
 import { useTheme } from '../lib/theme'
 import { useChatWidget, personaBlurb } from '../lib/widget-context-api'
 import { fetchLiveData, type LiveSubjectData } from '../services/statewave-live'
@@ -218,6 +218,29 @@ function buildFromLiveData(data: LiveSubjectData[]): { subjects: Subject[]; memo
   return { subjects, memories, episodes }
 }
 
+// Fade buffer: how far outside the zone boundary the fade starts (normalized).
+const ZONE_FADE_BUFFER = 0.04
+
+// Returns an alpha multiplier (0-1) for a particle at normalized (x, y).
+// Inside the zone: (1 - strength). Within ZONE_FADE_BUFFER outside: eases in.
+// Fully outside: 1 (no change).
+function zoneFade(
+  x: number,
+  y: number,
+  zone: { l: number; r: number; t: number; b: number } | null,
+  strength: number,
+): number {
+  if (!zone || strength <= 0) return 1
+  const inX = x >= zone.l && x <= zone.r
+  const inY = y >= zone.t && y <= zone.b
+  if (inX && inY) return 1 - strength
+  const dx = Math.max(zone.l - x, x - zone.r, 0)
+  const dy = Math.max(zone.t - y, y - zone.b, 0)
+  const dist = Math.sqrt(dx * dx + dy * dy)
+  if (dist >= ZONE_FADE_BUFFER) return 1
+  return 1 - strength * (1 - dist / ZONE_FADE_BUFFER)
+}
+
 /**
  * Detects narrow viewports (smartphone widths) at mount and on resize.
  *
@@ -242,7 +265,7 @@ function useIsHeroCanvasSuppressed(): boolean {
   return suppressed
 }
 
-export function HeroBackground() {
+export function HeroBackground({ contentZoneRef }: { contentZoneRef?: React.RefObject<HTMLElement | null> } = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === 'dark'
@@ -253,31 +276,24 @@ export function HeroBackground() {
   // window-level listeners (registered once) can read it without re-binding.
   const widgetActiveRef = useRef(false)
   widgetActiveRef.current = widgetOpen && !widgetMinimized
+  const contentZoneRefInternal = useRef<React.RefObject<HTMLElement | null> | undefined>(contentZoneRef)
+  contentZoneRefInternal.current = contentZoneRef
   const subjectsRef = useRef<Subject[]>([])
   const memoriesRef = useRef<Memory[]>([])  
   const episodesRef = useRef<Episode[]>([])
   const frameRef = useRef<number>(0)
-  const lastHintUpdate = useRef<number>(0)
+  const tooltipDismissRef = useRef<number | null>(null)
   const themeRef = useRef(isDark)
   const startTimeRef = useRef<number>(0)
+  const exclusionZoneRef = useRef<{ l: number; r: number; t: number; b: number } | null>(null)
+  const zoneStrengthRef = useRef(0)
   const [tooltip, setTooltip] = useState<{ x: number; y: number; text: string; type: string; group: number; kind: 'memory' | 'episode' | 'subject' } | null>(null)
-  const [isLive, setIsLive] = useState(false)
   const hoveredRef = useRef<{ kind: 'memory' | 'episode' | 'subject'; idx: number } | null>(null)
   // True while the pointer is over the hover card itself. Lets the visitor
   // travel from a particle onto the card (to click "try the demo") without
   // the tooltip vanishing the instant the cursor leaves the node.
   const cardHoverRef = useRef(false)
-  // Pending "dismiss the tooltip" timer — a short grace period that bridges
-  // the dead gap between the particle and the offset card.
-  const tooltipDismissRef = useRef<number | null>(null)
   const progressRef = useRef<number>(0)
-  const hintSubjectIdxRef = useRef<number>(-1)
-  const [hintPos, setHintPos] = useState<{ x: number; y: number } | null>(null)
-  // Agent name shown on the hint pill's second line. Ref mirrors the state so
-  // the per-frame draw loop only triggers a re-render when it actually changes.
-  const [hintLabel, setHintLabel] = useState<string | null>(null)
-  const hintLabelRef = useRef<string | null>(null)
-  const [hintVisible, setHintVisible] = useState(true)
 
   themeRef.current = isDark
 
@@ -298,7 +314,6 @@ export function HeroBackground() {
       memoriesRef.current = memories
       episodesRef.current = episodes
       startTimeRef.current = 0 // restart animation
-      setIsLive(true)
     })
   }, [canvasSuppressed])
 
@@ -342,8 +357,11 @@ export function HeroBackground() {
     // Check subjects first (largest circles)
     const canvasW = canvas.width ?? 1000
     const canvasH = canvas.height ?? 600
+    const hoverZone = exclusionZoneRef.current
+    const hoverZoneStrength = zoneStrengthRef.current
     for (let i = 0; i < subjectsRef.current.length; i++) {
       const s = subjectsRef.current[i]
+      if (hoverZone && hoverZoneStrength > 0.5 && zoneFade(s.x, s.y, hoverZone, 1) < 0.5) continue
       const dx = s.x - mx
       const dy = s.y - my
       const dist = Math.sqrt(dx * dx + dy * dy)
@@ -364,6 +382,7 @@ export function HeroBackground() {
     // Check memories
     for (let i = 0; i < memoriesRef.current.length; i++) {
       const m = memoriesRef.current[i]
+      if (hoverZone && hoverZoneStrength > 0.5 && zoneFade(m.x, m.y, hoverZone, 1) < 0.5) continue
       const dx = m.x - mx
       const dy = m.y - my
       const dist = Math.sqrt(dx * dx + dy * dy)
@@ -387,6 +406,7 @@ export function HeroBackground() {
     // Check episodes
     for (let i = 0; i < episodesRef.current.length; i++) {
       const ep = episodesRef.current[i]
+      if (hoverZone && hoverZoneStrength > 0.5 && zoneFade(ep.x, ep.y, hoverZone, 1) < 0.5) continue
       const dx = ep.x - mx
       const dy = ep.y - my
       const dist = Math.sqrt(dx * dx + dy * dy)
@@ -405,7 +425,6 @@ export function HeroBackground() {
         setTooltip({ x: e.clientX - rect.left, y: e.clientY - rect.top, text, type: 'Episode (raw)', group: ep.group, kind: 'episode' })
         hoveredRef.current = { kind: 'episode', idx: i }
         document.body.style.cursor = 'pointer'
-        setHintVisible(false)
         return
       }
     }
@@ -459,17 +478,6 @@ export function HeroBackground() {
     setTooltip(null)
   }, [openWidget])
 
-  // Anchor the hint chip to a random subject (the largest circle in any group),
-  // but delay its appearance so users register the visualization first.
-  const [hintReady, setHintReady] = useState(false)
-  useEffect(() => {
-    if (isLive && subjectsRef.current.length > 0 && hintSubjectIdxRef.current === -1) {
-      hintSubjectIdxRef.current = Math.floor(Math.random() * subjectsRef.current.length)
-    }
-    if (!isLive) return
-    const t = window.setTimeout(() => setHintReady(true), 3000)
-    return () => window.clearTimeout(t)
-  }, [isLive])
 
   useEffect(() => {
     // No canvas on mobile → no need to install the global hover/click
@@ -497,6 +505,22 @@ export function HeroBackground() {
     const rect = canvas.getBoundingClientRect()
     const w = rect.width
     const h = rect.height
+
+    // Compute the exclusion zone from the hero content element each frame so
+    // it adapts to window resizes. Pad by 2% so particles don't graze text.
+    const contentEl = contentZoneRefInternal.current?.current
+    let exclusionZone: { l: number; r: number; t: number; b: number } | null = null
+    if (contentEl && w > 0 && h > 0) {
+      const cr = contentEl.getBoundingClientRect()
+      const pad = 0.02
+      exclusionZone = {
+        l: (cr.left - rect.left) / w - pad,
+        r: (cr.right - rect.left) / w + pad,
+        t: (cr.top - rect.top) / h - pad,
+        b: (cr.bottom - rect.top) / h + pad,
+      }
+    }
+
     const elapsed = (time - startTimeRef.current) * 0.001
     const t = elapsed
 
@@ -506,6 +530,12 @@ export function HeroBackground() {
       ? 2 * rawProgress * rawProgress
       : 1 - Math.pow(-2 * rawProgress + 2, 2) / 2
     progressRef.current = progress
+    // Zone fade blends in over the last 30% of the settle animation so
+    // particles can fly freely through the text on their initial flight and
+    // only fade out as they approach their resting positions.
+    const zoneStrength = exclusionZone ? Math.max(0, (progress - 0.7) / 0.3) : 0
+    exclusionZoneRef.current = exclusionZone
+    zoneStrengthRef.current = zoneStrength
 
     // Clear
     ctx.save()
@@ -641,6 +671,11 @@ export function HeroBackground() {
         const e = episodes[ei]
         const subj = subjects[e.subjectIdx]
         if (!subj) continue
+        const lf = Math.min(
+          zoneFade(e.x, e.y, exclusionZone, zoneStrength),
+          zoneFade(subj.x, subj.y, exclusionZone, zoneStrength),
+        )
+        if (lf < 0.01) continue
         const ex = e.x * w
         const ey = e.y * h
         const sx = subj.x * w
@@ -648,7 +683,7 @@ export function HeroBackground() {
         ctx.beginPath()
         ctx.moveTo(ex, ey)
         ctx.lineTo(sx, sy)
-        ctx.strokeStyle = groupColor(e.group, dark ? 60 : 50, orphanAlpha)
+        ctx.strokeStyle = groupColor(e.group, dark ? 60 : 50, orphanAlpha * lf)
         ctx.lineWidth = 0.6
         ctx.stroke()
       }
@@ -666,12 +701,17 @@ export function HeroBackground() {
         for (const epIdx of m.sourceEpisodeIdxs) {
           const e = episodes[epIdx]
           if (!e) continue
+          const lf = Math.min(
+            zoneFade(m.x, m.y, exclusionZone, zoneStrength),
+            zoneFade(e.x, e.y, exclusionZone, zoneStrength),
+          )
+          if (lf < 0.01) continue
           const ex = e.x * w
           const ey = e.y * h
           ctx.beginPath()
           ctx.moveTo(mx, my)
           ctx.lineTo(ex, ey)
-          ctx.strokeStyle = groupColor(m.group, dark ? 70 : 45, provenanceAlpha)
+          ctx.strokeStyle = groupColor(m.group, dark ? 70 : 45, provenanceAlpha * lf)
           ctx.lineWidth = 0.9
           ctx.stroke()
         }
@@ -689,14 +729,20 @@ export function HeroBackground() {
       const maxDist = 220
 
       if (dist < maxDist && progress > 0.2) {
-        const strength = (1 - dist / maxDist) * progress
-        const alpha = strength * (dark ? 0.3 : 0.22)
-        ctx.beginPath()
-        ctx.moveTo(mx, my)
-        ctx.lineTo(sx, sy)
-        ctx.strokeStyle = groupColor(m.group, dark ? 72 : 45, alpha)
-        ctx.lineWidth = Math.max(0.7, strength * 1.6)
-        ctx.stroke()
+        const lf = Math.min(
+          zoneFade(m.x, m.y, exclusionZone, zoneStrength),
+          zoneFade(subj.x, subj.y, exclusionZone, zoneStrength),
+        )
+        if (lf >= 0.01) {
+          const strength = (1 - dist / maxDist) * progress
+          const alpha = strength * (dark ? 0.3 : 0.22) * lf
+          ctx.beginPath()
+          ctx.moveTo(mx, my)
+          ctx.lineTo(sx, sy)
+          ctx.strokeStyle = groupColor(m.group, dark ? 72 : 45, alpha)
+          ctx.lineWidth = Math.max(0.7, strength * 1.6)
+          ctx.stroke()
+        }
       }
     }
 
@@ -704,12 +750,16 @@ export function HeroBackground() {
     const hovered = hoveredRef.current
     for (let ei = 0; ei < episodes.length; ei++) {
       const e = episodes[ei]
+      const ef = zoneFade(e.x, e.y, exclusionZone, zoneStrength)
+      if (ef < 0.01) continue
       const px = e.x * w
       const py = e.y * h
       const isHovered = hovered?.kind === 'episode' && hovered.idx === ei
       const alpha = isHovered ? 1 : (dark ? 0.65 + progress * 0.25 : 0.7 + progress * 0.25)
       const radius = isHovered ? e.size * 2 : e.size
 
+      ctx.save()
+      ctx.globalAlpha = ef
       if (isHovered) {
         ctx.beginPath()
         ctx.arc(px, py, radius + 4, 0, Math.PI * 2)
@@ -724,15 +774,20 @@ export function HeroBackground() {
         ? groupColor(e.group, dark ? 85 : 32, 0.98)
         : groupColor(e.group, dark ? 68 : 38, alpha)
       ctx.fill()
+      ctx.restore()
     }
 
     // Draw memories (larger nodes with glow — colored per group)
     for (let mi = 0; mi < memories.length; mi++) {
       const m = memories[mi]
+      const mf = zoneFade(m.x, m.y, exclusionZone, zoneStrength)
+      if (mf < 0.01) continue
       const px = m.x * w
       const py = m.y * h
       const isHovered = hovered?.kind === 'memory' && hovered.idx === mi
       const alpha = isHovered ? 1 : (dark ? 0.7 + progress * 0.2 : 0.5 + progress * 0.2)
+      ctx.save()
+      ctx.globalAlpha = mf
 
       // Glow
       if (progress > 0.2) {
@@ -773,13 +828,18 @@ export function HeroBackground() {
         ctx.lineWidth = 0.8
         ctx.stroke()
       }
+      ctx.restore()
     }
 
     // Draw subject nodes (largest — center of each group)
     for (const s of subjects) {
+      const sf = zoneFade(s.x, s.y, exclusionZone, zoneStrength)
+      if (sf < 0.01) continue
       const px = s.x * w
       const py = s.y * h
       const alpha = dark ? 0.8 + progress * 0.2 : 0.6 + progress * 0.3
+      ctx.save()
+      ctx.globalAlpha = sf
 
       // Pulsing attention ring (radiates outward)
       if (progress > 0.5) {
@@ -847,22 +907,7 @@ export function HeroBackground() {
         ctx.shadowBlur = 0
         ctx.shadowColor = 'transparent'
       }
-    }
-
-
-    // Update hint chip position from tracked subject (throttled)
-    const hIdx = hintSubjectIdxRef.current
-    if (hIdx >= 0 && hIdx < subjects.length && progress > 0.3) {
-      const s = subjects[hIdx]
-      const now = performance.now()
-      if (!lastHintUpdate.current || now - lastHintUpdate.current > 80) {
-        lastHintUpdate.current = now
-        setHintPos({ x: s.x, y: s.y })
-      }
-      if (hintLabelRef.current !== s.label) {
-        hintLabelRef.current = s.label
-        setHintLabel(s.label)
-      }
+      ctx.restore()
     }
 
     frameRef.current = requestAnimationFrame(draw)
@@ -1037,65 +1082,6 @@ export function HeroBackground() {
           z-50 keeps it above the section's bottom-fade overlay and any other
           page-level scrims, so it never looks dimmed even if its anchor
           subject sits in the faded zone. */}
-      {isLive && hintReady && hintVisible && hintPos && !widgetOpen && (
-        <div
-          className="absolute pointer-events-none z-50"
-          style={{
-            left: `clamp(140px, ${hintPos.x * 100}%, calc(100% - 140px))`,
-            top: `clamp(60px, ${hintPos.y * 100}%, calc(100% - 60px))`,
-            transform: 'translate(-50%, -150%)',
-          }}
-        >
-          <div
-            className="pointer-events-auto flex items-center gap-2.5 pl-4 pr-5 py-2.5 rounded-2xl cursor-pointer whitespace-nowrap transition-transform duration-150 hover:scale-110"
-            style={{
-              // Warm amber against the cool indigo/cyan particle field — a
-              // deliberately *different* hue from every other CTA so the eye
-              // catches it instantly. Near-black text keeps it legible on
-              // amber (white-on-amber fails contrast).
-              backgroundColor: '#f59e0b',
-              color: '#1c1917',
-              // Amber-tinted glow ring so the halo reinforces the same accent.
-              boxShadow: isDark
-                ? '0 0 0 5px rgba(245, 158, 11, 0.22), 0 10px 30px -4px rgba(245, 158, 11, 0.55), 0 6px 16px -2px rgba(0, 0, 0, 0.45)'
-                : '0 0 0 5px rgba(245, 158, 11, 0.20), 0 10px 30px -4px rgba(245, 158, 11, 0.45), 0 6px 16px -2px rgba(180, 83, 9, 0.3)',
-              animation: 'heroHintBounce 1.4s ease-in-out infinite',
-            }}
-            onClick={() => {
-              const idx = hintSubjectIdxRef.current
-              if (idx >= 0 && idx < subjectsRef.current.length) {
-                const subj = subjectsRef.current[idx]
-                if (subj) {
-                  openWidget(subj.subjectId, subj.label)
-                }
-                setHintVisible(false)
-              }
-            }}
-          >
-            {/* Mouse cursor icon — direct visual cue to "interact here" */}
-            <svg
-              aria-hidden
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="flex-shrink-0"
-            >
-              <path d="M3 3l7 19 2-8 8-2z" />
-            </svg>
-            <span className="flex flex-col leading-tight text-left">
-              <span className="text-[13px] font-bold">Try with Memory</span>
-              {hintLabel && (
-                <span className="text-[11px] font-medium text-black/60">{hintLabel}</span>
-              )}
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
