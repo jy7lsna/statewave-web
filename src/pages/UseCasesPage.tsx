@@ -202,6 +202,7 @@ const USE_CASES: UseCase[] = [
     category: 'coding', status: 'good-fit',
     tags: ['coding', 'multi-tenant'],
     stack: ['Python', 'FastAPI', 'OpenAI'],
+    repo: 'statewave-personal-assistant-memory',
     audience: 'Developers building user-facing AI assistants where returning users should not have to repeat themselves.',
   },
 
@@ -368,6 +369,7 @@ const USE_CASES: UseCase[] = [
     category: 'infra', status: 'good-fit',
     tags: ['infra', 'multi-agent'],
     stack: ['Python', 'OpenAI'],
+    repo: 'statewave-multi-agent-shared-context',
     audience: 'Developers running parallel agent workflows where agents duplicate work or produce contradictory outputs.',
   },
 
