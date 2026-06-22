@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { Button } from "../components/Button";
+import { useTheme } from "../lib/theme";
 
 const PAGE_RAIL_CLASS =
   "mx-auto max-w-[1488px] px-5 sm:px-10 md:px-16 xl:px-[94px]"
@@ -28,6 +29,12 @@ function GridSection({
 /* ─── Hero ───────────────────────────────────────────────────────────────── */
 
 function HeroSection() {
+  const { resolvedTheme } = useTheme();
+  const heroSrc =
+    resolvedTheme === "dark"
+      ? "/statewave-multi-agent-memory-hero-img-dark-theme.svg"
+      : "/statewave-multi-agent-memory-hero-img-light-theme.svg";
+
   return (
     <section className="relative bg-surface-1 overflow-hidden">
       {/* Inner content — pt clears navbar (64px) + Figma top padding (41px). No border-b so no grid line appears between hero and CostSection. */}
@@ -43,27 +50,23 @@ function HeroSection() {
           <div className="flex items-center justify-center gap-2 mb-8">
             <Link
               to="/use-cases"
-              className="text-[14px] transition-colors"
-              style={{ color: "rgba(255,255,255,0.6)", fontFamily: "Inter, sans-serif" }}
+              className="text-[14px] text-theme-muted transition-colors hover:text-theme-secondary"
+              style={{ fontFamily: "Inter, sans-serif" }}
             >
               Use Cases
             </Link>
-            <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 14 }}>/</span>
-            {/* Pill dropdown — bg rgba(255,255,255,0.07), border rgba(255,255,255,0.13) */}
+            <span className="text-theme-muted" style={{ fontSize: 14 }}>/</span>
+            {/* Pill dropdown — bg surface-2, border theme-border */}
             <div
-              className="inline-flex items-center gap-1.5 rounded-[8px]"
-              style={{
-                background: "rgba(255,255,255,0.07)",
-                border: "1px solid rgba(255,255,255,0.13)",
-                padding: "4px 10px 4px 12px",
-              }}
+              className="inline-flex items-center gap-1.5 rounded-[8px] bg-surface-2 border border-theme-border"
+              style={{ padding: "4px 10px 4px 12px" }}
             >
               <span
+                className="text-theme-primary"
                 style={{
                   fontFamily: "Inter, sans-serif",
                   fontSize: 13,
                   fontWeight: 500,
-                  color: "#fff",
                   whiteSpace: "nowrap",
                 }}
               >
@@ -73,7 +76,8 @@ function HeroSection() {
               <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
                 <path
                   d="M2.5 4L5.5 7L8.5 4"
-                  stroke="rgba(255,255,255,0.6)"
+                  stroke="currentColor"
+                  className="text-theme-muted"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -115,36 +119,20 @@ function HeroSection() {
           </p>
 
           <div className="mt-8">
-            <a
+            <Button
               href="https://github.com/smaramwbc/statewave-multi-agent-memory"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: "inline-flex",
-                width: "182.16px",
-                height: "50px",
-                padding: "15px 30.336px 16px 32px",
-                justifyContent: "center",
-                alignItems: "center",
-                borderRadius: "8px",
-                background: "#FFF",
-                fontFamily: "Fustat, Inter, sans-serif",
-                fontSize: "14px",
-                fontWeight: 600,
-                color: "#0a0a0f",
-                textDecoration: "none",
-                whiteSpace: "nowrap",
-              }}
+              variant="primary"
+              size="lg"
             >
               Get Started Free
-            </a>
+            </Button>
           </div>
         </motion.div>
 
         {/* Hero image */}
         <div className="mt-12">
           <img
-            src="/hero-multi-agent-memory.png"
+            src={heroSrc}
             alt="Multi-agent memory demo"
             className="w-full rounded-t-2xl"
             style={{
@@ -180,13 +168,7 @@ function CostSection() {
     <GridSection innerClassName="relative py-20 sm:py-24 xl:py-28">
       {/* "Problems" pill */}
       <div className="flex justify-center mb-8 xl:mb-10">
-        <span
-          className="px-4 py-2 text-sm font-medium text-theme-primary"
-          style={{
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: "8px",
-          }}
-        >
+        <span className="px-4 py-2 text-sm font-medium text-theme-primary border border-theme-border rounded-[8px]">
           Problems
         </span>
       </div>
@@ -206,25 +188,21 @@ function CostSection() {
       </h2>
 
       {/* 3-column card grid */}
-      <div className="grid gap-4 sm:grid-cols-3 xl:gap-7">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:gap-7">
         {COST_ITEMS.map((item) => (
           <div
             key={item.title}
-            className="flex flex-col justify-between p-8 sm:p-10 xl:p-12"
-            style={{
-              border: "1px solid rgb(39,39,42)",
-              borderRadius: "10px",
-              background: "transparent",
-              minHeight: "clamp(300px, 22vw, 420px)",
-            }}
+            className="flex flex-col justify-between p-8 sm:p-10 xl:p-12 border border-theme-border rounded-[10px]"
+            style={{ minHeight: "clamp(260px, 22vw, 420px)" }}
           >
             {/* Top: circle-X icon + title */}
             <div>
-              <svg width="28" height="28" viewBox="0 0 28 28" fill="none" className="mb-6">
-                <circle cx="14" cy="14" r="13" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" />
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none" className="mb-6 text-theme-muted">
+                <circle cx="14" cy="14" r="13" stroke="currentColor" strokeOpacity="0.4" strokeWidth="1.5" />
                 <path
                   d="M9.5 9.5L18.5 18.5M18.5 9.5L9.5 18.5"
-                  stroke="rgba(255,255,255,0.55)"
+                  stroke="currentColor"
+                  strokeOpacity="0.6"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                 />
@@ -274,7 +252,7 @@ const MEMORY_CARDS_DATA = [
 
 function EpisodeVisual() {
   return (
-    <div className="relative mx-auto w-full max-w-[318px] text-[11px] text-white/70">
+    <div className="relative mx-auto w-full max-w-[318px] text-[11px]">
       <SessionBlock
         tone="blue"
         label="Current Session"
@@ -376,7 +354,7 @@ function EndpointVisual() {
   ];
 
   return (
-    <div className="mx-auto w-full max-w-100 space-y-3 text-[13px]">
+    <div className="mx-auto w-full max-w-full sm:max-w-[400px] space-y-3 text-[13px]">
       {steps.map((step) => (
         <div
           key={step.label}
@@ -404,7 +382,7 @@ function EndpointVisual() {
 
 function AgentMergeVisual() {
   return (
-    <div className="mx-auto w-full max-w-95 text-[12px]">
+    <div className="mx-auto w-full max-w-full sm:max-w-[380px] text-[12px]">
       <div className="mb-3 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2">
         <AgentPill title="Bloomberg" value="3.5% (stale)" />
         <span className="text-white/25">+</span>
@@ -453,7 +431,7 @@ function AgentPill({
 
 function ContextVisual() {
   return (
-    <div className="mx-auto w-full max-w-[420px] text-[12px]">
+    <div className="mx-auto w-full max-w-full sm:max-w-[420px] text-[12px]">
       <div className="mb-3 rounded-[5px] border border-white/10 bg-white/[0.035] px-3 py-2 text-white/70">
         ⌕ &nbsp; What is Stripe's current processing fee?
       </div>
@@ -537,10 +515,10 @@ function MemoryMergingSection() {
             key={card.title}
             className="overflow-hidden rounded-[10px] border border-theme-border"
           >
-            <div className="flex min-h-[380px] items-center justify-center px-8 py-10 sm:min-h-[440px]" style={{ background: "#212025" }}>
+            <div className="flex min-h-[300px] sm:min-h-[380px] md:min-h-[440px] items-center justify-center px-4 sm:px-8 py-10 bg-[#212025] dark:bg-[#212025]" style={{ background: "#212025" }}>
               <card.Visual />
             </div>
-            <div className="px-7 py-7 sm:px-8" style={{ background: "#18181b" }}>
+            <div className="px-7 py-7 sm:px-8 bg-surface-0">
               <h3 className="mb-3 text-[20px] font-semibold leading-tight text-theme-primary">
                 {card.title}
               </h3>
@@ -607,8 +585,8 @@ function SharedTimelineVisual() {
   ];
   return (
     <div
-      className="relative mx-auto w-full select-none"
-      style={{ height: 310, maxWidth: 400 }}
+      className="relative mx-auto w-full select-none overflow-hidden"
+      style={{ height: 310, maxWidth: "min(400px, 100%)" }}
     >
       {/* SVG curved dashed connectors between boxes */}
       <svg
@@ -686,7 +664,7 @@ function ActiveContextVisual() {
     <div
       className="mx-auto w-full overflow-hidden font-mono"
       style={{
-        maxWidth: 380,
+        maxWidth: "min(380px, 100%)",
         borderRadius: 8,
         border: "1px solid rgba(255,255,255,0.1)",
       }}
@@ -866,7 +844,7 @@ function ResumeRunVisual() {
     },
   ];
   return (
-    <div className="mx-auto w-full" style={{ maxWidth: 420 }}>
+    <div className="mx-auto w-full" style={{ maxWidth: "min(420px, 100%)" }}>
       <div className="space-y-3">
         {events.map((e) => (
           <div key={e.time} className="flex items-start gap-4">
@@ -966,15 +944,15 @@ function PipelineSection() {
             transition={{ duration: 0.5 }}
             className="overflow-hidden rounded-[12px] border border-theme-border md:grid md:min-h-[400px] md:grid-cols-[1fr_1.1fr]"
           >
-            <div className="flex flex-col justify-center border-b border-theme-border p-10 md:border-b-0 md:border-r md:p-14" style={{ background: "#18181b" }}>
-              <h3 className="max-w-[340px] text-[22px] font-semibold leading-[1.12] tracking-[-0.02em] text-theme-primary sm:text-[26px]">
+            <div className="flex flex-col justify-center border-b border-theme-border p-8 md:border-b-0 md:border-r md:p-14 bg-surface-0">
+              <h3 className="max-w-[340px] text-[20px] sm:text-[22px] font-semibold leading-[1.12] tracking-[-0.02em] text-theme-primary sm:text-[26px]">
                 {row.label}
               </h3>
               <p className="mt-5 max-w-[360px] text-[15px] leading-relaxed text-theme-muted">
                 {row.body}
               </p>
             </div>
-            <div className="flex min-h-[320px] items-center justify-center px-8 py-10 md:min-h-0 md:px-12" style={{ background: "#212025" }}>
+            <div className="flex min-h-[280px] sm:min-h-[320px] items-center justify-center px-4 sm:px-8 py-10 md:min-h-0 md:px-12" style={{ background: "#212025" }}>
               <row.Visual />
             </div>
           </motion.div>
@@ -1116,13 +1094,13 @@ function ContextBundleCard() {
 function WrongFactSection() {
   return (
     <GridSection innerClassName="py-28 sm:py-36">
-      <div className="grid md:grid-cols-2 gap-16 xl:gap-24 items-center">
+      <div className="grid md:grid-cols-2 gap-10 md:gap-16 xl:gap-24 items-center">
         <div>
           <h2
             className="text-theme-primary tracking-tight mb-5"
             style={{
               fontFamily: "Fustat, Inter, sans-serif",
-              fontSize: "clamp(2rem, 3.5vw, 3rem)",
+              fontSize: "clamp(1.75rem, 3.5vw, 3rem)",
               fontWeight: 700,
               lineHeight: 1.08,
               letterSpacing: "-0.02em",
@@ -1161,7 +1139,7 @@ function WrongFactSection() {
           </ul>
           <Button
             href="https://github.com/smaramwbc/statewave-docs/blob/main/getting-started.md"
-            variant="white"
+            variant="primary"
             size="lg"
           >
             Get Started
@@ -1169,8 +1147,8 @@ function WrongFactSection() {
         </div>
         <div className="flex justify-center md:justify-end">
           <div
-            className="w-full flex items-center justify-center rounded-[10px] border border-theme-border px-8 py-10"
-            style={{ background: "#212025", maxWidth: 560 }}
+            className="w-full flex items-center justify-center rounded-[10px] border border-theme-border px-4 sm:px-8 py-10"
+            style={{ background: "#212025", maxWidth: "min(560px, 100%)" }}
           >
             <ContextBundleCard />
           </div>
@@ -1251,7 +1229,7 @@ function CodeCardsStack() {
         flexDirection: "column",
         gap: 12,
         width: "100%",
-        maxWidth: 420,
+        maxWidth: "min(420px, 100%)",
       }}
     >
       {/* JS card — JavaScript tab active */}
@@ -1326,11 +1304,11 @@ function CodeCardsStack() {
 function ThreeEndpointsSection() {
   return (
     <GridSection innerClassName="py-28 sm:py-36">
-      <div className="grid md:grid-cols-2 gap-16 xl:gap-24 items-center">
+      <div className="grid md:grid-cols-2 gap-10 md:gap-16 xl:gap-24 items-center">
         <div className="flex justify-center md:justify-start">
           <div
-            className="w-full flex items-center justify-center rounded-[10px] border border-theme-border px-8 py-10"
-            style={{ background: "#212025", maxWidth: 560 }}
+            className="w-full flex items-center justify-center rounded-[10px] border border-theme-border px-4 sm:px-8 py-10"
+            style={{ background: "#212025", maxWidth: "min(560px, 100%)" }}
           >
             <CodeCardsStack />
           </div>
@@ -1380,7 +1358,7 @@ function ThreeEndpointsSection() {
           </ul>
           <Button
             href="https://github.com/smaramwbc/statewave-docs/blob/main/getting-started.md"
-            variant="white"
+            variant="primary"
             size="lg"
           >
             Integrate Statewave
@@ -1428,12 +1406,12 @@ function CircleCheck() {
       viewBox="0 0 20 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      style={{ flexShrink: 0 }}
+      className="text-theme-muted shrink-0"
     >
-      <circle cx="10" cy="10" r="9" stroke="#111827" strokeWidth="1.5" />
+      <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5" />
       <path
         d="M6.5 10.5L8.5 12.5L13.5 7.5"
-        stroke="#111827"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -1444,21 +1422,18 @@ function CircleCheck() {
 
 function FeatureGridSection() {
   return (
-    <section className="relative bg-white">
+    <section className="relative bg-surface-1">
       <div
         className="mx-auto max-w-[1488px]"
-        style={{ padding: "100px clamp(20px, 8vw, 160px)" }}
+        style={{ padding: "clamp(60px, 8vw, 100px) clamp(20px, 8vw, 160px)" }}
       >
         {/* Header */}
         <div className="text-center mb-14">
-          <span
-            className="inline-flex rounded-[6px] px-3.5 py-1.5 text-[13px] font-medium"
-            style={{ border: "1px solid rgba(0,0,0,0.12)", color: "#374151" }}
-          >
+          <span className="inline-flex rounded-[6px] px-3.5 py-1.5 text-[13px] font-medium text-theme-secondary border border-theme-border">
             Why Statewave
           </span>
           <h2
-            className="mt-4 text-[#111827] tracking-tight"
+            className="mt-4 text-theme-primary tracking-tight"
             style={{
               fontFamily: "Fustat, Inter, sans-serif",
               fontSize: "clamp(1.75rem, 3vw, 2.5rem)",
@@ -1473,28 +1448,23 @@ function FeatureGridSection() {
           </h2>
         </div>
 
-        {/* 3-col grid — padding: 22px 15.67px 24.5px 16px per Figma */}
+        {/* 3-col grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {FEATURE_GRID.map((f) => (
             <div
               key={f.title}
-              style={{
-                border: "1px solid rgba(0,0,0,0.08)",
-                background: "#F5F5F5",
-                borderRadius: 10,
-                padding: "22px 16px 24px 16px",
-              }}
+              className="rounded-[10px] border border-theme-border bg-surface-0 p-5"
             >
               <div className="flex items-center gap-2.5 mb-3">
                 <CircleCheck />
                 <h3
-                  className="text-[15px] font-semibold text-[#111827] leading-snug"
+                  className="text-[15px] font-semibold text-theme-primary leading-snug"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 >
                   {f.title}
                 </h3>
               </div>
-              <p className="text-[13px] leading-relaxed" style={{ color: "#6b7280" }}>
+              <p className="text-[13px] leading-relaxed text-theme-muted">
                 {f.body}
               </p>
             </div>
@@ -1522,6 +1492,7 @@ function CTASection() {
       >
         <div className="text-center" style={{ maxWidth: 720 }}>
           <h2
+            className="text-theme-primary"
             style={{
               fontFamily: "Fustat, Inter, sans-serif",
               fontSize: "clamp(2rem, 6vw, 5.5rem)",
@@ -1531,10 +1502,10 @@ function CTASection() {
               margin: 0,
             }}
           >
-            <span style={{ color: "#fff", display: "block" }}>Give your AI</span>
+            <span className="block">Give your AI</span>
             <span
+              className="block"
               style={{
-                display: "block",
                 whiteSpace: "nowrap",
                 background: "linear-gradient(90deg, #4f46e5 0%, #60a5fa 50%, #93c5fd 100%)",
                 WebkitBackgroundClip: "text",
@@ -1547,11 +1518,10 @@ function CTASection() {
           </h2>
 
           <p
+            className="text-theme-muted mt-5"
             style={{
-              marginTop: 20,
               fontSize: 15,
               lineHeight: 1.5,
-              color: "rgba(157,163,175,0.7)",
               fontFamily: "Inter, sans-serif",
               fontWeight: 400,
             }}
@@ -1559,23 +1529,15 @@ function CTASection() {
             Instant memory for LLMs for better, cheaper, personal.
           </p>
 
-          <div
-            style={{
-              marginTop: 36,
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "center",
-              gap: 12,
-            }}
-          >
+          <div className="mt-14 flex flex-wrap justify-center gap-3">
             <Button
               href="https://github.com/smaramwbc/statewave-docs/blob/main/getting-started.md"
-              variant="white"
+              variant="primary"
               size="lg"
             >
               Get Started
             </Button>
-            <Button to="/pricing" variant="dark" size="lg">
+            <Button to="/pricing" variant="secondary" size="lg">
               Pricing
             </Button>
           </div>
