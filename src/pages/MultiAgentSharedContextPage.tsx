@@ -15,9 +15,7 @@ import {
 } from "lucide-react";
 
 const PAGE_RAIL_CLASS =
-  'mx-auto max-w-[1488px] px-5 sm:px-10 md:px-16 xl:px-[94px]' +
-  ' border-b xl:border-l xl:border-r' +
-  ' border-theme-border'
+  'mx-auto max-w-[1488px] px-5 sm:px-10 md:px-16 xl:px-[94px]'
 
 /*
  * All product mockups below use the `--viz-*` tokens from src/index.css.
@@ -92,13 +90,13 @@ function GreenBadge({ label }: { label: string }) {
 
 function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-surface-1">
+    <section className="relative">
       <div
         aria-hidden="true"
-        className="section-glow pointer-events-none absolute left-1/2 top-0 h-80 w-[52rem] -translate-x-1/2 rounded-full bg-accent/[0.08] blur-3xl"
+        className="section-glow-full"
       />
 
-      <div className="relative mx-auto max-w-[1488px] border-theme-border px-5 pt-24 pb-10 text-center sm:px-10 md:px-16 md:pt-28 xl:border-l xl:border-r xl:px-[94px] xl:pt-32 xl:pb-12">
+      <div className="relative mx-auto max-w-[1488px] px-5 pt-24 pb-10 text-center sm:px-10 md:px-16 md:pt-28 xl:px-[94px] xl:pt-32 xl:pb-12">
         <motion.div
           initial={{ opacity: 0, y: 22 }}
           animate={{ opacity: 1, y: 0 }}
@@ -108,15 +106,11 @@ function HeroSection() {
             <UseCaseSwitcher currentSlug="multi-agent-shared-context" />
           </div>
 
-          <p className="section-eyebrow mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-brand-500/75">
-            Multi-Agent Shared Context
-          </p>
-
           <h1 className="font-heading text-[clamp(3.2rem,6.8vw,6.5rem)] font-bold leading-[0.94] tracking-[-0.06em] text-theme-primary">
-            Multiple Agents.
+            Multiple Agents
             <br />
             <span className="text-gradient-brand">
-              One Source of Truth.
+              One Source of Truth
             </span>
           </h1>
 
@@ -506,7 +500,7 @@ function CostSection() {
     <GridSection innerClassName="relative overflow-hidden bg-surface-1 py-20 sm:py-24 xl:py-28">
       <div
         aria-hidden="true"
-        className="section-glow pointer-events-none absolute left-1/2 top-0 h-72 w-[44rem] -translate-x-1/2 rounded-full bg-danger/[0.08] blur-3xl"
+        className="section-glow-full"
       />
 
       <div className="relative">
@@ -1166,7 +1160,7 @@ function FeatureCardsSection() {
     <GridSection innerClassName="relative overflow-hidden py-20 sm:py-24 xl:py-28">
       <div
         aria-hidden="true"
-        className="section-glow pointer-events-none absolute left-1/2 top-0 h-72 w-[44rem] -translate-x-1/2 rounded-full bg-accent/[0.08] blur-3xl"
+        className="section-glow-full"
       />
 
       <div className="relative">
@@ -1176,9 +1170,9 @@ function FeatureCardsSection() {
           </p>
 
           <h2 className="font-heading text-4xl font-bold leading-[0.98] tracking-[-0.03em] text-theme-primary md:text-[56px]">
-            One Subject.{' '}
+            One Subject{' '}
             <span className="text-gradient-brand">
-              Every Agent Reads It.
+              Every Agent Reads It
             </span>
           </h2>
 
@@ -1671,7 +1665,7 @@ function ReferenceBuildsSection() {
     <GridSection innerClassName="relative overflow-hidden py-20 sm:py-24 xl:py-28">
       <div
         aria-hidden="true"
-        className="section-glow pointer-events-none absolute left-1/2 top-0 h-72 w-[46rem] -translate-x-1/2 rounded-full bg-accent/[0.08] blur-3xl"
+        className="section-glow-full"
       />
 
       <div className="relative">
@@ -1681,10 +1675,10 @@ function ReferenceBuildsSection() {
           </p>
 
           <h2 className="font-heading text-4xl font-bold leading-[0.98] tracking-[-0.03em] text-theme-primary md:text-[56px]">
-            One Repository.
+            One Repository
             <br />
             <span className="text-gradient-brand">
-              Three Ways To See It.
+              Three Ways To See It
             </span>
           </h2>
 
@@ -1916,7 +1910,7 @@ function PreventedSection() {
     <GridSection innerClassName="relative overflow-hidden py-20 sm:py-24 xl:py-28">
       <div
         aria-hidden="true"
-        className="section-glow pointer-events-none absolute right-0 top-1/2 h-80 w-[38rem] -translate-y-1/2 rounded-full bg-accent/[0.08] blur-3xl"
+        className="section-glow-full"
       />
 
       <div className="relative grid items-center gap-14 md:grid-cols-2 md:gap-16 xl:gap-24">
@@ -1937,7 +1931,7 @@ function PreventedSection() {
             Prevented,
             <br />
             <span className="text-gradient-brand">
-              Not Just Detected.
+              Not Just Detected
             </span>
           </h2>
 
@@ -2154,7 +2148,7 @@ function TwoCallsSection() {
     <GridSection innerClassName="relative overflow-hidden py-20 sm:py-24 xl:py-28">
       <div
         aria-hidden="true"
-        className="section-glow pointer-events-none absolute left-0 top-1/2 h-80 w-[38rem] -translate-y-1/2 rounded-full bg-accent/[0.08] blur-3xl"
+        className="section-glow-full"
       />
 
       <div className="relative grid items-center gap-14 md:grid-cols-2 md:gap-16 xl:gap-24">
@@ -2191,10 +2185,10 @@ function TwoCallsSection() {
           </p>
 
           <h2 className="font-heading text-4xl font-bold leading-[0.98] tracking-[-0.03em] text-theme-primary md:text-[56px]">
-            Two Calls.
+            Two Calls
             <br />
             <span className="text-gradient-brand">
-              That's The Primitive.
+              That's The Primitive
             </span>
           </h2>
 
@@ -2286,7 +2280,7 @@ function FeatureGridSection() {
     <GridSection innerClassName="relative overflow-hidden py-20 sm:py-24 xl:py-28">
       <div
         aria-hidden="true"
-        className="section-glow pointer-events-none absolute left-1/2 top-0 h-72 w-[46rem] -translate-x-1/2 rounded-full bg-accent/[0.08] blur-3xl"
+        className="section-glow-full"
       />
 
       <div className="relative">
@@ -2298,7 +2292,7 @@ function FeatureGridSection() {
           <h2 className="font-heading text-4xl font-bold leading-[0.98] tracking-[-0.03em] text-theme-primary md:text-[56px]">
             Memory Built
             <br />
-            <span className="text-gradient-brand">For Real Agents.</span>
+            <span className="text-gradient-brand">For Real Agents</span>
           </h2>
 
           <p className="mx-auto mt-6 max-w-2xl text-[20px] leading-[1.65] text-theme-secondary/85">
@@ -2436,7 +2430,7 @@ export function MultiAgentSharedContextPage() {
     ],
   });
   return (
-    <div className="bg-surface-1 font-fustat-headings">
+    <div className="bg-surface-1">
       <div>
         <HeroSection />
         <CostSection />
