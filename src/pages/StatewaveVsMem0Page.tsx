@@ -833,8 +833,8 @@ function BenchmarksSection() {
           <div className="relative flex-1 overflow-hidden rounded-[1.75rem] border border-accent/30 bg-surface-2/40 p-7">
             <div aria-hidden="true" className="pointer-events-none absolute right-0 top-0 h-32 w-52 rounded-full bg-accent/[0.09] blur-3xl" />
             <div className="relative flex items-baseline gap-2.5">
-              <span className="font-heading text-[36px] font-extrabold tracking-[-0.03em] text-accent">8/8</span>
-              <span className="text-[14px] text-theme-primary">support eval vs <span className="text-theme-muted">2/8 naive</span></span>
+              <span className="font-heading text-[36px] font-extrabold tracking-[-0.03em] text-accent">8</span>
+              <span className="text-[14px] text-theme-primary">support eval criteria, <span className="text-theme-muted">open harness</span></span>
             </div>
             <p className="relative mt-3 text-[12.5px] leading-[1.5] text-theme-muted">
               Facts persist across sessions, token budgets hold, provenance
