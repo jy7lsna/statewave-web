@@ -185,7 +185,10 @@ export function BlogIndexPage() {
                             {p.meta.description}
                           </p>
 
-                          <p className="mt-5 text-sm text-accent">
+                          {/* mt-auto, not mt-5: descriptions run two to four
+                              lines, so without it the CTA sits at a different
+                              height in every card of a row. */}
+                          <p className="mt-auto pt-5 text-sm text-accent">
                             Read post{' '}
                             <span
                               aria-hidden
