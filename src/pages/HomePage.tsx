@@ -1381,9 +1381,9 @@ function ProofSection() {
           Every claim here is backed by automated evals that run in CI. Head-to-head
           retrieval results sit apart from these figures, with the harness, the
           answerer, the judge, and the per-system retrieval budgets documented on the{' '}
-          <a href="/benchmarks" className="underline decoration-brand-500/40 underline-offset-4 hover:text-theme-primary">
+          <Link to="/benchmarks" className="underline decoration-brand-500/40 underline-offset-4 hover:text-theme-primary">
             benchmarks page
-          </a>.
+          </Link>.
         </p>
       </div>
 

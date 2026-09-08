@@ -305,7 +305,8 @@ export function AboutPage() {
               >
                 statewave-memory-benchmarks
               </a>{' '}
-              harness — anyone can clone it and reproduce them.
+              harness and the public reference repos linked below — anyone can
+              clone them and reproduce every number.
             </p>
           </div>
 
