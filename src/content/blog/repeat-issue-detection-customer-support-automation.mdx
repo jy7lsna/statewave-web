@@ -30,7 +30,7 @@ The [2026 survey of memory for autonomous LLM agents](https://arxiv.org/abs/2603
 It compares the words in the live issue against the words in each closed session, and boosts any closed session that clears a fixed overlap threshold. There is no model call and no embedding in this path.
 
 <figure className="my-8">
-<img src="/images/blog/repeat-issue-detection-customer-support-automation/image1.png" alt="Repeat-issue detection running inside context assembly: keywords extracted from the live issue, compared against each resolved session, boosting those that clear the threshold before the bundle is packed." width="624" height="293" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<img src="/images/blog/repeat-issue-detection-customer-support-automation/image1.png" alt="Repeat-issue detection running inside context assembly: keywords extracted from the live issue, compared against each resolved session, boosting those that clear the threshold before the bundle is packed." width="2000" height="940" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
 <figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">Repeat-issue detection runs inside context assembly on every request, before the bundle is packed.</figcaption>
 </figure>
 
@@ -57,7 +57,7 @@ This is containment, not Jaccard similarity, and the choice matters. A customer 
 Because the boost comes in two sizes, and only the larger one is big enough to overcome the resolved-session penalty.
 
 <figure className="my-8">
-<img src="/images/blog/repeat-issue-detection-customer-support-automation/image2.png" alt="Score adjustments on episodes from a resolved session when the issue recurs: minus five penalty, plus four without a summary, plus six with one." width="624" height="312" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<img src="/images/blog/repeat-issue-detection-customer-support-automation/image2.png" alt="Score adjustments on episodes from a resolved session when the issue recurs: minus five penalty, plus four without a summary, plus six with one." width="2000" height="1040" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
 <figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">Score adjustment applied to episodes from an already-resolved session when the issue recurs.</figcaption>
 </figure>
 
@@ -80,7 +80,7 @@ If you are wiring resolution writes into an agent for the first time, the four-c
 Paraphrase. We ran the repository's own `_extract_issue_keywords` and `_session_keyword_overlap` functions against one resolved session (a nightly Snowflake sync failing on a connection timeout, resolved by raising `connect_timeout` from 30s to 120s) and scored seven ways a customer might report the same problem returning.
 
 <figure className="my-8">
-<img src="/images/blog/repeat-issue-detection-customer-support-automation/image3.png" alt="Keyword overlap scores for seven phrasings of one recurring issue, six clearing the 0.30 threshold and one scoring zero." width="624" height="324" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<img src="/images/blog/repeat-issue-detection-customer-support-automation/image3.png" alt="Keyword overlap scores for seven phrasings of one recurring issue, six clearing the 0.30 threshold and one scoring zero." width="2000" height="1000" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
 <figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">Keyword overlap for seven phrasings of one recurring issue. Values computed by running the repository's own matcher.</figcaption>
 </figure>
 
@@ -106,7 +106,7 @@ That gives a rule you can hand to an agent prompt or a QA rubric: **write the su
 Four separate surfaces read the same write, so a thin record degrades all of them at once.
 
 <figure className="my-8">
-<img src="/images/blog/repeat-issue-detection-customer-support-automation/image4.png" alt="One resolution record feeding four surfaces: retrieval ranking, health scoring, SLA calculation, and the handoff pack." width="624" height="337" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<img src="/images/blog/repeat-issue-detection-customer-support-automation/image4.png" alt="One resolution record feeding four surfaces: retrieval ranking, health scoring, SLA calculation, and the handoff pack." width="2000" height="1080" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
 <figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">Four surfaces read one record. Skipping the write degrades all four.</figcaption>
 </figure>
 
@@ -170,7 +170,9 @@ The first step takes an afternoon. Pull your last fifty resolution records and c
 
 We build Statewave, so the framing here is ours, but the constants are not opinions: every value above is a named constant in `server/services/context.py`. Statewave is open source under Apache-2.0 and runs locally with one command. If you want to see the ranking behave on your own tickets before committing to anything, [the runtime is on GitHub](https://github.com/smaramwbc/statewave).
 
-## Frequently Asked Questions
+## FAQ
+
+<div className="my-8 space-y-3">
 
 <details open className="blog-faq group rounded-2xl border border-brand-500/20 bg-surface-1/45 backdrop-blur-sm transition-colors hover:border-brand-500/35">
 <summary className="flex cursor-pointer items-center justify-between gap-6 py-4 px-6 list-none">
@@ -249,3 +251,5 @@ We build Statewave, so the framing here is ours, but the constants are not opini
 <p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">Yes. The same record feeds the customer health score, SLA resolution-time and breach calculations, and the handoff pack that a human or another agent receives on escalation. One skipped write degrades all four surfaces.</p>
 </div>
 </details>
+
+</div>
