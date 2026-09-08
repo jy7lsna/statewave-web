@@ -1,0 +1,251 @@
+---
+title: Repeat-Issue Detection in Customer Support Automation
+slug: repeat-issue-detection-customer-support-automation
+date: "2026-09-08T11:00:00+02:00"
+description: A resolved session carries a -5.0 ranking penalty. Repeat-issue detection adds +4.0, or +6.0 with a summary. One free-text field decides whether the prior fix surfaces.
+author: Saber Maram
+category: Engineering
+tags:
+  - support
+  - ranking
+  - retrieval
+---
+
+If your support agent has memory but never writes a resolution summary, it will not find its own prior fix when the issue comes back. In Statewave, the math is exact: episodes from a resolved session carry a **-5.0** ranking penalty, and repeat-issue detection adds **+4.0** without a summary or **+6.0** with one. Net -1.0 stays buried. Net +1.0 surfaces. A single free-text field decides whether your customer support automation repeats work it already did.
+
+This post covers the matching mechanism, the exact scoring constants, a measured test of where the matcher fails, and what to write in that field so it does not.
+
+## Why does customer support automation re-solve solved tickets?
+
+Because well-built memory systems suppress resolved sessions on purpose, and repeat-issue detection is the exception that has to be earned.
+
+A support agent with no filtering pulls every prior conversation into the prompt. Closed tickets from six months ago outrank the live problem, the token budget fills with noise, and answer quality drops. The fix most systems apply is a penalty on closed work. Statewave applies `_RESOLVED_SESSION_PENALTY = -5.0` to any episode belonging to a session marked resolved, which is the correct default for the other 90% of requests.
+
+That default is wrong exactly once: when the same issue comes back. The prior session is closed, so it is penalized, and the one thing the agent most needs to see is the thing the ranker most wants to hide. Repeat-issue detection exists to reverse the penalty for that case only.
+
+The [2026 survey of memory for autonomous LLM agents](https://arxiv.org/abs/2603.07670) frames agent memory as persisting "what happened, what was learned, and what should not be repeated." Most memory work covers the first two. The third is a ranking problem, not a storage problem.
+
+## How does repeat-issue detection actually work?
+
+It compares the words in the live issue against the words in each closed session, and boosts any closed session that clears a fixed overlap threshold. There is no model call and no embedding in this path.
+
+<figure className="my-8">
+<img src="/images/blog/repeat-issue-detection-customer-support-automation/image1.png" alt="Repeat-issue detection running inside context assembly: keywords extracted from the live issue, compared against each resolved session, boosting those that clear the threshold before the bundle is packed." width="624" height="293" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">Repeat-issue detection runs inside context assembly on every request, before the bundle is packed.</figcaption>
+</figure>
+
+### The overlap ratio is asymmetric
+
+The comparison divides by the current issue's keyword count, not by the union of both sets:
+
+```python
+def _session_keyword_overlap(current_keywords, prior_keywords):
+    if not current_keywords or not prior_keywords:
+        return 0.0
+    overlap = len(current_keywords & prior_keywords)
+    return overlap / len(current_keywords)
+```
+
+This is containment, not Jaccard similarity, and the choice matters. A customer writing "same timeout again" produces three or four keywords. A prior session thread produces forty. Jaccard would score that pair near zero because the sets are wildly different sizes. Containment asks a better question for support: how much of what the customer just said already appears in a case you closed?
+
+### The threshold is 0.30, and keywords are lexical
+
+`_REPEAT_OVERLAP_THRESHOLD = 0.3`. Roughly a third of the live issue's meaningful terms must appear in the prior session. Terms are lowercased, stripped of edge punctuation, and filtered against a stopword list that removes conversational filler including "please", "thanks", "help", "need" and "want". Stripping punctuation is load-bearing: without it a sentence-final "outage!" fails to match a clean "outage" and silently zeroes the overlap, a bug class the repo fixed and now guards with a test.
+
+## Why does the resolution summary decide whether the prior fix surfaces?
+
+Because the boost comes in two sizes, and only the larger one is big enough to overcome the resolved-session penalty.
+
+<figure className="my-8">
+<img src="/images/blog/repeat-issue-detection-customer-support-automation/image2.png" alt="Score adjustments on episodes from a resolved session when the issue recurs: minus five penalty, plus four without a summary, plus six with one." width="624" height="312" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">Score adjustment applied to episodes from an already-resolved session when the issue recurs.</figcaption>
+</figure>
+
+The constants sit together in `server/services/context.py`:
+
+| Constant | Value | Applies when |
+| ----- | ----- | ----- |
+| `_RESOLVED_SESSION_PENALTY` | -5.0 | Episode belongs to a session marked resolved |
+| `_REPEAT_ISSUE_BOOST` | +4.0 | Keyword overlap clears 0.30 |
+| `_REPEAT_RESOLVED_BOOST` | +6.0 | Overlap clears 0.30 **and** a resolution summary exists |
+
+Add them. A recurring issue whose prior session has no summary scores **-5.0 + 4.0 = -1.0**, still net negative, still ranked below ordinary episodes, still likely to fall outside the token budget. The same issue with a summary scores **-5.0 + 6.0 = +1.0** and enters the bundle.
+
+The summary earns its extra two points twice over. It raises the boost, and its own text is unioned into the prior session's keyword set before the overlap is computed, so it also makes the match more likely to fire in the first place. That second effect turns out to matter more than the first.
+
+If you are wiring resolution writes into an agent for the first time, the four-call sequence is in [how to add persistent memory to your AI support agent](/blog/persistent-memory-for-ai-support-agents). This post is the layer above it: what to write into the record once the plumbing exists.
+
+## What does the matcher miss?
+
+Paraphrase. We ran the repository's own `_extract_issue_keywords` and `_session_keyword_overlap` functions against one resolved session (a nightly Snowflake sync failing on a connection timeout, resolved by raising `connect_timeout` from 30s to 120s) and scored seven ways a customer might report the same problem returning.
+
+<figure className="my-8">
+<img src="/images/blog/repeat-issue-detection-customer-support-automation/image3.png" alt="Keyword overlap scores for seven phrasings of one recurring issue, six clearing the 0.30 threshold and one scoring zero." width="624" height="324" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">Keyword overlap for seven phrasings of one recurring issue. Values computed by running the repository's own matcher.</figcaption>
+</figure>
+
+Six of seven cleared the threshold, including two that share only a single term with the original ticket. The lexical approach is more forgiving than it looks, because customers reporting a recurring problem tend to reuse the vocabulary of the system that broke.
+
+The one miss is instructive. "ETL pipeline keeps failing, same as before" scored **0.000**. The customer named the same failure using none of the same nouns: pipeline instead of sync, failing instead of timeout, and no product name at all. Semantically, it is the clearest statement of recurrence in the set. Lexically it is invisible.
+
+### The miss is recoverable, and the summary is where you recover it
+
+We reran that phrase against two versions of the same resolution record. The first summary described only the fix. The second also restated the problem in the customer's own words.
+
+| Resolution summary | Overlap | Net score |
+| ----- | ----- | ----- |
+| "Raised connect_timeout on the Snowflake connector from 30s to 120s." | 0.000 | -5.0 |
+| "Customer's ETL pipeline (nightly Snowflake sync) was failing on connection timeout. Raised connect_timeout from 30s to 120s." | 0.500 | +1.0 |
+
+Same incident, same fix, same code. The second summary shares "etl", "pipeline" and "failing" with the new report, clears the threshold at 0.500, and flips the session from suppressed to surfaced. The wording of the summary is a retrieval decision, not documentation hygiene.
+
+That gives a rule you can hand to an agent prompt or a QA rubric: **write the summary in the customer's vocabulary, not the engineer's.** Name the symptom the way it was reported, then the cause, then the fix. An engineer-only summary describes a fix nobody will find.
+
+## What belongs in a resolution record?
+
+Four separate surfaces read the same write, so a thin record degrades all of them at once.
+
+<figure className="my-8">
+<img src="/images/blog/repeat-issue-detection-customer-support-automation/image4.png" alt="One resolution record feeding four surfaces: retrieval ranking, health scoring, SLA calculation, and the handoff pack." width="624" height="337" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">Four surfaces read one record. Skipping the write degrades all four.</figcaption>
+</figure>
+
+The write itself is one call. `status` accepts `open`, `resolved` or `unresolved`, and the endpoint upserts on `subject_id` plus `session_id`, so repeated writes during a session are safe:
+
+```json
+POST /v1/resolutions
+{
+  "subject_id": "cust_4f1a",
+  "session_id": "sess-8821",
+  "status": "resolved",
+  "resolution_summary": "Customer's ETL pipeline (nightly Snowflake sync) was failing on connection timeout at ~09:00 UTC. Warehouse had auto-suspended. Raised connect_timeout 30s to 120s on the connector.",
+  "metadata": { "category": "data-pipeline" }
+}
+```
+
+Three properties of that record are worth naming. `status: unresolved` is distinct from `open`, and it is the honest value for a case that was closed without a fix, which keeps a failed attempt from being retrieved as a solution. The `metadata` object carries category without polluting the summary text used for matching. And every downstream reader is deterministic, so the same record produces the same ranking on every call.
+
+The health endpoint returns a 0 to 100 score with named factors rather than an opaque number, with states of **healthy** at 70 and above, **watch** from 40 to 69, and **at risk** below 40. Unresolved sessions and SLA breaches appear as explicit signed factors, so an account manager can see which open case is costing the score. The [handoff pack](https://github.com/smaramwbc/statewave) ships `resolution_history` inside the escalation brief, which means the prior fix reaches a human even when the ranker did not surface it to the model.
+
+## Does structured memory actually beat searching the raw logs?
+
+Not always, and the strongest published challenge to structured memory is worth reading before you build anything.
+
+The [ReFind paper](https://arxiv.org/html/2608.12888) (August 2026) builds no semantic structure at all. It leaves the conversation archive unmodified, indexes it lexically at turn granularity, and gives an agent a keyword-search loop it can run repeatedly. Across roughly 2,800 questions on MemoryAgentBench, it reached **58.2** mean accuracy, above the strongest graph- and tree-based memory systems in the comparison at **53.2**, under a matched GPT-4o-mini backbone. The authors conclude that much of the benefit credited to elaborate memory structure comes from somewhere else.
+
+Read the mechanisms they added, and the result becomes less of a challenge than it first appears. Their four controls are session-aware rank fusion, local context expansion, temporal narrowing, and skipping already-inspected sessions. Three of those four are session-state controls rather than content controls, and they are the same class of signal repeat-issue detection uses: which session an item belongs to, whether that session is closed, and how it relates to the live one.
+
+A paper arguing against structure arrived independently at session-awareness and lexical matching as the mechanisms that carry precise retrieval over chat archives.
+
+The honest reading is that structure is not what makes repeat detection work. Session state is. Statewave's ranker counts seven support-specific signals, and four of them (active-session boost, resolved-session penalty, open-issue boost, repeat-issue boost) key off session state rather than content. Where compiled memory still earns its cost is everything that is not retrieval: provenance back to source episodes, typed facts with validity windows, conflict resolution when a later fact supersedes an earlier one, and a deletion path that removes derived facts along with their sources. The ranking side of the argument, in more detail, is in [why session state beats more memory](/blog/ai-support-agent-session-state).
+
+## How do you wire this into an existing stack?
+
+Four steps, and only the second is new if you already have memory running.
+
+1. **Ingest tickets as episodes.** The Zendesk, Intercom and Freshdesk connectors handle both pull and real-time webhook push, so tickets, replies and internal notes land as episodes without a hand-written ingest path.
+2. **Write a resolution on close.** One `POST /v1/resolutions` call, with the summary written in the customer's vocabulary. This is the step teams skip, and it is the step that decides everything above.
+3. **Request context with the session ID.** `POST /v1/context` with `subject_id`, the current `session_id` and a token budget. Repeat detection runs inside assembly. There is nothing to enable.
+4. **Check the bundle, not the answer.** Every returned item carries provenance back to its source episodes, so you can verify that the prior fix was retrieved before you debug why the model ignored it.
+
+For a working reference of the record, compile, retrieve and splice loop in a real service, the [personal assistant example](https://github.com/smaramwbc/statewave-personal-assistant) is a runnable FastAPI implementation. The [core runtime](https://github.com/smaramwbc/statewave) is Apache-2.0 and self-hosted on Postgres with pgvector, so the resolution records and the raw tickets stay in your infrastructure.
+
+## What this does not solve
+
+Repeat-issue detection is a retrieval mechanism. It has four limits worth stating plainly.
+
+It does not find the root cause. Surfacing a prior fix that did not hold means your agent now confidently applies a fix that already failed once. The `unresolved` status exists for exactly this, and using it correctly is manual work.
+
+It does not deduplicate across customers. Matching is scoped to a subject, so a bug affecting forty accounts produces forty independent repeat detections and no signal that it is one bug. Cross-subject clustering is a different problem, and the [tenant boundary](/blog/multi-tenant-isolation-in-ai-memory) exists specifically to stop that kind of leakage.
+
+It does not replace your knowledge base. Product docs and runbooks belong in a RAG stack, because [memory and RAG answer different questions](/blog/ai-agent-memory-vs-rag).
+
+It does not coordinate parallel agents. Two agents working the same account in the same window can both detect the recurrence and both act. That is a shared-context problem, and the [multi-agent shared context demo](https://github.com/smaramwbc/statewave-multi-agent-shared-context) shows the collision and the fix.
+
+## Start with the summaries you are already writing
+
+You now know the exact reason a support agent with working memory still re-solves closed tickets, the two-point scoring margin that decides it, and the one editorial rule (write the summary in the customer's words) that moves a match from 0.000 to 0.500.
+
+The first step takes an afternoon. Pull your last fifty resolution records and check how many have a non-empty `resolution_summary` that names the symptom as the customer reported it. Whatever fraction that is, it is roughly the fraction of recurring issues your automation can currently find its own answer to.
+
+We build Statewave, so the framing here is ours, but the constants are not opinions: every value above is a named constant in `server/services/context.py`. Statewave is open source under Apache-2.0 and runs locally with one command. If you want to see the ranking behave on your own tickets before committing to anything, [the runtime is on GitHub](https://github.com/smaramwbc/statewave).
+
+## Frequently Asked Questions
+
+<details open className="blog-faq group rounded-2xl border border-brand-500/20 bg-surface-1/45 backdrop-blur-sm transition-colors hover:border-brand-500/35">
+<summary className="flex cursor-pointer items-center justify-between gap-6 py-4 px-6 list-none">
+<h3 className="text-[18px] font-semibold leading-snug text-theme-primary !m-0">1. What is repeat-issue detection in customer support automation?</h3>
+<div className="blog-faq-chevron flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-theme-primary/40 bg-surface-2/40">
+<svg className="h-5 w-5 text-theme-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7" /></svg>
+</div>
+</summary>
+<div className="px-7 pb-7">
+<div className="h-px bg-theme-primary/10 mb-6" />
+<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">It is a retrieval mechanism that recognizes when a customer's current problem matches one you already closed, and lifts that closed session back into the agent's context. Without it, resolved sessions are deliberately deprioritized so old tickets do not crowd out live ones, which means the prior fix is hidden at the exact moment it is most useful.</p>
+</div>
+</details>
+
+<details className="blog-faq group rounded-2xl border border-brand-500/20 bg-surface-1/45 backdrop-blur-sm transition-colors hover:border-brand-500/35">
+<summary className="flex cursor-pointer items-center justify-between gap-6 py-4 px-6 list-none">
+<h3 className="text-[18px] font-semibold leading-snug text-theme-primary !m-0">2. How does Statewave decide two issues are the same?</h3>
+<div className="blog-faq-chevron flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-theme-primary/40 bg-surface-2/40">
+<svg className="h-5 w-5 text-theme-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7" /></svg>
+</div>
+</summary>
+<div className="px-7 pb-7">
+<div className="h-px bg-theme-primary/10 mb-6" />
+<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">It extracts meaningful keywords from the live session and task text, does the same for each resolved session including its resolution summary, and computes what fraction of the current keywords appear in the prior set. If that fraction reaches 0.30, the prior session is boosted.</p>
+</div>
+</details>
+
+<details className="blog-faq group rounded-2xl border border-brand-500/20 bg-surface-1/45 backdrop-blur-sm transition-colors hover:border-brand-500/35">
+<summary className="flex cursor-pointer items-center justify-between gap-6 py-4 px-6 list-none">
+<h3 className="text-[18px] font-semibold leading-snug text-theme-primary !m-0">3. Do I need an LLM or embeddings for repeat-issue detection?</h3>
+<div className="blog-faq-chevron flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-theme-primary/40 bg-surface-2/40">
+<svg className="h-5 w-5 text-theme-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7" /></svg>
+</div>
+</summary>
+<div className="px-7 pb-7">
+<div className="h-px bg-theme-primary/10 mb-6" />
+<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">No. This path is lexical and runs with no model call. Compilation and semantic search can use any of the LiteLLM-supported providers, but repeat detection itself works with the default heuristic compiler and no API key.</p>
+</div>
+</details>
+
+<details className="blog-faq group rounded-2xl border border-brand-500/20 bg-surface-1/45 backdrop-blur-sm transition-colors hover:border-brand-500/35">
+<summary className="flex cursor-pointer items-center justify-between gap-6 py-4 px-6 list-none">
+<h3 className="text-[18px] font-semibold leading-snug text-theme-primary !m-0">4. Why does my prior fix still not show up?</h3>
+<div className="blog-faq-chevron flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-theme-primary/40 bg-surface-2/40">
+<svg className="h-5 w-5 text-theme-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7" /></svg>
+</div>
+</summary>
+<div className="px-7 pb-7">
+<div className="h-px bg-theme-primary/10 mb-6" />
+<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">Two common causes. The resolution record has no <code>resolution_summary</code>, which caps the boost at +4.0 against a -5.0 penalty and leaves it net negative. Or the customer described the problem in entirely different words, dropping the overlap below 0.30. Rewriting the summary to include the customer's own phrasing addresses both.</p>
+</div>
+</details>
+
+<details className="blog-faq group rounded-2xl border border-brand-500/20 bg-surface-1/45 backdrop-blur-sm transition-colors hover:border-brand-500/35">
+<summary className="flex cursor-pointer items-center justify-between gap-6 py-4 px-6 list-none">
+<h3 className="text-[18px] font-semibold leading-snug text-theme-primary !m-0">5. Can I tune the overlap threshold or the boost values?</h3>
+<div className="blog-faq-chevron flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-theme-primary/40 bg-surface-2/40">
+<svg className="h-5 w-5 text-theme-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7" /></svg>
+</div>
+</summary>
+<div className="px-7 pb-7">
+<div className="h-px bg-theme-primary/10 mb-6" />
+<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">Not today. The weights are constants in <code>server/services/context.py</code> with no per-tenant override, a deliberate choice to keep ranking deterministic and reproducible. You can filter the candidate set by kind or subject before requesting context, or subclass the context assembler in your own deployment.</p>
+</div>
+</details>
+
+<details className="blog-faq group rounded-2xl border border-brand-500/20 bg-surface-1/45 backdrop-blur-sm transition-colors hover:border-brand-500/35">
+<summary className="flex cursor-pointer items-center justify-between gap-6 py-4 px-6 list-none">
+<h3 className="text-[18px] font-semibold leading-snug text-theme-primary !m-0">6. Does resolution tracking affect anything besides retrieval?</h3>
+<div className="blog-faq-chevron flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-theme-primary/40 bg-surface-2/40">
+<svg className="h-5 w-5 text-theme-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7" /></svg>
+</div>
+</summary>
+<div className="px-7 pb-7">
+<div className="h-px bg-theme-primary/10 mb-6" />
+<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">Yes. The same record feeds the customer health score, SLA resolution-time and breach calculations, and the handoff pack that a human or another agent receives on escalation. One skipped write degrades all four surfaces.</p>
+</div>
+</details>

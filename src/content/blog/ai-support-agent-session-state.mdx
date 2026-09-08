@@ -1,0 +1,298 @@
+---
+title: "AI Support Agents: Why Session State Beats More Memory"
+slug: ai-support-agent-session-state
+date: "2026-09-08T09:00:00+02:00"
+description: A session-aware AI support agent ranks context by ticket state, not similarity. The exact scoring weights, the repeat-issue rule, and the four failures that show up when teams build it themselves.
+author: Saber Maram
+category: Engineering
+tags:
+  - support
+  - ranking
+  - memory
+---
+
+A session-aware AI support agent ranks context by what is happening right now, not by what looks similar to the question. In Statewave's ranker, that choice is worth up to 14 points on a single conversation turn, while embedding similarity contributes exactly zero to the same turn. The agent that knows a customer's entire history and treats it as one flat pile will still answer a live outage with a fix from a ticket closed in March.
+
+That gap is where support agents actually fail. Salesforce's [CRMArena-Pro benchmark](https://arxiv.org/abs/2505.18878) measured leading LLM agents at roughly 58% success on single-turn business tasks and about 35% once the same tasks ran multi-turn. The work did not get harder between turns. The agent lost track of which state it was in.
+
+This post covers what session-awareness means at the data layer, the exact ranking arithmetic that implements it, the one operational habit that decides whether a prior fix ever resurfaces, and what to build before any of it earns its keep.
+
+## What does session-aware actually mean for an AI support agent?
+
+It means the agent carries two separate scopes and knows which one is answering. Most builds carry one.
+
+<figure className="my-8">
+<img src="/images/blog/ai-support-agent-session-state/image1.png" alt="Two scopes side by side: a subject holding durable customer facts, and sessions holding individual tickets with their own state." width="624" height="283" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">Drop the session layer and the agent still remembers the customer. It just stops knowing which of their problems is live.</figcaption>
+</figure>
+
+### The subject is the customer. The session is the ticket.
+
+A **subject** is a stable identifier for the person or account: a CRM ID, an account UUID, an email hash. It outlives every conversation. A **session** is one support interaction with a start, a state, and usually an end. Statewave stores `session_id` directly on the episode row, added in [migration 0010](https://github.com/smaramwbc/statewave) specifically so context assembly can rank by it.
+
+The reason to separate them is that they decay at completely different rates. A customer's tech stack is true for years. Whether their pipeline is currently down is true for nine minutes. Score both with the same recency curve and you get an agent that treats a two-day-old resolved complaint as more relevant than a profile fact from last quarter.
+
+### Session-awareness is a retrieval property, not a storage one
+
+You do not become session-aware by writing session IDs to a database. You become session-aware when the retrieval step reads them.
+
+None of this is a vendor position. The [ReFind paper](https://arxiv.org/abs/2608.12888) built a memory system with no semantic structure at all, just lexical search over raw chat logs plus four chat-native controls, one of which is session-aware rank fusion. It reached the highest mean accuracy of any system tested on MemoryAgentBench at 58.2, above the strongest graph and tree-based memory systems at 53.2, on a matched GPT-4o-mini backbone. Session structure, used at retrieval time, recovered most of what elaborate memory architectures were being credited for.
+
+Sessions are also the natural unit further down the stack. In production agent traces analysed for the [SMetric scheduling paper](https://arxiv.org/abs/2607.08565), KV cache reuse exceeded 80% of request tokens, against 54% to 62% for human chat. Agent workloads cluster inside sessions. Ranking that ignores the boundary fights the shape of the traffic.
+
+## Why does customer-scoped memory still return the wrong context?
+
+Because relevance and recency both point at the wrong thing when a customer has more than one problem.
+
+Take an account with four tickets in six months. Three are closed. One is a production outage opened eleven minutes ago. The customer types "still seeing the timeout." A similarity-ranked retriever pulls every turn containing the word timeout, and three of the four tickets mentioned timeouts. Two of those are closed. The agent proposes a fix that was already applied and did not hold.
+
+This failure has a specific shape worth naming, because it is neither hallucination nor a recall miss. Every fact returned was true and correctly retrieved. Only the ordering was wrong. A [survey of memory for autonomous LLM agents](https://arxiv.org/abs/2603.07670) frames agent memory as a write, manage, read loop, and this is a read-path defect that no amount of better writing fixes.
+
+Three mitigations get reached for first, and all three fail in a predictable way:
+
+| Approach | What it does | Why it still misfires |
+| ----- | ----- | ----- |
+| Bigger context window | Replays the whole history | Cost scales with account lifetime, ordering stays flat, resolved and live tickets carry equal weight |
+| Recency cutoff | Keeps the last N turns | Drops the profile facts the agent needs and keeps yesterday's closed ticket |
+| Better embeddings | Sharpens topical match | Closed and open tickets about the same product are topically identical |
+
+The fourth option is to give the retriever the state it is missing. This is the whole idea, and the arithmetic is worth walking through rather than asserting it works. We cover the broader distinction in [agent memory versus RAG](/blog/ai-agent-memory-vs-rag).
+
+## How does session-aware ranking actually work?
+
+Every candidate gets a score, and session state contributes more of that score than anything else. Here is the tally, taken from the scoring constants in `server/services/context.py` in the [open-source core runtime](https://github.com/smaramwbc/statewave).
+
+<figure className="my-8">
+<img src="/images/blog/ai-support-agent-session-state/image2.png" alt="Bar chart of maximum points per signal family on one raw conversation turn: session state 14, recency 5, lexical overlap 5, base priority 3, embedding similarity 0." width="624" height="283" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">Maximum points each signal family can add to one raw conversation turn.</figcaption>
+</figure>
+
+### The episode score has no embedding term in it
+
+This is the part that surprises people, and it is checkable in about ninety seconds. Semantic similarity in Statewave is computed by embedding the task and running a cosine search against **compiled memories only**. It caps at 8.0 points and it never touches an episode.
+
+A raw conversation turn is scored as a flat base priority of 3.0, plus up to 5.0 for recency, plus up to 5.0 for word overlap with the current task. That is a ceiling of 13.0 for everything a conventional retriever would use. Then session state is applied on top:
+
+| Signal | Weight | Fires when |
+| ----- | ----- | ----- |
+| Active session | **+6** | The episode belongs to the session happening right now |
+| Open issue | **+4** | Its session has an unresolved status |
+| Repeat issue with known fix | **+6** | A closed session matches the current problem and has a summary |
+| Repeat issue, no summary | **+4** | Same match, nothing written down |
+| Action step | **+2** | The episode is an agent, tool, or system action, not customer text |
+| Urgency marker | **+2** | Content matches terms like outage, p0, escalate, sla |
+| Resolved session | **−5** | Its session is closed |
+| Idle chatter | **−2** | Content is under twenty characters |
+
+Active-session and repeat-issue boosts apply to different sessions, so they do not stack on one episode. The realistic ceiling for a live-session turn is +14. The floor for a closed-session turn is −7.
+
+### The 11-point gap is the whole mechanism
+
+Two identical sentences, same words, same age, one in the live session and one in a closed ticket, sit 11 points apart before a single other signal is read. Recency and word overlap together top out at 10. Session state can outweigh both at their maximum.
+
+The agent stops offering March's fix during an outage for that reason alone. Not because it forgot March. Because March was pushed below the token budget.
+
+### Action steps get their own boost, and it matters more than it looks
+
+The +2 on episodes emitted by the agent rather than the customer is small, but it changes what the agent sees when an issue drags on. Customer turns describe the symptom repeatedly. Agent turns record what was tried. Boosting the second class is what stops an escalating ticket from filling its context budget with five restatements of "it's still broken" while the four things already attempted fall off the end.
+
+## What happens when a session closes?
+
+The session moves to resolved, its episodes drop 5 points, and one field decides whether that knowledge is ever recoverable.
+
+<figure className="my-8">
+<img src="/images/blog/ai-support-agent-session-state/image3.png" alt="The same closed-session episode scored twice: without a resolution summary it nets minus one, with a summary it nets plus one." width="624" height="275" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">The same episode, scored two ways. The only difference is whether anyone wrote a resolution summary.</figcaption>
+</figure>
+
+### Repeat-issue detection needs 30% keyword overlap to trigger
+
+When a new question arrives, the ranker extracts issue keywords from the task and from the current session, then compares them against every resolved session for that subject. The threshold is a 30% overlap ratio. Clear it, and the closed session gets a boost that partly cancels its penalty.
+
+### Write the resolution summary or lose the fix
+
+The boost comes in two sizes, and the split is the most actionable thing in this post.
+
+A resolved session that matches the current issue but has **no** `resolution_summary` gets +4. Against its −5 penalty, that nets to −1. It is still below neutral, still competing badly for a token budget, still probably invisible to the model.
+
+A resolved session with a summary gets +6. That nets to **+1**. It clears zero and surfaces.
+
+Two points is the entire difference between an agent that says "we hit this in March, raising the connect timeout fixed it" and an agent that starts the same investigation from scratch. Closing a ticket with `status: resolved` and an empty summary field is the single cheapest way to break repeat-issue detection, and it is a one-line fix in whatever code closes your tickets:
+
+```json
+POST /v1/resolutions
+{
+  "subject_id": "cust_4f1a",
+  "session_id": "intercom_8821",
+  "status": "resolved",
+  "resolution_summary": "Connection timeout on the Snowflake connector. Fixed by raising connect_timeout from 30s to 120s in the pipeline config."
+}
+```
+
+If your ticketing system already captures a closing note, pipe it into that field. The [Zendesk connector](/connectors) exists for exactly this reason.
+
+## How do you hand a session to a human without losing it?
+
+You build the escalation brief from session state rather than from a transcript dump, and you compute a health score the receiving human can audit.
+
+<figure className="my-8">
+<img src="/images/blog/ai-support-agent-session-state/image4.png" alt="Health score starting at 100 and moving down through named penalties and up through named recovery bonuses, each returned with its reason." width="624" height="275" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">Every customer starts at 100. Session state moves the number, and each move is returned with its reason.</figcaption>
+</figure>
+
+### The health score is arithmetic, not a model call
+
+Every subject starts at 100 and gets degraded by signals already in the data. Each unresolved session costs 15, capped at 45 total. Two or more sessions sharing an issue pattern costs 20. An open issue with no activity for seven days costs 15. Urgency markers cost 10 per episode, capped at 20.
+
+SLA signals cost a little more. A resolution breach costs 10, capped at 20, and an average first response over ten minutes costs 5. Recovery works in the other direction: a session resolved in the last week returns 10, and a resolution rate above 80% returns another 10. Above 70 is healthy, 40 to 69 is watch, below 40 is at risk.
+
+No model is involved and nothing is cached in the score path, so the same history always produces the same number. Determinism is what makes it safe to fire an alert webhook on a band change: the number can be recomputed and disputed. A score a human cannot check is a score a human will learn to ignore.
+
+The default SLA thresholds are five minutes to first response and 24 hours to resolution, both configurable, both computed on demand from episode timestamps rather than stored.
+
+### The handoff pack answers seven questions, in order
+
+`POST /v1/handoff` assembles a token-bounded brief covering who the customer is, which profile facts matter, what the active issue is, what has already been tried, what related history is relevant, what is resolved and should be deprioritised, and what the next agent needs immediately. It defaults to a 4,000-token budget and emits a state-assembly receipt.
+
+Receipts matter more for support than for most workloads. When a human takes over a ticket the AI mishandled, "what did the agent actually see" is the first question asked. A receipt answers it exactly. Our [provenance model](/blog/agent-memory-provenance-audit-trails) covers how the chain back to source episodes is built and what it costs to store.
+
+## What breaks when teams build this themselves?
+
+Four failures show up repeatedly, and three of them are schema decisions made in week one that are painful to reverse in month six.
+
+<figure className="my-8">
+<img src="/images/blog/ai-support-agent-session-state/image5.png" alt="Session state machine with four states: open, unresolved, resolved, and idle, with the application owning transitions and the ranker reading them." width="624" height="257" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">Four states. Your application owns the transitions; the ranker reads them.</figcaption>
+</figure>
+
+### Using the chat session ID as the subject ID
+
+The most common and the most expensive. It looks correct because both are identifiers attached to a conversation. It means memory dies when the tab closes, which is the exact problem you set out to solve. The subject must be the customer. The session sits beside it as a separate column.
+
+### Never closing sessions
+
+If nothing ever writes `status: resolved`, every session stays open forever. Every episode keeps its +4 open-issue boost, the −5 resolved penalty never applies, repeat-issue detection has nothing to match against, and the health score sits at its 45-point unresolved floor for every customer equally. The ranking degrades back to flat memory while looking fully instrumented.
+
+### Compiling episodes but never reading state at retrieval
+
+Teams get the write path right and leave the read path on default similarity search. It is the ReFind finding in reverse: the structure was built, and the control that would have used it was never wired in. If your `/v1/context` call does not pass a `session_id`, the +6 active-session boost cannot fire.
+
+### Forgetting the tenant boundary until the second customer
+
+Session and subject scoping are not tenant scoping. An agent can be correctly authenticated, correctly authorised, and still receive another customer's facts in a bundle because a surface downstream of the boundary was never scoped. We wrote up [which surfaces actually need a tenant boundary](/blog/multi-tenant-isolation-in-ai-memory), including the backfill step that silently erases memory if you skip it. Read it before your second tenant, not after.
+
+CRMArena-Pro is worth citing twice here: the same benchmark that found the multi-turn collapse also found agents exhibit near-zero inherent confidentiality awareness, and that prompting them into it degrades task performance. Boundaries belong in the retrieval layer, not in the system prompt.
+
+## What does it take to get one running?
+
+Four fields and one extra parameter on the retrieval call. The ranking is already implemented.
+
+The mechanics of recording, compiling, retrieving, and splicing are covered step by step in [how to add persistent memory to your AI support agent](/blog/persistent-memory-for-ai-support-agents). What that walkthrough does not cover, and what this post is about, is the state layer on top:
+
+1. **Pick a stable subject ID.** CRM ID, account UUID, or email hash. Not the chat session.
+2. **Stamp `session_id` on every episode.** Your ticket ID or conversation ID works.
+3. **Pass `session_id` into `/v1/context`.** Without it the active-session boost cannot fire.
+4. **Write a resolution with a summary when a ticket closes.** This is the +6 versus +4 decision.
+5. **Poll or subscribe to the health score.** Alert on band changes, not on raw values.
+
+Two repos are worth cloning before you write anything. [`eval-support-agent`](https://github.com/smaramwbc/statewave-examples) runs 56 assertions across 23 tests covering session-aware ranking, health scoring, handoff packs, provenance, and determinism, so you can see each signal fire in isolation. [`benchmark-support-agent`](https://github.com/smaramwbc/statewave-examples) puts the memory runtime against history stuffing and TF-IDF retrieval on recall, token count, and provenance.
+
+Score it on a task rather than on recall. The support workflow benchmark scores an agent on eight criteria that map to real support concerns: identity persistence across sessions, preference surfacing, token budget compliance, provenance tracing, idempotent compilation, session-aware ranking, repeat-issue detection, and explainable health scoring. Run it against your own stack before you run it against ours. The criteria are the transferable part, and the harness is open source, so the scoring is inspectable rather than asserted. Head-to-head retrieval results, with the harness, the answerer, the judge, and the per-system retrieval budgets documented alongside them, are on the [benchmarks page](/benchmarks).
+
+### When a ticket has more than one agent on it
+
+Support tiers, a triage bot plus a specialist, or an AI agent working alongside a human all write to the same ticket at once, and they will contradict each other. Two demos cover that directly. [`statewave-multi-agent-shared-context`](https://github.com/smaramwbc/statewave-multi-agent-shared-context) shows parallel agents reading and writing one shared subject, so a decision made by the first is visible to the second before it acts. [`statewave-multi-agent-memory`](https://github.com/smaramwbc/statewave-multi-agent-memory) shows the compiler detecting contradicting facts and superseding the stale one.
+
+For the wrapper pattern in isolation, wrapping each turn with a context call before the model and an episode record after, [`statewave-personal-assistant`](https://github.com/smaramwbc/statewave-personal-assistant) is the smallest working reference.
+
+Everything runs on Postgres with pgvector and nothing leaves your network unless you configure an LLM compiler or a hosted embedding model. The reasoning behind that constraint is in [self-hosted memory with Postgres and pgvector](/blog/self-hosted-memory-postgres-pgvector).
+
+```bash
+npx @statewavedev/statewave
+```
+
+One command boots the API, the admin console, and Postgres locally. The server defaults to demo mode with stub hash-based embeddings and the heuristic compiler, which means no real semantic search but a working loop.
+
+**Start with the state layer.** Adding memory to a support agent without session state gives you an agent that remembers everything and prioritises nothing. The four fields that fix it, a subject ID, a session ID, a status, and a summary, cost an afternoon. [Boot it locally in two minutes](/developers) or read the ranking code yourself in the [core runtime](https://github.com/smaramwbc/statewave), which is Apache-2.0 and self-hosted end-to-end.
+
+We build Statewave, so treat the framing here as ours and the constants as checkable: every number above is a named constant in `server/services/context.py` and `server/services/health.py`.
+
+## Frequently Asked Questions
+
+<details open className="blog-faq group rounded-2xl border border-brand-500/20 bg-surface-1/45 backdrop-blur-sm transition-colors hover:border-brand-500/35">
+<summary className="flex cursor-pointer items-center justify-between gap-6 py-4 px-6 list-none">
+<h3 className="text-[18px] font-semibold leading-snug text-theme-primary !m-0">1. What is a session-aware AI support agent?</h3>
+<div className="blog-faq-chevron flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-theme-primary/40 bg-surface-2/40">
+<svg className="h-5 w-5 text-theme-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7" /></svg>
+</div>
+</summary>
+<div className="px-7 pb-7">
+<div className="h-px bg-theme-primary/10 mb-6" />
+<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">A support agent whose retrieval step reads the state of the current ticket, not just the customer's history. It knows which session is active, which are resolved, what has already been tried, and whether the current problem matches a prior one. That state adjusts the ranking of every candidate before the context bundle is assembled.</p>
+</div>
+</details>
+
+<details className="blog-faq group rounded-2xl border border-brand-500/20 bg-surface-1/45 backdrop-blur-sm transition-colors hover:border-brand-500/35">
+<summary className="flex cursor-pointer items-center justify-between gap-6 py-4 px-6 list-none">
+<h3 className="text-[18px] font-semibold leading-snug text-theme-primary !m-0">2. What is the difference between a session ID and a subject ID?</h3>
+<div className="blog-faq-chevron flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-theme-primary/40 bg-surface-2/40">
+<svg className="h-5 w-5 text-theme-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7" /></svg>
+</div>
+</summary>
+<div className="px-7 pb-7">
+<div className="h-px bg-theme-primary/10 mb-6" />
+<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">The subject ID identifies the customer and must survive across every conversation, so use a CRM ID, account UUID, or email hash. The session ID identifies one support interaction and is usually your ticket or conversation ID. Using the session ID as the subject is the most common build error, because memory then dies when the conversation ends.</p>
+</div>
+</details>
+
+<details className="blog-faq group rounded-2xl border border-brand-500/20 bg-surface-1/45 backdrop-blur-sm transition-colors hover:border-brand-500/35">
+<summary className="flex cursor-pointer items-center justify-between gap-6 py-4 px-6 list-none">
+<h3 className="text-[18px] font-semibold leading-snug text-theme-primary !m-0">3. Does session-aware ranking replace semantic search?</h3>
+<div className="blog-faq-chevron flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-theme-primary/40 bg-surface-2/40">
+<svg className="h-5 w-5 text-theme-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7" /></svg>
+</div>
+</summary>
+<div className="px-7 pb-7">
+<div className="h-px bg-theme-primary/10 mb-6" />
+<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">No, they operate on different objects. Embedding similarity ranks compiled memories, contributing up to 8 points. Session state ranks raw episodes, contributing up to 14. Both appear in the same bundle, which is why the agent gets long-term facts and the live timeline together.</p>
+</div>
+</details>
+
+<details className="blog-faq group rounded-2xl border border-brand-500/20 bg-surface-1/45 backdrop-blur-sm transition-colors hover:border-brand-500/35">
+<summary className="flex cursor-pointer items-center justify-between gap-6 py-4 px-6 list-none">
+<h3 className="text-[18px] font-semibold leading-snug text-theme-primary !m-0">4. Why does my agent keep re-solving problems it already fixed?</h3>
+<div className="blog-faq-chevron flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-theme-primary/40 bg-surface-2/40">
+<svg className="h-5 w-5 text-theme-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7" /></svg>
+</div>
+</summary>
+<div className="px-7 pb-7">
+<div className="h-px bg-theme-primary/10 mb-6" />
+<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">Almost always because resolved sessions are being closed without a <code>resolution_summary</code>. A matching closed session with a summary scores +6 against its −5 penalty and surfaces at net +1. Without a summary it scores +4 and stays at net −1, below neutral and outside the token budget.</p>
+</div>
+</details>
+
+<details className="blog-faq group rounded-2xl border border-brand-500/20 bg-surface-1/45 backdrop-blur-sm transition-colors hover:border-brand-500/35">
+<summary className="flex cursor-pointer items-center justify-between gap-6 py-4 px-6 list-none">
+<h3 className="text-[18px] font-semibold leading-snug text-theme-primary !m-0">5. How do you measure whether session-awareness is working?</h3>
+<div className="blog-faq-chevron flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-theme-primary/40 bg-surface-2/40">
+<svg className="h-5 w-5 text-theme-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7" /></svg>
+</div>
+</summary>
+<div className="px-7 pb-7">
+<div className="h-px bg-theme-primary/10 mb-6" />
+<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">Run the eight-criteria support workflow benchmark. It scores identity persistence across sessions, preference surfacing, token budget adherence, provenance tracing, idempotent compilation, session-aware ranking of active sessions, repeat-issue detection, and deterministic health scoring. Run it against your own stack before you run it against ours: the criteria are the transferable part, and the harness is open source, so the scoring is inspectable rather than asserted.</p>
+</div>
+</details>
+
+<details className="blog-faq group rounded-2xl border border-brand-500/20 bg-surface-1/45 backdrop-blur-sm transition-colors hover:border-brand-500/35">
+<summary className="flex cursor-pointer items-center justify-between gap-6 py-4 px-6 list-none">
+<h3 className="text-[18px] font-semibold leading-snug text-theme-primary !m-0">6. Can a session-aware agent hand off to a human mid-ticket?</h3>
+<div className="blog-faq-chevron flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-theme-primary/40 bg-surface-2/40">
+<svg className="h-5 w-5 text-theme-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 9l-7 7-7-7" /></svg>
+</div>
+</summary>
+<div className="px-7 pb-7">
+<div className="h-px bg-theme-primary/10 mb-6" />
+<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">Yes, that is what the handoff pack is for. <code>POST /v1/handoff</code> returns a token-bounded brief with the customer's profile facts, the active issue, the steps already attempted, related history, and the health score with its contributing factors. It also emits a receipt, so the human can see exactly what the agent had in context.</p>
+</div>
+</details>
