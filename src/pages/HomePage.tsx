@@ -206,13 +206,7 @@ function HeroSection() {
                 )}
 
                 <span className="flex items-center gap-1">
-                  <span
-                    className={
-                      stat.label.toLowerCase().includes('harness')
-                        ? 'font-semibold text-success'
-                        : 'font-semibold text-theme-primary'
-                    }
-                  >
+                  <span className="font-semibold text-theme-primary">
                     {stat.value}
                   </span>
 
@@ -1384,9 +1378,9 @@ function ProofSection() {
         </Heading>
 
         <p className="mt-6 text-[18px] leading-relaxed text-theme-secondary max-w-3xl mx-auto">
-          Every claim is backed by automated evals and benchmarks that run in CI.
-          The retrieval scores come from mem0's own harness, with the answerer,
-          judge, and per-system retrieval budgets documented on the{' '}
+          Every claim here is backed by automated evals that run in CI. Head-to-head
+          retrieval results sit apart from these figures, with the harness, the
+          answerer, the judge, and the per-system retrieval budgets documented on the{' '}
           <a href="/benchmarks" className="underline decoration-brand-500/40 underline-offset-4 hover:text-theme-primary">
             benchmarks page
           </a>.

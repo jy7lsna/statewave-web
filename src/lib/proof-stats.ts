@@ -3,14 +3,28 @@
  * across the marketing site. Mirrored on the homepage (hero credibility
  * row, prerendered into dist/index.html, and the below-the-fold
  * ProofSection) and on the /about page. Recompute together when the
- * eval suite or the benchmark run changes — drift between surfaces makes
- * us look sloppy. The retrieval scores come from mem0's own harness and
- * must stay in sync with SYSTEMS in BenchmarksPage.tsx; the self-scored
- * support-workflow figure is deliberately not surfaced here.
+ * eval suite changes — drift between surfaces makes us look sloppy.
+ *
+ * Deliberately carries no benchmark scores. The self-scored support
+ * workflow figure is a strawman against a naive baseline, and the
+ * head-to-head retrieval scores are only publishable with the harness,
+ * the opponent, and the mem0-OSS retrieval-budget asymmetry disclosed
+ * alongside them — which these tiles have no room for. /benchmarks
+ * carries all three, so the numbers live there and nowhere else.
  */
+/** The individual figures, named — the homepage answer paragraphs quote
+ *  them in prose, so they read from here rather than repeating literals
+ *  that would drift the next time a run changes. */
+export const PROOF_FIGURES = {
+  unitTests: '708',
+  evalAssertions: '56',
+  supportCriteria: '8',
+  tokenReduction: '73%',
+} as const
+
 export const PROOF_STATS = [
-  { value: '708', label: 'Unit tests' },
-  { value: '56', label: 'Eval assertions' },
-  { value: '0.905', label: "LoCoMo · mem0's harness" },
-  { value: '0.967', label: "LongMemEval · mem0's harness" },
+  { value: PROOF_FIGURES.unitTests, label: 'Unit tests' },
+  { value: PROOF_FIGURES.evalAssertions, label: 'Eval assertions' },
+  { value: PROOF_FIGURES.supportCriteria, label: 'Support eval criteria' },
+  { value: PROOF_FIGURES.tokenReduction, label: 'Fewer tokens at an 800-token budget' },
 ] as const
