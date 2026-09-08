@@ -201,7 +201,7 @@ export const POST_FAQ: Readonly<Record<string, readonly FaqEntry[]>> = {
     {
       question: 'How much better is this than just concatenating recent chat history?',
       answer:
-        'On the eight-criteria support workflow benchmark, a naive prompt-stuffing baseline that concatenates the last N turns scores 2/8. A Statewave-backed agent scores 8/8 on the same dataset and model, with no agent-side memory code.',
+        "Score it on a task rather than on recall. The support workflow benchmark scores an agent on eight criteria that map to real support concerns — identity persistence across sessions, preference surfacing, token budget compliance, provenance tracing, idempotent compilation, session-aware ranking, repeat-issue detection, and explainable health scoring. The harness is open source, so run it against your own stack and read the criteria rather than anyone's score.",
     },
     {
       question: 'Does the memory layer replace a knowledge base or RAG stack?',
