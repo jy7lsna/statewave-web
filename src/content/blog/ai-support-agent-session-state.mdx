@@ -22,7 +22,7 @@ This post covers what session-awareness means at the data layer, the exact ranki
 It means the agent carries two separate scopes and knows which one is answering. Most builds carry one.
 
 <figure className="my-8">
-<img src="/images/blog/ai-support-agent-session-state/image1.png" alt="Two scopes side by side: a subject holding durable customer facts, and sessions holding individual tickets with their own state." width="624" height="283" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<img src="/images/blog/ai-support-agent-session-state/image1.png" alt="Two scopes side by side: a subject holding durable customer facts, and sessions holding individual tickets with their own state." width="1705" height="774" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
 <figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">Drop the session layer and the agent still remembers the customer. It just stops knowing which of their problems is live.</figcaption>
 </figure>
 
@@ -63,7 +63,7 @@ The fourth option is to give the retriever the state it is missing. This is the 
 Every candidate gets a score, and session state contributes more of that score than anything else. Here is the tally, taken from the scoring constants in `server/services/context.py` in the [open-source core runtime](https://github.com/smaramwbc/statewave).
 
 <figure className="my-8">
-<img src="/images/blog/ai-support-agent-session-state/image2.png" alt="Bar chart of maximum points per signal family on one raw conversation turn: session state 14, recency 5, lexical overlap 5, base priority 3, embedding similarity 0." width="624" height="283" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<img src="/images/blog/ai-support-agent-session-state/image2.png" alt="Bar chart of maximum points per signal family on one raw conversation turn: session state 14, recency 5, lexical overlap 5, base priority 3, embedding similarity 0." width="1729" height="760" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
 <figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">Maximum points each signal family can add to one raw conversation turn.</figcaption>
 </figure>
 
@@ -101,7 +101,7 @@ The +2 on episodes emitted by the agent rather than the customer is small, but i
 The session moves to resolved, its episodes drop 5 points, and one field decides whether that knowledge is ever recoverable.
 
 <figure className="my-8">
-<img src="/images/blog/ai-support-agent-session-state/image3.png" alt="The same closed-session episode scored twice: without a resolution summary it nets minus one, with a summary it nets plus one." width="624" height="275" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<img src="/images/blog/ai-support-agent-session-state/image3.png" alt="The same closed-session episode scored twice: without a resolution summary it nets minus one, with a summary it nets plus one." width="1722" height="781" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
 <figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">The same episode, scored two ways. The only difference is whether anyone wrote a resolution summary.</figcaption>
 </figure>
 
@@ -136,7 +136,7 @@ If your ticketing system already captures a closing note, pipe it into that fiel
 You build the escalation brief from session state rather than from a transcript dump, and you compute a health score the receiving human can audit.
 
 <figure className="my-8">
-<img src="/images/blog/ai-support-agent-session-state/image4.png" alt="Health score starting at 100 and moving down through named penalties and up through named recovery bonuses, each returned with its reason." width="624" height="275" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<img src="/images/blog/ai-support-agent-session-state/image4.png" alt="Health score starting at 100 and moving down through named penalties and up through named recovery bonuses, each returned with its reason." width="1716" height="709" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
 <figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">Every customer starts at 100. Session state moves the number, and each move is returned with its reason.</figcaption>
 </figure>
 
@@ -161,7 +161,7 @@ Receipts matter more for support than for most workloads. When a human takes ove
 Four failures show up repeatedly, and three of them are schema decisions made in week one that are painful to reverse in month six.
 
 <figure className="my-8">
-<img src="/images/blog/ai-support-agent-session-state/image5.png" alt="Session state machine with four states: open, unresolved, resolved, and idle, with the application owning transitions and the ranker reading them." width="624" height="257" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<img src="/images/blog/ai-support-agent-session-state/image5.png" alt="Session state machine with four states: open, unresolved, resolved, and idle, with the application owning transitions and the ranker reading them." width="1750" height="769" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
 <figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">Four states. Your application owns the transitions; the ranker reads them.</figcaption>
 </figure>
 
@@ -217,7 +217,9 @@ One command boots the API, the admin console, and Postgres locally. The server d
 
 We build Statewave, so treat the framing here as ours and the constants as checkable: every number above is a named constant in `server/services/context.py` and `server/services/health.py`.
 
-## Frequently Asked Questions
+## FAQ
+
+<div className="my-8 space-y-3">
 
 <details open className="blog-faq group rounded-2xl border border-brand-500/20 bg-surface-1/45 backdrop-blur-sm transition-colors hover:border-brand-500/35">
 <summary className="flex cursor-pointer items-center justify-between gap-6 py-4 px-6 list-none">
@@ -296,3 +298,5 @@ We build Statewave, so treat the framing here as ours and the constants as check
 <p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">Yes, that is what the handoff pack is for. <code>POST /v1/handoff</code> returns a token-bounded brief with the customer's profile facts, the active issue, the steps already attempted, related history, and the health score with its contributing factors. It also emits a receipt, so the human can see exactly what the agent had in context.</p>
 </div>
 </details>
+
+</div>
