@@ -366,7 +366,7 @@ export const POST_FAQ: Readonly<Record<string, readonly FaqEntry[]>> = {
     {
       question: 'Can I tune the overlap threshold or the boost values?',
       answer:
-        'Not today. The weights are constants in server/services/context.py with no per-tenant override, a deliberate choice to keep ranking deterministic and reproducible. You can filter the candidate set by kind or subject before requesting context, or subclass the context assembler in your own deployment.',
+        'Not today. The weights are constants in server/services/context.py with no per-tenant override, a deliberate choice to keep ranking deterministic and reproducible. You can scope requests by subject, filter /v1/memories/search results by kind, or modify the context assembler in your own self-hosted deployment.',
     },
     {
       question: 'Does resolution tracking affect anything besides retrieval?',
