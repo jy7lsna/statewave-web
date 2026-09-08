@@ -40,7 +40,7 @@ You do not become session-aware by writing session IDs to a database. You become
 
 None of this is a vendor position. The [ReFind paper](https://arxiv.org/abs/2608.12888) built a memory system with no semantic structure at all, just lexical search over raw chat logs plus four chat-native controls, one of which is session-aware rank fusion. It reached the highest mean accuracy of any system tested on MemoryAgentBench at 58.2, above the strongest graph and tree-based memory systems at 53.2, on a matched GPT-4o-mini backbone. Session structure, used at retrieval time, recovered most of what elaborate memory architectures were being credited for.
 
-Sessions are also the natural unit further down the stack. In production agent traces analysed for the [SMetric scheduling paper](https://arxiv.org/abs/2607.08565), KV cache reuse exceeded 80% of request tokens, against 54% to 62% for human chat. Agent workloads cluster inside sessions. Ranking that ignores the boundary fights the shape of the traffic.
+Sessions are also the natural unit further down the stack. In production agent traces analyzed for the [SMetric scheduling paper](https://arxiv.org/abs/2607.08565), KV cache reuse exceeded 80% of request tokens, against 54% to 62% for human chat. Agent workloads cluster inside sessions. Ranking that ignores the boundary fights the shape of the traffic.
 
 ## Why does customer-scoped memory still return the wrong context?
 
@@ -154,7 +154,7 @@ The default SLA thresholds are five minutes to first response and 24 hours to re
 
 ### The handoff pack answers seven questions, in order
 
-`POST /v1/handoff` assembles a token-bounded brief covering who the customer is, which profile facts matter, what the active issue is, what has already been tried, what related history is relevant, what is resolved and should be deprioritised, and what the next agent needs immediately. It defaults to a 4,000-token budget and emits a state-assembly receipt.
+`POST /v1/handoff` assembles a token-bounded brief covering who the customer is, which profile facts matter, what the active issue is, what has already been tried, what related history is relevant, what is resolved and should be deprioritized, and what the next agent needs immediately. It defaults to a 4,000-token budget and emits a state-assembly receipt.
 
 Receipts matter more for support than for most workloads. When a human takes over a ticket the AI mishandled, "what did the agent actually see" is the first question asked. A receipt answers it exactly. Our [provenance model](/blog/agent-memory-provenance-audit-trails) covers how the chain back to source episodes is built and what it costs to store.
 
@@ -181,7 +181,7 @@ Teams get the write path right and leave the read path on default similarity sea
 
 ### Forgetting the tenant boundary until the second customer
 
-Session and subject scoping are not tenant scoping. An agent can be correctly authenticated, correctly authorised, and still receive another customer's facts in a bundle because a surface downstream of the boundary was never scoped. We wrote up [which surfaces actually need a tenant boundary](/blog/multi-tenant-isolation-in-ai-memory), including the backfill step that silently erases memory if you skip it. Read it before your second tenant, not after.
+Session and subject scoping are not tenant scoping. An agent can be correctly authenticated, correctly authorized, and still receive another customer's facts in a bundle because a surface downstream of the boundary was never scoped. We wrote up [which surfaces actually need a tenant boundary](/blog/multi-tenant-isolation-in-ai-memory), including the backfill step that silently erases memory if you skip it. Read it before your second tenant, not after.
 
 CRMArena-Pro is worth citing twice here: the same benchmark that found the multi-turn collapse also found agents exhibit near-zero inherent confidentiality awareness, and that prompting them into it degrades task performance. Boundaries belong in the retrieval layer, not in the system prompt.
 
@@ -215,7 +215,7 @@ npx @statewavedev/statewave
 
 One command boots the API, the admin console, and Postgres locally. The server defaults to demo mode with stub hash-based embeddings and the heuristic compiler, which means no real semantic search but a working loop.
 
-**Start with the state layer.** Adding memory to a support agent without session state gives you an agent that remembers everything and prioritises nothing. The four fields that fix it, a subject ID, a session ID, a status, and a summary, cost an afternoon. [Boot it locally in two minutes](/developers) or read the ranking code yourself in the [core runtime](https://github.com/smaramwbc/statewave), which is Apache-2.0 and self-hosted end-to-end.
+**Start with the state layer.** Adding memory to a support agent without session state gives you an agent that remembers everything and prioritizes nothing. The four fields that fix it, a subject ID, a session ID, a status, and a summary, cost an afternoon. [Boot it locally in two minutes](/developers) or read the ranking code yourself in the [core runtime](https://github.com/smaramwbc/statewave), which is Apache-2.0 and self-hosted end-to-end.
 
 We build Statewave, so treat the framing here as ours and the constants as checkable: every number above is a named constant in `server/services/context.py` and `server/services/health.py`.
 

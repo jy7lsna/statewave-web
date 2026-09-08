@@ -237,7 +237,7 @@ We build Statewave, so the framing here is ours, but the constants are not opini
 </summary>
 <div className="px-7 pb-7">
 <div className="h-px bg-theme-primary/10 mb-6" />
-<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">Not today. The weights are constants in <code>server/services/context.py</code> with no per-tenant override, a deliberate choice to keep ranking deterministic and reproducible. You can filter the candidate set by kind or subject before requesting context, or subclass the context assembler in your own deployment.</p>
+<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">Not today. The weights are constants in <code>server/services/context.py</code> with no per-tenant override, a deliberate choice to keep ranking deterministic and reproducible. You can scope requests by subject, filter /v1/memories/search results by kind, or modify the context assembler in your own self-hosted deployment.</p>
 </div>
 </details>
 
