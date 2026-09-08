@@ -310,6 +310,70 @@ export const POST_FAQ: Readonly<Record<string, readonly FaqEntry[]>> = {
         'Yes, and it is the case the design targets. Both writes land as append-only episodes, so neither is lost. Conflict resolution happens at compile time rather than write time, which means concurrency does not need a lock on the write path. If you want the conflict prevented instead of resolved, have each agent read compiled context before it acts.',
     },
   ],
+  'ai-support-agent-session-state': [
+    {
+      question: 'What is a session-aware AI support agent?',
+      answer:
+        "A support agent whose retrieval step reads the state of the current ticket, not just the customer's history. It knows which session is active, which are resolved, what has already been tried, and whether the current problem matches a prior one. That state adjusts the ranking of every candidate before the context bundle is assembled.",
+    },
+    {
+      question: 'What is the difference between a session ID and a subject ID?',
+      answer:
+        'The subject ID identifies the customer and must survive across every conversation, so use a CRM ID, account UUID, or email hash. The session ID identifies one support interaction and is usually your ticket or conversation ID. Using the session ID as the subject is the most common build error, because memory then dies when the conversation ends.',
+    },
+    {
+      question: 'Does session-aware ranking replace semantic search?',
+      answer:
+        'No, they operate on different objects. Embedding similarity ranks compiled memories, contributing up to 8 points. Session state ranks raw episodes, contributing up to 14. Both appear in the same bundle, which is why the agent gets long-term facts and the live timeline together.',
+    },
+    {
+      question: 'Why does my agent keep re-solving problems it already fixed?',
+      answer:
+        'Almost always because resolved sessions are being closed without a resolution_summary. A matching closed session with a summary scores +6 against its −5 penalty and surfaces at net +1. Without a summary it scores +4 and stays at net −1, below neutral and outside the token budget.',
+    },
+    {
+      question: 'How do you measure whether session-awareness is working?',
+      answer:
+        'Run the eight-criteria support workflow benchmark. It scores identity persistence across sessions, preference surfacing, token budget adherence, provenance tracing, idempotent compilation, session-aware ranking of active sessions, repeat-issue detection, and deterministic health scoring. Run it against your own stack before you run it against ours: the criteria are the transferable part, and the harness is open source, so the scoring is inspectable rather than asserted.',
+    },
+    {
+      question: 'Can a session-aware agent hand off to a human mid-ticket?',
+      answer:
+        "Yes, that is what the handoff pack is for. POST /v1/handoff returns a token-bounded brief with the customer's profile facts, the active issue, the steps already attempted, related history, and the health score with its contributing factors. It also emits a receipt, so the human can see exactly what the agent had in context.",
+    },
+  ],
+  'repeat-issue-detection-customer-support-automation': [
+    {
+      question: 'What is repeat-issue detection in customer support automation?',
+      answer:
+        "It is a retrieval mechanism that recognizes when a customer's current problem matches one you already closed, and lifts that closed session back into the agent's context. Without it, resolved sessions are deliberately deprioritized so old tickets do not crowd out live ones, which means the prior fix is hidden at the exact moment it is most useful.",
+    },
+    {
+      question: 'How does Statewave decide two issues are the same?',
+      answer:
+        'It extracts meaningful keywords from the live session and task text, does the same for each resolved session including its resolution summary, and computes what fraction of the current keywords appear in the prior set. If that fraction reaches 0.30, the prior session is boosted.',
+    },
+    {
+      question: 'Do I need an LLM or embeddings for repeat-issue detection?',
+      answer:
+        'No. This path is lexical and runs with no model call. Compilation and semantic search can use any of the LiteLLM-supported providers, but repeat detection itself works with the default heuristic compiler and no API key.',
+    },
+    {
+      question: 'Why does my prior fix still not show up?',
+      answer:
+        "Two common causes. The resolution record has no resolution_summary, which caps the boost at +4.0 against a -5.0 penalty and leaves it net negative. Or the customer described the problem in entirely different words, dropping the overlap below 0.30. Rewriting the summary to include the customer's own phrasing addresses both.",
+    },
+    {
+      question: 'Can I tune the overlap threshold or the boost values?',
+      answer:
+        'Not today. The weights are constants in server/services/context.py with no per-tenant override, a deliberate choice to keep ranking deterministic and reproducible. You can filter the candidate set by kind or subject before requesting context, or subclass the context assembler in your own deployment.',
+    },
+    {
+      question: 'Does resolution tracking affect anything besides retrieval?',
+      answer:
+        'Yes. The same record feeds the customer health score, SLA resolution-time and breach calculations, and the handoff pack that a human or another agent receives on escalation. One skipped write degrades all four surfaces.',
+    },
+  ],
 } as const
 
 export const HOWTO_SLUGS: readonly string[] = ['persistent-memory-for-ai-support-agents']
