@@ -97,7 +97,7 @@ Getting it wrong in one direction floods the store; getting it wrong in the othe
 
 ## What makes the compile step idempotent?
 
-A marker on each episode, not a hash comparison. Statewave's [getting-started guide](https://github.com/smaramwbc/statewave-docs/blob/main/getting-started.md) states the behaviour directly: compilation is idempotent because running it again only processes new episodes. The implementation tracks this per episode rather than as one moving watermark, but the guarantee is the same. The API returns `memories_created`, so a no-op recompile reports zero and you can assert on it.
+A marker on each episode, not a hash comparison. Statewave's [getting-started guide](https://github.com/smaramwbc/statewave-docs/blob/main/getting-started.md) states the behavior directly: compilation is idempotent because running it again only processes new episodes. The implementation tracks this per episode rather than as one moving watermark, but the guarantee is the same. The API returns `memories_created`, so a no-op recompile reports zero and you can assert on it.
 
 ### Compilation sets, it does not increment
 
@@ -141,7 +141,7 @@ That matches the failure worth naming here: the problem is applying the rule bli
 | The same GitHub issue synced twice | A duplicate | Suppress at ingest on the idempotency key |
 | "I am in Berlin this week" vs "this user lives in Lisbon" | Not a conflict — a temporary state next to a durable one | Keep both |
 
-The Berlin-versus-Lisbon row is where most systems go wrong. These three actions are a recommended policy per memory kind, not built-in behaviour you get for free.
+The Berlin-versus-Lisbon row is where most systems go wrong. These three actions are a recommended policy per memory kind, not built-in behavior you get for free.
 
 <figure className="my-8">
 <img src="/images/blog/idempotent-compilation-and-conflict-resolution/image3.jpg" alt="Decision tree splitting two memories about one subject into duplicate, coexisting, or contradicting, with per-kind actions of supersede, qualify or flag for review." width="935" height="624" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
@@ -162,7 +162,7 @@ Two properties fall out of that:
 1. The synthesis agent's context bundle contains only the winner, because the read path filters to active memories.
 2. The audit trail contains both, along with the similarity score that triggered the decision.
 
-The repo ships an inspector that prints episodes, derived memories, and supersession records with their Jaccard scores for any subject. The full demo run resolves six conflicts across its three sources; the Stripe pair described above is one of them. The loser is still there, and that is the difference between supersession and overwrite.
+The repo ships an inspector that prints episodes, derived memories, and supersession records with their Jaccard scores for any subject. The run pictured below resolves six conflicts across its three sources; the Stripe pair described above is one of them. The loser is still there, and that is the difference between supersession and overwrite.
 
 ### Superseded is a status, not a delete
 
@@ -178,7 +178,7 @@ Jaccard 0.6 is a default, and you should treat it as one. Set it lower and unrel
 
 <figure className="my-8">
 <img src="/images/blog/idempotent-compilation-and-conflict-resolution/image4.jpg" alt="The multi-agent memory demo resolving six conflicts across three sources, with superseded memories still listed alongside the winners." width="936" height="483" loading="lazy" className="w-full rounded-2xl border border-brand-500/20" />
-<figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">The full demo run resolves six conflicts across its three sources; the Stripe pre-reversal pair described above is one of them. The loser is still there, and that is the difference between supersession and overwrite.</figcaption>
+<figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">The run pictured resolves six conflicts across its three sources; the Stripe pre-reversal pair described above is one of them. The loser is still there, and that is the difference between supersession and overwrite.</figcaption>
 </figure>
 
 ## What changes in a multi-agent pipeline?
