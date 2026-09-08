@@ -8,7 +8,7 @@
  * Deliberately carries no benchmark scores. The self-scored support
  * workflow figure is a strawman against a naive baseline, and the
  * head-to-head retrieval scores are only publishable with the harness,
- * the opponent, and the mem0-OSS retrieval-budget asymmetry disclosed
+ * the opponent, and the per-system retrieval-budget asymmetry disclosed
  * alongside them — which these tiles have no room for. /benchmarks
  * carries all three, so the numbers live there and nowhere else.
  */
@@ -26,5 +26,5 @@ export const PROOF_STATS = [
   { value: PROOF_FIGURES.unitTests, label: 'Unit tests' },
   { value: PROOF_FIGURES.evalAssertions, label: 'Eval assertions' },
   { value: PROOF_FIGURES.supportCriteria, label: 'Support eval criteria' },
-  { value: PROOF_FIGURES.tokenReduction, label: 'Fewer tokens at an 800-token budget' },
+  { value: PROOF_FIGURES.tokenReduction, label: 'Fewer tokens vs raw history (reference demo)' },
 ] as const
