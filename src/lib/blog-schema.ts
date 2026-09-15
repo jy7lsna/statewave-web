@@ -388,7 +388,7 @@ export const POST_FAQ: Readonly<Record<string, readonly FaqEntry[]>> = {
     {
       question: 'Can I migrate from Mem0 to Statewave without rewriting my agent?',
       answer:
-        "Mostly, yes. Mem0's user_id becomes a Statewave subject_id, add becomes an episode write, and search becomes a context request. Statewave's docs include a bulk import path that keeps the original Mem0 memory IDs, so you can trace each memory back to where it came from.",
+        "Mostly, yes. Mem0's user_id becomes a Statewave subject_id, add becomes an episode write, and search becomes a context request. Statewave's docs describe a bulk migration that carries each original Mem0 memory ID in the episode's provenance, so you can trace each memory back to where it came from.",
     },
     {
       question: 'Are LoCoMo and LongMemEval scores comparable across vendors?',

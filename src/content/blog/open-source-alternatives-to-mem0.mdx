@@ -85,7 +85,7 @@ An Apache-2.0 badge doesn't guarantee that the free build includes the features 
 - **Cognee:** running the whole memory layer on Postgres [ships as a demo feature](https://github.com/topoteretes/cognee). The production-ready version is a licensed product.
 - **Supermemory:** the [local build](https://supermemory.ai/docs/self-hosting/local-vs-enterprise) runs as one process on one machine with a single API key. Proprietary extraction models, multi-member orgs and connectors are Enterprise features.
 
-Letta and LangMem ship their memory engines in full. Statewave has no paid edition at all.
+LangMem ships its memory engine in full, and so does Letta, which keeps only cloud-hosted agent memory as a paid service. Statewave has no paid edition at all.
 
 <figure className="my-8">
 <img src="/images/blog/open-source-alternatives-to-mem0/image9.gif" alt="Table of seven memory projects showing what ships in the free self-hosted build against what is reserved for paid or managed, with each labelled fully open, mostly open or open core." width="937" height="562" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
@@ -130,7 +130,7 @@ These alternatives take different approaches to memory, from vector search and k
 The same subject, task and token budget over the same memory state always return the same bytes. That determinism separates compile-then-use from query-time retrieval, where random variation in results leaks into every answer.
 
 <figure className="my-8">
-<img src="/images/blog/open-source-alternatives-to-mem0/image8.gif" alt="Accuracy on Mem0's own benchmark harness for LoCoMo and LongMemEval, comparing Statewave, Mem0 cloud and Mem0 OSS with only the memory backend changed between runs." width="937" height="422" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<img src="/images/blog/open-source-alternatives-to-mem0/image8.gif" alt="Accuracy on Mem0's own benchmark harness for LoCoMo and LongMemEval, comparing Statewave, Mem0 cloud and Mem0 OSS with only the memory backend changed between runs, noting that Mem0 OSS retrieves at most 20 memories per query against roughly 200 for the other two." width="937" height="456" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
 <figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">Same benchmark code, same judge. Only the memory backend changes between runs.</figcaption>
 </figure>
 
@@ -298,7 +298,7 @@ Mem0, Zep, Graphiti, Letta, Cognee, LangMem and Supermemory are trademarks of th
 </summary>
 <div className="px-7 pb-7">
 <div className="h-px bg-theme-primary/10 mb-6" />
-<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">Mostly, yes. Mem0's <code>user_id</code> becomes a Statewave <code>subject_id</code>, <code>add</code> becomes an episode write, and <code>search</code> becomes a context request. Statewave's docs include a bulk import path that keeps the original Mem0 memory IDs, so you can trace each memory back to where it came from.</p>
+<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">Mostly, yes. Mem0's <code>user_id</code> becomes a Statewave <code>subject_id</code>, <code>add</code> becomes an episode write, and <code>search</code> becomes a context request. Statewave's docs describe a bulk migration that carries each original Mem0 memory ID in the episode's provenance, so you can trace each memory back to where it came from.</p>
 </div>
 </details>
 

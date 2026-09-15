@@ -6,6 +6,7 @@ description: How Statewave computes an explainable customer health score, why it
 author: Saber Maram
 category: Engineering
 headerImage: /images/blog/customer-health-score-handoff-context-packs/header.jpg
+image: /images/blog/customer-health-score-handoff-context-packs/og.png
 tags:
   - support
   - ranking
@@ -46,7 +47,7 @@ The rules live in [server/services/health.py](https://github.com/smaramwbc/state
 | Signal | Points | Cap | Fires when |
 | ----- | ----- | ----- | ----- |
 | Unresolved issues | −15 per open session | −45 | A session's resolution status is `open` |
-| Repeated issue | −20 | Once | An open session shares at least 30% of its keywords with a resolved session |
+| Repeated issue | −20 | Once | An open session and a resolved session share at least 30% of the smaller keyword set |
 | Escalations | −10 per episode | −20 | A message contains an urgency marker such as outage, p0, sev1, or escalat |
 | Idle open issue | −15 | Once | An open session has had no activity for 7 days |
 | Resolution breach | −10 per session | −20 | A resolved session took more than 24 hours from the first customer message |
