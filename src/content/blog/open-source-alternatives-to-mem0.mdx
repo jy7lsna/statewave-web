@@ -82,7 +82,7 @@ An Apache-2.0 badge doesn't guarantee that the free build includes the features 
 
 - **Mem0:** by our count, 14 Platform-only capabilities, and graph memory removed from OSS.
 - **Zep:** [stopped maintaining Community Edition](https://blog.getzep.com/announcing-a-new-direction-for-zeps-open-source-strategy/) and moved its open-source work to Graphiti. Graphiti is a library, not a memory service.
-- **Cognee:** running the whole memory layer on Postgres [ships as a demo feature](https://github.com/topoteretes/cognee). The production-ready version is a licensed product.
+- **Cognee:** using Postgres as the graph store [ships as a demo feature](https://github.com/topoteretes/cognee). The production-ready version of it is a licensed product.
 - **Supermemory:** the [local build](https://supermemory.ai/docs/self-hosting/local-vs-enterprise) runs as one process on one machine with a single API key. Proprietary extraction models, multi-member orgs and connectors are Enterprise features.
 
 LangMem ships its memory engine in full, and so does Letta, which keeps only cloud-hosted agent memory as a paid service. Statewave has no paid edition at all.
@@ -210,7 +210,7 @@ The trade-off: Letta is a framework you adopt, not a layer you drop into an exis
 
 [Cognee](https://github.com/topoteretes/cognee) turns text into entities and relationships, and code into a graph of symbols. Its API has four operations: **remember**, **recall**, **improve** and **forget**. It ships plugins for Claude Code and Codex.
 
-Watch the edition line. Running the whole memory layer on a single Postgres database is a demo feature in the open-source build.
+Watch the edition line. Cognee can run graph, vector, cache and metadata on one Postgres instance, but Postgres as the graph store ships as a demo feature, and the production-ready version of it is licensed separately.
 
 **Best for:** agents that need to reason over documentation, tickets and codebases, not just conversations.
 
