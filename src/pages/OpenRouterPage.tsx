@@ -54,7 +54,7 @@ const NAV_SECTIONS: readonly NavSection[] = [
  * section; at real viewport sizes that reads as haze over the content instead
  * of hierarchy, and it buries the one wash that earns its place (the hero).
  */
-type Tier = 'lead' | 'body' | 'close'
+type Tier = 'lead' | 'body'
 
 /* A lead band announces itself with extra space ABOVE; every band closes with
  * the same space below. Padding between two sections adds rather than
@@ -65,16 +65,20 @@ type Tier = 'lead' | 'body' | 'close'
 const BAND_PAD: Record<Tier, string> = {
   lead: 'pt-24 pb-16 sm:pt-28 sm:pb-20 lg:pt-32 lg:pb-24',
   body: 'py-16 sm:py-20 lg:py-24',
-  close: 'py-14 sm:py-16 lg:py-20',
 }
 
-/* Leading is set per tier, not inherited: the body default of 1.5 puts a 66px
- * gap between the two lines of a 44px lead heading, which reads as two
- * unrelated sentences. Headlines tighten as they grow. */
+/* A 62 / 48 / 36px scale down from the h1. Body sections were 30px, which is
+ * barely above large body text and left five of the eight sections reading
+ * flat; it also put them BELOW the shared PageFaq heading (text-3xl md:text-4xl
+ * = 36px) sitting directly underneath, so a section title looked subordinate to
+ * the FAQ. Body now matches that 36px and lead clears it.
+ *
+ * Leading is per tier rather than inherited: the 1.5 default puts a 72px gap
+ * between the two lines of a 48px heading, which reads as two unrelated
+ * sentences. Headlines tighten as they grow. */
 const HEAD_SIZE: Record<Tier, string> = {
-  lead: 'text-[clamp(1.85rem,4.4vw,2.75rem)] leading-[1.1]',
-  body: 'text-[clamp(1.4rem,2.9vw,1.9rem)] leading-[1.2]',
-  close: 'text-[clamp(1.2rem,2.3vw,1.5rem)] leading-[1.3]',
+  lead: 'text-[clamp(1.85rem,4.8vw,3rem)] leading-[1.1]',
+  body: 'text-[clamp(1.6rem,3.2vw,2.25rem)] leading-[1.15]',
 }
 
 /* Same cadence as /benchmarks and the homepage hero, so the page's motion
