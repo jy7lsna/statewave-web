@@ -1,11 +1,30 @@
 import { motion, useReducedMotion, type Variants } from 'framer-motion'
 import { useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router'
+import {
+  Send,
+  Search,
+  Waypoints,
+  MessageSquareMore,
+  Clock3,
+  ShieldCheck,
+  ShieldAlert,
+  Radio,
+  KeyRound,
+  CircleCheck,
+  TriangleAlert,
+  Layers,
+  Server,
+  ServerCrash,
+  Check,
+  Minus,
+  type LucideIcon,
+} from 'lucide-react'
 import { Heading } from '../components/Heading'
 import { Button } from '../components/Button'
 import { CodeCopyButton } from '../components/CodeCopyButton'
 import { PageFaq } from '../components/PageFaq'
-import { SectionNav, type NavSection } from '../components/SectionNav'
+import { Section } from '../components/Section'
 import { usePageSEO } from '../lib/seo'
 import { OPENROUTER_PROXY_VERSION as VERSION } from '../lib/seo-meta'
 
@@ -31,16 +50,6 @@ const CARD =
   'hover:shadow-[0_18px_50px_rgba(122,92,255,0.14)] ' +
   'focus-within:-translate-y-0.5 focus-within:border-brand-500/45 ' +
   'focus-within:shadow-[0_18px_50px_rgba(122,92,255,0.14)]'
-
-const NAV_SECTIONS: readonly NavSection[] = [
-  { id: 'diff', label: 'The diff' },
-  { id: 'flow', label: 'Request flow' },
-  { id: 'endpoints', label: 'Endpoints' },
-  { id: 'auth', label: 'Auth' },
-  { id: 'config', label: 'Config' },
-  { id: 'start', label: 'Quick start' },
-  { id: 'page-faq', label: 'FAQ' },
-]
 
 /* ─── Page shell ─────────────────────────────────────────────────────────────
  * The page is one argument, not nine equal chapters, so the section shells
@@ -162,17 +171,18 @@ function Band({
   )
 }
 
-/** Eyebrow + heading + optional lede, sized by the band's tier. */
+/** Heading + optional lede, sized by the band's tier. No eyebrow label — the
+ *  heading text itself carries the section's subject (see [[no-eyebrows]]
+ *  note above BAND_PAD), so hierarchy comes from scale and the lede, not a
+ *  small-caps tag repeated at the top of every section. */
 function BandHead({
   id,
   tier = 'body',
-  eyebrow,
   children,
   lede,
 }: {
   id: string
   tier?: Tier
-  eyebrow: ReactNode
   children: ReactNode
   lede?: ReactNode
 }) {
@@ -182,10 +192,9 @@ function BandHead({
   // against the wrapper's 16px and squeeze a 2.75rem lead heading into ~500px.
   return (
     <Rise>
-      <Eyebrow>{eyebrow}</Eyebrow>
       <Heading
         id={id}
-        className={`mt-3 max-w-[22ch] font-heading ${HEAD_SIZE[tier]} font-semibold tracking-[-0.02em] text-theme-primary`}
+        className={`max-w-[22ch] font-heading ${HEAD_SIZE[tier]} font-semibold tracking-[-0.02em] text-theme-primary`}
       >
         {children}
       </Heading>
@@ -196,9 +205,9 @@ function BandHead({
 
 /* ─── Small shared pieces ────────────────────────────────────────────────── */
 
-function Eyebrow({ children }: { children: ReactNode }) {
+function Eyebrow({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <p className="section-eyebrow font-mono text-xs uppercase tracking-[0.14em] text-theme-muted">
+    <p className={`section-eyebrow font-mono text-xs uppercase tracking-[0.14em] text-theme-muted ${className}`}>
       {children}
     </p>
   )
@@ -232,21 +241,216 @@ function C({ children }: { children: ReactNode }) {
   )
 }
 
-/** Bulleted item with a gradient dot, used in the "what happened" lists. */
-function Bullet({ children, muted = false }: { children: ReactNode; muted?: boolean }) {
+/** Circular flat-stroke icon badge — the site's own icon-card dialect
+ *  (see HomePage.tsx's feature cards), reused here so every diagram node and
+ *  icon row speaks the same visual language instead of a new one. No
+ *  gradient, no glow: a plain accent- or amber-tinted ring. */
+function IconBadge({
+  icon: Icon,
+  tone = 'accent',
+  size = 'md',
+}: {
+  icon: LucideIcon
+  tone?: 'accent' | 'amber' | 'neutral'
+  size?: 'sm' | 'md'
+}) {
+  const box = size === 'sm' ? 'h-8 w-8' : 'h-10 w-10'
+  const iconBox = size === 'sm' ? 'h-4 w-4' : 'h-5 w-5'
+  const color =
+    tone === 'amber'
+      ? { color: 'var(--viz-amber)', borderColor: 'rgba(245,158,11,0.35)' }
+      : tone === 'neutral'
+        ? { color: 'var(--viz-text-3)', borderColor: 'var(--viz-border-strong)' }
+        : { color: 'var(--color-accent)', borderColor: 'rgba(122,92,255,0.35)' }
   return (
-    <li className="relative pl-[18px] text-[14.5px] leading-[1.6] text-theme-secondary">
-      <span
+    <span
+      className={`flex ${box} shrink-0 items-center justify-center rounded-full border`}
+      style={color}
+    >
+      <Icon className={iconBox} strokeWidth={1.8} aria-hidden="true" />
+    </span>
+  )
+}
+
+/** Icon-led list row. Replaces the old gradient-dot `Bullet`: a real icon
+ *  says what kind of fact this is (kept vs. changed vs. failed) before the
+ *  reader parses the sentence, which is the point — less reliance on prose
+ *  alone to carry meaning. */
+function IconRow({
+  icon: Icon,
+  tone = 'accent',
+  children,
+}: {
+  icon: LucideIcon
+  tone?: 'accent' | 'muted'
+  children: ReactNode
+}) {
+  return (
+    <li className="flex items-start gap-2.5 text-[14px] leading-[1.55] text-theme-secondary">
+      <Icon
+        className="mt-[3px] h-4 w-4 shrink-0"
+        strokeWidth={2}
         aria-hidden="true"
-        className="absolute left-0 top-[9px] h-1.5 w-1.5 rounded-full"
+        style={{ color: tone === 'muted' ? 'var(--viz-text-3)' : 'var(--color-accent)' }}
+      />
+      <span>{children}</span>
+    </li>
+  )
+}
+
+/** One node in a linear (non-branching) card diagram: icon badge, small
+ *  mono eyebrow, short title. Used by the Request Flow and Subject Timeline
+ *  diagrams so a "flowchart" renders as real DOM cards, not SVG text. */
+function NodeCard({
+  icon,
+  tone = 'accent',
+  eyebrow,
+  title,
+  dashed = false,
+  className = '',
+}: {
+  icon: LucideIcon
+  tone?: 'accent' | 'amber'
+  eyebrow: string
+  title: string
+  dashed?: boolean
+  className?: string
+}) {
+  return (
+    <div
+      className={`flex min-w-[190px] shrink-0 items-center gap-3 rounded-xl p-3.5 ${className}`}
+      style={{
+        background: 'var(--viz-card)',
+        border: `1px ${dashed ? 'dashed' : 'solid'} ${
+          tone === 'amber' ? 'rgba(245,158,11,0.4)' : 'var(--viz-border)'
+        }`,
+      }}
+    >
+      <IconBadge icon={icon} tone={tone} size="sm" />
+      <div className="min-w-0">
+        <div
+          className="truncate font-mono text-[10px] uppercase tracking-[0.1em]"
+          style={{ color: 'var(--viz-text-3)' }}
+        >
+          {eyebrow}
+        </div>
+        <div className="mt-0.5 truncate text-[13.5px] font-medium text-theme-primary">
+          {title}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** Thin connector between two NodeCards in a row. `dashed` marks a branch
+ *  that leaves the main path (e.g. an async write), matching the dashed
+ *  treatment the SVG diagrams already use for the same idea. */
+function NodeConnector({ dashed = false }: { dashed?: boolean }) {
+  return (
+    <div aria-hidden="true" className="flex w-6 shrink-0 items-center justify-center sm:w-9">
+      <div
+        className="h-px w-full"
+        style={
+          dashed
+            ? {
+              backgroundImage:
+                'linear-gradient(to right, var(--viz-indigo) 50%, transparent 50%)',
+              backgroundSize: '6px 1px',
+              opacity: 0.7,
+            }
+            : { background: 'var(--viz-text-3)', opacity: 0.5 }
+        }
+      />
+    </div>
+  )
+}
+
+/** A small mark for the gap between two Bands, so it reads as an intentional
+ *  seam rather than empty space with an unexplained darker patch where the
+ *  surface fade sits. Deliberately not used between every section — see the
+ *  note above `BAND_PAD`. */
+function SectionDivider() {
+  return (
+    <div aria-hidden="true" className="flex justify-center">
+      <div
+        className="h-px w-40"
         style={{
-          background: muted
-            ? 'var(--viz-text-3)'
-            : 'linear-gradient(135deg, var(--color-accent), var(--color-accent-light))',
+          background:
+            'linear-gradient(to right, transparent, var(--viz-border-strong), transparent)',
         }}
       />
-      {children}
-    </li>
+    </div>
+  )
+}
+
+/** Percent position/size within a diagram's SVG viewBox, for matching an
+ *  absolutely positioned GateNode to a connector path drawn in that space. */
+function diagramPct(value: number, total: number): string {
+  return `${(value / total) * 100}%`
+}
+
+/** A node in a *branching* card diagram (Trust Gate, Fails-Open): absolutely
+ *  positioned over a connector-only SVG layer at percentages matching the
+ *  SVG's own coordinate space, so the existing bezier fork/merge math keeps
+ *  driving the layout while the node itself renders as a real HTML card
+ *  with an icon. `active` mirrors the old opacity-dim treatment for a
+ *  branch that isn't the one currently traced/selected; the interactive
+ *  props (onMouseEnter etc.) are spread onto the card so hover/keyboard
+ *  trace behavior carries over unchanged from the SVG version. */
+function GateNode({
+  icon,
+  tone = 'accent',
+  title,
+  sub,
+  active = true,
+  dashed = false,
+  style,
+  interactive,
+}: {
+  /** Omit on a tight/"boring" shared node (e.g. a fork's entry or exit) —
+   *  the icon+padding overhead doesn't leave room for its label otherwise. */
+  icon?: LucideIcon
+  tone?: 'accent' | 'amber' | 'neutral'
+  title: string
+  sub?: string
+  active?: boolean
+  dashed?: boolean
+  style: CSSProperties
+  interactive?: Record<string, unknown>
+}) {
+  const accentColor =
+    tone === 'amber' ? 'var(--viz-amber)' : tone === 'neutral' ? 'var(--viz-text-3)' : 'var(--color-accent)'
+  return (
+    <div
+      {...interactive}
+      className={`absolute flex items-center gap-2.5 overflow-hidden rounded-xl px-3 transition-opacity duration-300 ${
+        icon ? '' : 'justify-center text-center'
+      } ${interactive ? 'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/70' : ''}`}
+      style={{
+        ...style,
+        opacity: active ? 1 : 0.5,
+        background: active && tone !== 'neutral' ? 'var(--viz-card-2)' : 'var(--viz-card)',
+        border: `1px ${dashed ? 'dashed' : 'solid'} ${active && tone !== 'neutral' ? accentColor : 'var(--viz-border)'}`,
+      }}
+    >
+      {icon && <IconBadge icon={icon} tone={tone} size="sm" />}
+      <div className="min-w-0">
+        <div
+          className="text-[12.5px] font-medium leading-[1.25]"
+          style={{ color: active && tone !== 'neutral' ? accentColor : 'var(--viz-text)' }}
+        >
+          {title}
+        </div>
+        {sub && (
+          <div
+            className="mt-0.5 font-mono text-[10px] leading-[1.3]"
+            style={{ color: 'var(--viz-text-3)' }}
+          >
+            {sub}
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -525,6 +729,42 @@ function ConsoleMock() {
 
 /* ─── Hero ───────────────────────────────────────────────────────────────── */
 
+/* A restrained request-path strip under the console mock — brief was "your
+ * app, Statewave, memory, OpenRouter" as thin lines and small nodes, not
+ * another full diagram. Decorative: the hero copy already states this
+ * mechanism in words, so screen readers skip it rather than hearing it
+ * twice. Gives the hero's right column real additional mass instead of
+ * empty space below the card. */
+const HERO_FLOW = [
+  { icon: Send, label: 'Your app' },
+  { icon: Waypoints, label: 'Statewave' },
+  { icon: Layers, label: 'Memory' },
+  { icon: MessageSquareMore, label: 'OpenRouter' },
+] as const
+
+function HeroFlowStrip() {
+  return (
+    <div
+      aria-hidden="true"
+      className="mt-4 flex flex-wrap items-center gap-x-2.5 gap-y-2 rounded-xl px-4 py-3"
+      style={{ border: '1px solid var(--viz-border)', background: 'var(--viz-card)' }}
+    >
+      {HERO_FLOW.map((step, i) => (
+        <span key={step.label} className="flex items-center gap-2.5">
+          {i > 0 && <span style={{ color: 'var(--viz-text-3)' }}>→</span>}
+          <span
+            className="flex items-center gap-1.5 font-mono text-[11.5px]"
+            style={{ color: 'var(--viz-text-3)' }}
+          >
+            <step.icon className="h-3.5 w-3.5" style={{ color: 'var(--color-accent)' }} strokeWidth={2} />
+            {step.label}
+          </span>
+        </span>
+      ))}
+    </div>
+  )
+}
+
 function HeroSection() {
   return (
     <section className="relative isolate overflow-hidden">
@@ -553,7 +793,7 @@ function HeroSection() {
         }}
       />
 
-      <div className="relative z-[2] mx-auto max-w-7xl px-5 pt-28 pb-10 sm:px-6 sm:pt-32 md:pt-36">
+      <div className="relative z-[2] mx-auto max-w-7xl px-5 pt-28 pb-6 sm:px-6 sm:pt-32 md:pt-36">
         <div className="grid items-center gap-11 lg:grid-cols-2">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -584,18 +824,27 @@ function HeroSection() {
               </Button>
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-2 font-mono text-xs">
-              {['CI passing', 'Apache-2.0', 'Python 3.11+', `v${VERSION}`].map((badge) => (
-                <span
-                  key={badge}
-                  className="rounded-full px-3 py-1.5"
-                  style={{
-                    color: 'var(--viz-indigo)',
-                    background: 'var(--viz-fill)',
-                    border: '1px solid var(--viz-border-strong)',
-                  }}
-                >
-                  {badge}
+            {/* One compact metadata row, not pills stacked on top of a second
+                row saying half the same things (Python version, Apache-2.0
+                used to appear twice). */}
+            <div
+              className="mt-8 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 pt-5 font-mono text-xs uppercase tracking-[0.12em] text-theme-muted"
+              style={{ borderTop: '1px solid var(--viz-border)' }}
+            >
+              {[
+                '40 unit tests',
+                'Python 3.11–3.13',
+                '3 memory-aware endpoints',
+                'Apache 2.0',
+                `v${VERSION}`,
+              ].map((item, i) => (
+                <span key={item} className="flex items-center gap-2.5">
+                  {i > 0 && (
+                    <span aria-hidden="true" style={{ color: 'var(--viz-text-3)' }}>
+                      ·
+                    </span>
+                  )}
+                  {item}
                 </span>
               ))}
             </div>
@@ -608,23 +857,57 @@ function HeroSection() {
             className="min-w-0"
           >
             <ConsoleMock />
+            <HeroFlowStrip />
           </motion.div>
-        </div>
-
-        <div
-          className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2.5 pt-5 font-mono text-xs uppercase tracking-[0.12em] text-theme-muted"
-          style={{ borderTop: '1px solid var(--viz-border)' }}
-        >
-          <span>40 unit tests</span>
-          <span aria-hidden="true" style={{ color: 'var(--viz-text-3)' }}>·</span>
-          <span>Python 3.11–3.13</span>
-          <span aria-hidden="true" style={{ color: 'var(--viz-text-3)' }}>·</span>
-          <span>3 memory-aware endpoints</span>
-          <span aria-hidden="true" style={{ color: 'var(--viz-text-3)' }}>·</span>
-          <span>Apache 2.0</span>
         </div>
       </div>
     </section>
+  )
+}
+
+/* ─── Why ────────────────────────────────────────────────────────────────── *
+ * The page went straight from the hero into eight sections of "how it
+ * works" — no scannable "why should I care" first. Each card previews a
+ * section further down the page (diff, flow/subjects, fails-open) rather
+ * than restating it, so this is an overview, not duplicated content. */
+const BENEFITS = [
+  {
+    icon: Waypoints,
+    title: 'One header, zero rewrite',
+    body: 'Change the base URL, add one header. Everything else in your integration stays exactly as it is.',
+  },
+  {
+    icon: Layers,
+    title: 'Context that survives the call',
+    body: 'Every request arrives with the memory of the ones before it, not just the current turn.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Fails open, not closed',
+    body: 'If Statewave is unreachable, the call still goes through — just without memory for that turn.',
+  },
+  {
+    icon: Server,
+    title: 'Self-hosted, Apache 2.0',
+    body: 'Runs next to your own infrastructure. No managed service, no vendor lock-in.',
+  },
+] as const
+
+function BenefitsSection() {
+  return (
+    <Band id="why">
+      <BandHead id="why-heading">Why route through Statewave</BandHead>
+
+      <Rise className="mt-8 grid gap-[18px] sm:grid-cols-2 lg:grid-cols-4">
+        {BENEFITS.map((b) => (
+          <div key={b.title} className={`${CARD} min-w-0 p-6`}>
+            <IconBadge icon={b.icon} />
+            <div className="mt-4 text-[15px] font-semibold text-theme-primary">{b.title}</div>
+            <p className="mt-2 text-sm leading-[1.6] text-theme-secondary">{b.body}</p>
+          </div>
+        ))}
+      </Rise>
+    </Band>
   )
 }
 
@@ -757,7 +1040,6 @@ function DiffSection() {
       <BandHead
         id="the-diff"
         tier="lead"
-        eyebrow="The whole integration change"
         lede="Two lines. Everything else in your integration stays exactly as it is. No subject header means plain pass-through, so memory is opt-in per request rather than a global mode."
       >
         A base URL and <span className="text-gradient-brand">one header</span>
@@ -845,16 +1127,43 @@ function DiffSection() {
         <div className={`${CARD} min-w-0 p-6`}>
           <Eyebrow>What just happened</Eyebrow>
           <ul className="mt-4 flex list-none flex-col gap-3.5 p-0">
-            <Bullet>
-              The proxy assembled a <L to="/product">memory bundle</L> for{' '}
-              <C>user:42</C> and injected it as a system message.
-            </Bullet>
-            <Bullet>The call went to OpenRouter unchanged otherwise.</Bullet>
-            <Bullet>
-              The turn was written back as an episode, after the response was already
-              sent.
-            </Bullet>
+            <IconRow icon={Layers}>
+              A <L to="/product">memory bundle</L> for <C>user:42</C> was injected as a
+              system message.
+            </IconRow>
+            <IconRow icon={Waypoints}>The call went to OpenRouter unchanged otherwise.</IconRow>
+            <IconRow icon={Clock3}>
+              The turn was written back as an episode after the response was sent.
+            </IconRow>
           </ul>
+
+          {/* The path itself, before and after — the bullets above say what
+              happened on one call; this says what changed structurally. */}
+          <div
+            className="mt-5 flex flex-col gap-2.5 pt-5"
+            style={{ borderTop: '1px solid var(--viz-border)' }}
+          >
+            <div
+              className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px]"
+              style={{ color: 'var(--viz-text-3)' }}
+            >
+              <span className="uppercase tracking-[0.08em] opacity-70">before</span>
+              <span>OpenAI Client</span>
+              <span>→</span>
+              <span>OpenRouter</span>
+            </div>
+            <div
+              className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px]"
+              style={{ color: 'var(--color-accent)' }}
+            >
+              <span className="uppercase tracking-[0.08em] opacity-70">after</span>
+              <span>OpenAI Client</span>
+              <span>→</span>
+              <span>Statewave Proxy</span>
+              <span>→</span>
+              <span>OpenRouter</span>
+            </div>
+          </div>
         </div>
       </Rise>
     </Band>
@@ -864,19 +1173,50 @@ function DiffSection() {
 /* ─── Request flow ───────────────────────────────────────────────────────── */
 
 const FLOW_STEPS = [
-  { n: '01', title: 'Client calls the proxy', body: 'Any OpenAI-compatible SDK, unchanged.' },
-  {
-    n: '02',
-    title: 'Context fetched',
-    body: 'Proxy assembles the memory bundle for that subject from Statewave.',
-  },
-  {
-    n: '03',
-    title: 'Forwarded to OpenRouter',
-    body: 'Bundle injected into the request, then passed upstream.',
-  },
-  { n: '04', title: 'Reply relayed back', body: 'Response returned to the client as-is.' },
+  { n: '01', title: 'Client calls the proxy' },
+  { n: '02', title: 'Context fetched' },
+  { n: '03', title: 'Forwarded to OpenRouter' },
+  { n: '04', title: 'Reply relayed back' },
 ] as const
+
+const FLOW_ICONS: Record<string, LucideIcon> = {
+  '01': Send,
+  '02': Search,
+  '03': Waypoints,
+  '04': MessageSquareMore,
+}
+
+/* A row of real cards connected by a line, not an SVG diagram: the steps are
+ * one path, so a connected row says that four equal boxes cannot, and a DOM
+ * card with an icon reads at a glance where SVG text does not. Same
+ * icon-badge dialect as HomePage's feature cards. The episode-write card
+ * sits last in the same row, dashed, joined by a dashed connector — the
+ * same "branches off the main path" idea the old SVG fork drew, without
+ * needing a second axis to lay it out on. */
+function RequestFlowDiagram() {
+  return (
+    <figure className="sw-scroll-x m-0 min-w-0 overflow-x-auto">
+      <div className="flex min-w-max items-center pb-1">
+        {FLOW_STEPS.map((step, i) => (
+          <div key={step.n} className="flex items-center">
+            <NodeCard icon={FLOW_ICONS[step.n]} eyebrow={step.n} title={step.title} />
+            <NodeConnector dashed={i === FLOW_STEPS.length - 1} />
+          </div>
+        ))}
+        <NodeCard
+          icon={Clock3}
+          eyebrow="async · off the critical path"
+          title="Episode written back"
+          dashed
+          className="min-w-[230px]"
+        />
+      </div>
+      <figcaption className="mt-3.5 text-[13.5px] text-theme-muted">
+        One path through the proxy. The write happens after the reply, not before it.
+      </figcaption>
+    </figure>
+  )
+}
 
 const FLOW_NOTES = [
   {
@@ -896,83 +1236,40 @@ const FLOW_NOTES = [
 function FlowSection() {
   return (
     <Band id="flow" tier="lead" surface>
-      <BandHead id="request-flow" tier="lead" eyebrow="How a request flows">
-        Memory in, completion out,{' '}
-        <span className="text-gradient-brand">episode written after</span>
+      <BandHead id="request-flow" tier="lead">
+        Memory in, completion out, episode written after
       </BandHead>
 
-      <Rise className="mt-10 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-5">
-        {FLOW_STEPS.map((step) => (
-          <div key={step.n} className={`${CARD} min-w-0 p-[18px]`}>
-            <div className="font-mono text-[11px]" style={{ color: 'var(--color-accent)' }}>
-              {step.n}
-            </div>
-            <div className="mt-2 text-[14.5px] font-medium text-theme-primary">{step.title}</div>
-            <div className="mt-1.5 text-[13px] leading-[1.55] text-theme-muted">{step.body}</div>
-          </div>
-        ))}
-        <div
-          className="min-w-0 rounded-2xl p-[18px]"
-          style={{
-            border: '1px dashed rgba(122,92,255,0.45)',
-            background: 'rgba(122,92,255,0.07)',
-          }}
-        >
-          <div
-            className="flex flex-wrap items-center gap-2 font-mono text-[11px]"
-            style={{ color: 'var(--viz-indigo)' }}
-          >
-            05
-            <span
-              className="rounded-full px-1.5 py-0.5 text-[10px]"
-              style={{
-                border: '1px solid rgba(122,92,255,0.24)',
-                background: 'rgba(122,92,255,0.10)',
-              }}
-            >
-              fire-and-forget
-            </span>
-          </div>
-          <div className="mt-2 text-[14.5px] font-medium text-theme-primary">
-            Episode written back
-          </div>
-          <div className="mt-1.5 text-[13px] leading-[1.55] text-theme-muted">
-            Turn stored in Statewave asynchronously, off the critical path.
-          </div>
-        </div>
+      <Rise className="mt-10">
+        <RequestFlowDiagram />
       </Rise>
 
-      <Rise className="mt-5 grid gap-[18px] md:grid-cols-2">
+      <Rise className="mt-9 grid gap-[18px] md:grid-cols-2">
         <div className={`${CARD} min-w-0 p-[22px]`}>
           <Eyebrow>What the proxy touches</Eyebrow>
           <ul className="mt-3.5 flex list-none flex-col gap-3 p-0">
-            <Bullet>
-              It adds the memory bundle to the request and reads the reply text back
-              out.
-            </Bullet>
-            <Bullet>
-              Statewave headers and the <C>statewave_subject</C> body field are
-              stripped before the call goes upstream.
-            </Bullet>
-            <Bullet>
-              Model, temperature, tools, and every other parameter pass through
-              untouched.
-            </Bullet>
+            <IconRow icon={Check}>Adds the memory bundle, reads the reply text back out.</IconRow>
+            <IconRow icon={Check}>
+              Strips Statewave headers and the <C>statewave_subject</C> body field
+              before the call goes upstream.
+            </IconRow>
+            <IconRow icon={Check}>
+              Leaves model, temperature, tools and every other parameter untouched.
+            </IconRow>
           </ul>
         </div>
         <div className={`${CARD} min-w-0 p-[22px]`}>
           <Eyebrow>What it leaves alone</Eyebrow>
           <ul className="mt-3.5 flex list-none flex-col gap-3 p-0">
-            <Bullet muted>
-              A request with no subject is a plain pass-through, byte for byte.
-            </Bullet>
-            <Bullet muted>
-              Non-completion paths such as <C>/v1/models</C> are forwarded as-is.
-            </Bullet>
-            <Bullet muted>
-              Your OpenRouter key stays your key; the proxy forwards it rather than
-              replacing it.
-            </Bullet>
+            <IconRow icon={Minus} tone="muted">
+              No subject header: a plain pass-through, byte for byte.
+            </IconRow>
+            <IconRow icon={Minus} tone="muted">
+              Non-completion paths such as <C>/v1/models</C> forward as-is.
+            </IconRow>
+            <IconRow icon={Minus} tone="muted">
+              Your OpenRouter key stays yours; the proxy forwards it, never replaces it.
+            </IconRow>
           </ul>
         </div>
       </Rise>
@@ -1050,9 +1347,7 @@ function ResponsesGlyph() {
 function EndpointsSection() {
   return (
     <Band id="endpoints">
-      <BandHead id="endpoints-heading" eyebrow="Three memory-aware endpoints">
-        Where the bundle goes, <span className="text-gradient-brand">per endpoint</span>
-      </BandHead>
+      <BandHead id="endpoints-heading">Where the bundle goes, per endpoint</BandHead>
 
       <Rise className="mt-8">
         <DataTable
@@ -1116,67 +1411,62 @@ const SUBJECT_CURL = `curl http://localhost:8080/v1/chat/completions \\
   -H "Content-Type: application/json" \\
   -d '{"model":"openai/gpt-4o","messages":[{"role":"user","content":"What coffee do I like?"}]}'`
 
+/* Real turn cards connected by a line, not SVG text on a rail — same move as
+ * RequestFlowDiagram. The compiled-bundle card below is the merge point for
+ * all three turns, so it stays full-width rather than trying to draw three
+ * converging lines into it. */
 function SubjectTimeline() {
   const turns = [
-    { x: 2, cx: 105, label: 'turn 1', text: 'oat lattes', session: 'no session', dot: 'var(--color-accent)', stroke: 'var(--viz-border)' },
-    { x: 237, cx: 340, label: 'turn 2', text: 'no sugar', session: 'session: sess_abc', dot: 'var(--color-accent-light)', stroke: 'rgba(74,140,255,0.34)' },
-    { x: 472, cx: 575, label: 'turn 3', text: 'decaf after 4pm', session: 'session: sess_abc', dot: 'var(--color-accent-light)', stroke: 'rgba(74,140,255,0.34)' },
-  ]
+    { label: 'turn 1', text: 'oat lattes', session: null },
+    { label: 'turn 2', text: 'no sugar', session: 'sess_abc' },
+    { label: 'turn 3', text: 'decaf after 4pm', session: 'sess_abc' },
+  ] as const
+
   return (
-    <figure className="sw-scroll-x m-0 mx-auto min-w-0 max-w-[680px] overflow-x-auto">
-      <svg
-        viewBox="0 0 680 236"
-        role="img"
-        aria-labelledby="subTitle subDesc"
-        preserveAspectRatio="xMidYMid meet"
-        className="mx-auto block h-auto w-full min-w-[480px] max-w-[680px]"
-      >
-        <title id="subTitle">Turns accumulating under one subject</title>
-        <desc id="subDesc">
-          Three turns recorded under the subject user:42 accumulate into a compiled
-          memory bundle. The second and third turns also carry the session sess_abc,
-          showing that a session scopes a run of turns inside a subject.
-        </desc>
-        <text x="2" y="16" className="font-mono" fontSize="12" fill="var(--viz-indigo)">
-          subject: user:42
-        </text>
-        <line x1="2" y1="54" x2="678" y2="54" stroke="var(--viz-border)" strokeWidth="1.5" />
-        {turns.map((t) => (
-          <g key={t.label}>
-            <circle cx={t.cx} cy="54" r="6" fill={t.dot} />
-            <rect x={t.x} y="74" width="206" height="78" rx="14" fill="var(--viz-card)" stroke={t.stroke} />
-            <text x={t.cx} y="98" textAnchor="middle" className="font-mono" fontSize="11" fill="var(--viz-text-3)">
-              {t.label}
-            </text>
-            <text x={t.cx} y="120" textAnchor="middle" fontSize="13" fill="var(--viz-text)">
-              {t.text}
-            </text>
-            <text
-              x={t.cx}
-              y="140"
-              textAnchor="middle"
-              className="font-mono"
-              fontSize="10"
-              fill={t.session === 'no session' ? 'var(--viz-text-3)' : 'var(--viz-indigo)'}
+    <figure
+      className="sw-scroll-x m-0 mx-auto min-w-0 max-w-[680px] overflow-x-auto"
+      aria-label="Turns accumulating under one subject"
+    >
+      <div className="mb-3 font-mono text-xs" style={{ color: 'var(--viz-indigo)' }}>
+        subject: user:42
+      </div>
+      <div className="flex min-w-max items-center">
+        {turns.map((t, i) => (
+          <div key={t.label} className="flex items-center">
+            <div
+              className="flex min-w-[176px] flex-col gap-2.5 rounded-xl p-3.5"
+              style={{
+                background: 'var(--viz-card)',
+                border: `1px solid ${t.session ? 'rgba(74,140,255,0.34)' : 'var(--viz-border)'}`,
+              }}
             >
-              {t.session}
-            </text>
-            <path d={`M${t.cx} 156 L${t.cx} 176`} stroke="var(--viz-text-3)" strokeWidth="1.2" />
-          </g>
+              <div className="flex items-center gap-2">
+                <IconBadge icon={MessageSquareMore} size="sm" />
+                <span className="font-mono text-[11px]" style={{ color: 'var(--viz-text-3)' }}>
+                  {t.label}
+                </span>
+              </div>
+              <div className="text-[13px] text-theme-primary">{t.text}</div>
+              <div
+                className="font-mono text-[10px]"
+                style={{ color: t.session ? 'var(--viz-indigo)' : 'var(--viz-text-3)' }}
+              >
+                {t.session ? `session: ${t.session}` : 'no session'}
+              </div>
+            </div>
+            {i < turns.length - 1 && <NodeConnector />}
+          </div>
         ))}
-        <rect
-          x="2"
-          y="178"
-          width="676"
-          height="52"
-          rx="14"
-          fill="rgba(122,92,255,0.08)"
-          stroke="rgba(122,92,255,0.30)"
-        />
-        <text x="340" y="209" textAnchor="middle" className="font-mono" fontSize="12.5" fill="var(--viz-indigo)">
+      </div>
+      <div
+        className="mt-4 flex min-w-max items-center gap-3 rounded-xl p-3.5"
+        style={{ background: 'rgba(122,92,255,0.08)', border: '1px solid rgba(122,92,255,0.30)' }}
+      >
+        <IconBadge icon={Layers} />
+        <span className="font-mono text-[12.5px]" style={{ color: 'var(--viz-indigo)' }}>
           compiled memory bundle for user:42
-        </text>
-      </svg>
+        </span>
+      </div>
       <figcaption className="mt-3.5 text-[13.5px] text-theme-muted">
         A session scopes a run of turns inside a subject; the subject keeps the memory.
       </figcaption>
@@ -1228,7 +1518,6 @@ function SubjectsSection() {
     <Band id="subjects" surface>
       <BandHead
         id="subjects-heading"
-        eyebrow="Subjects and sessions"
         lede={
           <>
             A subject is the <L to="/product">unit of memory</L>. A session narrows it
@@ -1236,7 +1525,7 @@ function SubjectsSection() {
           </>
         }
       >
-        Who the memory <span className="text-gradient-brand">belongs to</span>
+        Who the memory belongs to
       </BandHead>
 
       {/* The diagram is the explanation, so it leads. Capped to the SVG's own
@@ -1365,99 +1654,97 @@ const GATE_OUTCOMES: {
   { key: 'jwt', y: 194, title: 'sub claim', sub: 'signed token', accent: 'var(--color-accent)' },
 ]
 
-function TrustGateDiagram({ mode }: { mode: TrustMode }) {
-  // Inactive branches drop back but stay readable — at 0.28 they looked
-  // disabled rather than simply not-selected, which is a different claim.
-  const on = (k: TrustMode) => (mode === k ? 1 : 0.5)
+const AUTH_VIEW = { w: 492, h: 256 }
+const authPct = (v: number, dim: 'w' | 'h') => diagramPct(v, AUTH_VIEW[dim])
 
+const GATE_ICONS: Record<TrustMode, LucideIcon> = {
+  none: ShieldAlert,
+  header: Radio,
+  jwt: KeyRound,
+}
+
+/* Connector paths stay SVG (the existing bezier fork math is reused as-is);
+ * every node is now a real HTML card layered on top at matching percentage
+ * coordinates, so the diagram renders crisp DOM text and an icon instead of
+ * 10-13px SVG labels. */
+function TrustGateDiagram({ mode }: { mode: TrustMode }) {
   return (
     <figure className="m-0 min-w-0">
-      <svg
-        viewBox="0 0 492 256"
-        role="img"
-        aria-labelledby="authTitle authDesc"
-        className="block h-auto w-full"
-      >
-        <title id="authTitle">How the proxy decides whether to trust a subject</title>
-        <desc id="authDesc">
-          A request naming a subject reaches the trust gate. With nothing configured
-          it is rejected with 400. With the trust flag set the header is taken as
-          sent. With a JWT secret set the subject is taken from the token&apos;s sub
-          claim.
-        </desc>
-
-        {/* request */}
-        <rect x="0" y="102" width="122" height="52" rx="13" fill="var(--viz-card)" stroke="var(--viz-border)" />
-        <text x="61" y="124" textAnchor="middle" fontSize="13" fill="var(--viz-text)">
-          request
-        </text>
-        <text x="61" y="141" textAnchor="middle" className="font-mono" fontSize="10" fill="var(--viz-text-3)">
-          names a subject
-        </text>
-
-        <line x1="122" y1="128" x2="154" y2="128" stroke="var(--viz-text-3)" strokeWidth="1.5" />
-
-        {/* the gate */}
-        <rect
-          x="154"
-          y="98"
-          width="94"
-          height="60"
-          rx="14"
-          fill="rgba(122,92,255,0.10)"
-          stroke="var(--color-accent)"
-          strokeWidth="1.6"
-        />
-        <text x="201" y="122" textAnchor="middle" className="font-mono" fontSize="11" fill="var(--viz-indigo)">
-          trust
-        </text>
-        <text x="201" y="138" textAnchor="middle" className="font-mono" fontSize="11" fill="var(--viz-indigo)">
-          gate
-        </text>
-
-        {GATE_OUTCOMES.map((o) => {
-          const cy = o.y + 29
-          const active = mode === o.key
-          // Cubic out of the gate's right edge into the node's left edge, so
-          // every branch leaves and lands horizontally instead of cutting a
-          // diagonal across the frame.
-          const d = `M248 128 C278 128 278 ${cy} 306 ${cy}`
-          return (
-            <g
-              key={o.key}
-              className="transition-opacity duration-300"
-              style={{ opacity: on(o.key) }}
-            >
+      <div className="relative w-full" style={{ aspectRatio: `${AUTH_VIEW.w} / ${AUTH_VIEW.h}` }}>
+        <svg
+          viewBox={`0 0 ${AUTH_VIEW.w} ${AUTH_VIEW.h}`}
+          role="img"
+          aria-labelledby="authTitle authDesc"
+          className="absolute inset-0 block h-full w-full"
+        >
+          <title id="authTitle">How the proxy decides whether to trust a subject</title>
+          <desc id="authDesc">
+            A request naming a subject reaches the trust gate. With nothing configured it
+            is rejected with 400. With the trust flag set the header is taken as sent.
+            With a JWT secret set the subject is taken from the token&apos;s sub claim.
+          </desc>
+          <line x1="122" y1="128" x2="154" y2="128" stroke="var(--viz-text-3)" strokeWidth="1.5" />
+          {GATE_OUTCOMES.map((o) => {
+            const cy = o.y + 29
+            const active = mode === o.key
+            // Cubic out of the gate's right edge into the node's left edge, so
+            // every branch leaves and lands horizontally instead of cutting a
+            // diagonal across the frame.
+            const d = `M248 128 C278 128 278 ${cy} 306 ${cy}`
+            return (
               <path
+                key={o.key}
                 d={d}
                 fill="none"
                 stroke={active ? o.accent : 'var(--viz-text-3)'}
                 strokeWidth={active ? 2 : 1.3}
                 strokeLinecap="round"
+                className="transition-[stroke,stroke-width] duration-300"
               />
-              <rect
-                x="306"
-                y={o.y}
-                width="186"
-                height="58"
-                rx="14"
-                fill={active ? 'var(--viz-card-2)' : 'var(--viz-card)'}
-                stroke={active ? o.accent : 'var(--viz-border)'}
-                strokeWidth={active ? 1.6 : 1}
-                strokeDasharray={o.dashed ? '6 5' : undefined}
-              />
-              {/* state pip, so each outcome is identifiable without colour alone */}
-              <circle cx="326" cy={o.y + 29} r="4" fill={active ? o.accent : 'var(--viz-text-3)'} />
-              <text x="342" y={o.y + 26} className="font-mono" fontSize="12" fill={active ? o.accent : 'var(--viz-text)'}>
-                {o.title}
-              </text>
-              <text x="342" y={o.y + 43} className="font-mono" fontSize="10" fill="var(--viz-text-3)">
-                {o.sub}
-              </text>
-            </g>
-          )
-        })}
-      </svg>
+            )
+          })}
+        </svg>
+
+        <GateNode
+          icon={Send}
+          tone="neutral"
+          title="request"
+          sub="names a subject"
+          style={{
+            left: authPct(0, 'w'),
+            top: authPct(102, 'h'),
+            width: authPct(122, 'w'),
+            height: authPct(52, 'h'),
+          }}
+        />
+        <GateNode
+          icon={ShieldCheck}
+          title="trust gate"
+          style={{
+            left: authPct(154, 'w'),
+            top: authPct(98, 'h'),
+            width: authPct(94, 'w'),
+            height: authPct(60, 'h'),
+          }}
+        />
+        {GATE_OUTCOMES.map((o) => (
+          <GateNode
+            key={o.key}
+            icon={GATE_ICONS[o.key]}
+            tone={o.key === 'none' ? 'amber' : 'accent'}
+            title={o.title}
+            sub={o.sub}
+            active={mode === o.key}
+            dashed={o.dashed}
+            style={{
+              left: authPct(306, 'w'),
+              top: authPct(o.y, 'h'),
+              width: authPct(186, 'w'),
+              height: authPct(58, 'h'),
+            }}
+          />
+        ))}
+      </div>
       <figcaption className="mt-4 text-[13.5px] text-theme-muted">
         One gate, three outcomes. Pick a setting below to follow its branch.
       </figcaption>
@@ -1475,10 +1762,7 @@ function AuthSection() {
 
   return (
     <Band id="auth">
-      <BandHead id="auth-heading" eyebrow="Authenticating the subject">
-        One decision to get right{' '}
-        <span className="text-gradient-brand">before you deploy</span>
-      </BandHead>
+      <BandHead id="auth-heading">One decision to get right before you deploy</BandHead>
 
       <Rise className="mt-7 grid items-center gap-9 md:grid-cols-2">
         <div className="min-w-0">
@@ -1522,16 +1806,19 @@ function AuthSection() {
                 active ? '!border-brand-500/55' : ''
               }`}
             >
-              <span
-                className="inline-flex rounded-full px-2.5 py-1 font-mono text-[11px]"
-                style={{
-                  color: 'var(--viz-indigo)',
-                  background: m.chipTint + (active ? '0.18)' : '0.08)'),
-                  border: '1px solid ' + m.chipTint + '0.18)',
-                }}
-              >
-                {m.chip}
-              </span>
+              <div className="flex items-center justify-between gap-3">
+                <IconBadge icon={GATE_ICONS[m.key]} tone={m.key === 'none' ? 'amber' : 'accent'} size="sm" />
+                <span
+                  className="inline-flex rounded-full px-2.5 py-1 font-mono text-[11px]"
+                  style={{
+                    color: 'var(--viz-indigo)',
+                    background: m.chipTint + (active ? '0.18)' : '0.08)'),
+                    border: '1px solid ' + m.chipTint + '0.18)',
+                  }}
+                >
+                  {m.chip}
+                </span>
+              </div>
               <div
                 className={`mt-3.5 font-semibold text-theme-primary ${
                   m.mono ? 'overflow-x-auto font-mono text-sm' : 'text-base'
@@ -1566,9 +1853,7 @@ const FO_BRANCHES = [
     title: 'context ok',
     sub: 'bundle assembled',
     reply: 'with memory',
-    fill: 'rgba(122,92,255,0.08)',
     stroke: 'var(--color-accent)',
-    color: 'var(--viz-indigo)',
   },
   {
     key: 'failed' as const,
@@ -1577,150 +1862,137 @@ const FO_BRANCHES = [
     title: 'context failed',
     sub: 'logged, not raised',
     reply: 'no memory',
-    fill: 'rgba(245,158,11,0.10)',
     stroke: 'var(--viz-amber)',
-    color: 'var(--viz-amber)',
     dashed: true,
   },
 ]
 
+const FO_VIEW = { w: 680, h: 208 }
+const foPct = (v: number, dim: 'w' | 'h') => diagramPct(v, FO_VIEW[dim])
+const FO_ICONS: Record<'healthy' | 'failed', LucideIcon> = {
+  healthy: CircleCheck,
+  failed: TriangleAlert,
+}
+
+/* Same hybrid pattern as TrustGateDiagram: SVG carries only the fork/merge
+ * connector paths, every node is an HTML card. The hover/keyboard trace
+ * moves from the old SVG <g> onto the card itself via `interactive`. */
 function FailsOpenDiagram() {
   const [trace, setTrace] = useState<'healthy' | 'failed' | null>(null)
-  const dim = (k: 'healthy' | 'failed') => (trace && trace !== k ? 0.32 : 1)
 
   return (
     <figure className="sw-scroll-x m-0 mx-auto min-w-0 max-w-[680px] overflow-x-auto">
-      <svg
-        viewBox="0 0 680 208"
-        role="img"
-        aria-labelledby="foTitle foDesc"
-        className="block h-auto w-full min-w-[540px] max-w-[680px]"
+      <div
+        className="relative min-w-[540px] max-w-[680px]"
+        style={{ aspectRatio: `${FO_VIEW.w} / ${FO_VIEW.h}` }}
       >
-        <title id="foTitle">Fails-open comparison</title>
-        <desc id="foDesc">
-          One request forks at the context step. When Statewave is healthy the bundle
-          is assembled; when it is unreachable the failure is logged rather than
-          raised. Both paths rejoin and return 200 OK, and only the memory in the
-          reply differs.
-        </desc>
+        <svg
+          viewBox={`0 0 ${FO_VIEW.w} ${FO_VIEW.h}`}
+          role="img"
+          aria-labelledby="foTitle foDesc"
+          className="absolute inset-0 block h-full w-full"
+        >
+          <title id="foTitle">Fails-open comparison</title>
+          <desc id="foDesc">
+            One request forks at the context step. When Statewave is healthy the bundle
+            is assembled; when it is unreachable the failure is logged rather than
+            raised. Both paths rejoin and return 200 OK, and only the memory in the
+            reply differs.
+          </desc>
+          <line x1="550" y1="104" x2="568" y2="104" stroke="var(--viz-text-3)" strokeWidth="1.5" />
+          {FO_BRANCHES.map((b) => {
+            const cy = b.y + 27
+            const active = trace === b.key
+            return (
+              <g key={b.key}>
+                {/* fork out, then merge back: both curves leave and arrive
+                    horizontally so the join reads as a rejoin, not a collision */}
+                <path
+                  d={`M110 104 C148 104 148 ${cy} 186 ${cy}`}
+                  fill="none"
+                  stroke={active ? b.stroke : 'var(--viz-text-3)'}
+                  strokeWidth={active ? 2 : 1.4}
+                  strokeLinecap="round"
+                  className="transition-[stroke,stroke-width] duration-300"
+                />
+                <path
+                  d={`M356 ${cy} C394 ${cy} 394 104 432 104`}
+                  fill="none"
+                  stroke={active ? b.stroke : 'var(--viz-text-3)'}
+                  strokeWidth={active ? 2 : 1.4}
+                  strokeLinecap="round"
+                  className="transition-[stroke,stroke-width] duration-300"
+                />
+              </g>
+            )
+          })}
+        </svg>
 
-        {/* shared entry */}
-        <rect x="0" y="77" width="110" height="54" rx="13" fill="var(--viz-card)" stroke="var(--viz-border)" />
-        <text x="55" y="109" textAnchor="middle" fontSize="13" fill="var(--viz-text)">
-          request
-        </text>
+        <GateNode
+          tone="neutral"
+          title="request"
+          style={{
+            left: foPct(0, 'w'),
+            top: foPct(77, 'h'),
+            width: foPct(110, 'w'),
+            height: foPct(54, 'h'),
+          }}
+        />
 
         {FO_BRANCHES.map((b) => {
-          const cy = b.y + 27
           const active = trace === b.key
           return (
-            <g
+            <GateNode
               key={b.key}
-              // Focusable and focus-driven, not hover-only: an SVG <g> takes no
-              // keyboard focus by default, so without this the branch trace was
-              // unreachable for anyone not using a pointer.
-              tabIndex={0}
-              role="button"
-              aria-label={`Trace the ${b.label.toLowerCase()} path`}
-              aria-pressed={trace === b.key}
-              className="transition-opacity duration-300 focus:outline-none"
-              style={{ opacity: dim(b.key), cursor: 'pointer' }}
-              onMouseEnter={() => setTrace(b.key)}
-              onMouseLeave={() => setTrace(null)}
-              onFocus={() => setTrace(b.key)}
-              onBlur={() => setTrace(null)}
-            >
-              {/* visible focus ring, since SVG gets no UA outline */}
-              {trace === b.key && (
-                <rect
-                  x="182"
-                  y={b.y - 4}
-                  width="178"
-                  height="62"
-                  rx="17"
-                  fill="none"
-                  stroke={b.stroke}
-                  strokeWidth="1"
-                  opacity="0.45"
-                />
-              )}
-              {/* fork out, then merge back: both curves leave and arrive
-                  horizontally so the join reads as a rejoin, not a collision */}
-              <path
-                d={`M110 104 C148 104 148 ${cy} 186 ${cy}`}
-                fill="none"
-                stroke={active ? b.stroke : 'var(--viz-text-3)'}
-                strokeWidth={active ? 2 : 1.4}
-                strokeLinecap="round"
-              />
-              <path
-                d={`M356 ${cy} C394 ${cy} 394 104 432 104`}
-                fill="none"
-                stroke={active ? b.stroke : 'var(--viz-text-3)'}
-                strokeWidth={active ? 2 : 1.4}
-                strokeLinecap="round"
-              />
-
-              <text x="186" y={b.y - 8} className="font-mono" fontSize="10" letterSpacing="1.2" fill="var(--viz-text-3)">
-                {b.label}
-              </text>
-              <rect
-                x="186"
-                y={b.y}
-                width="170"
-                height="54"
-                rx="13"
-                fill={b.fill}
-                stroke={b.stroke}
-                strokeWidth={active ? 1.8 : 1.1}
-                strokeDasharray={b.dashed ? '6 5' : undefined}
-              />
-              <text x="271" y={b.y + 24} textAnchor="middle" fontSize="13" fontWeight="500" fill={b.color}>
-                {b.title}
-              </text>
-              <text x="271" y={b.y + 42} textAnchor="middle" className="font-mono" fontSize="10.5" fill="var(--viz-text-3)">
-                {b.sub}
-              </text>
-
-              {/* what each path is carrying when it rejoins */}
-              <text
-                x="394"
-                y={b.key === 'healthy' ? b.y + 14 : b.y + 48}
-                textAnchor="middle"
-                className="font-mono"
-                fontSize="10"
-                fill={active ? b.color : 'var(--viz-text-3)'}
-              >
-                {b.reply}
-              </text>
-            </g>
+              icon={FO_ICONS[b.key]}
+              tone={b.key === 'failed' ? 'amber' : 'accent'}
+              title={b.title}
+              sub={b.sub}
+              active={trace === null || active}
+              dashed={b.dashed}
+              style={{
+                left: foPct(186, 'w'),
+                top: foPct(b.y, 'h'),
+                width: foPct(170, 'w'),
+                height: foPct(54, 'h'),
+              }}
+              interactive={{
+                tabIndex: 0,
+                role: 'button',
+                'aria-label': `Trace the ${b.label.toLowerCase()} path — reply ${b.reply}`,
+                'aria-pressed': active,
+                onMouseEnter: () => setTrace(b.key),
+                onMouseLeave: () => setTrace(null),
+                onFocus: () => setTrace(b.key),
+                onBlur: () => setTrace(null),
+              }}
+            />
           )
         })}
 
-        {/* shared exit */}
-        <rect x="432" y="77" width="118" height="54" rx="13" fill="var(--viz-card)" stroke="var(--viz-border)" />
-        <text x="491" y="109" textAnchor="middle" fontSize="13" fill="var(--viz-text)">
-          completion
-        </text>
-        <line x1="550" y1="104" x2="568" y2="104" stroke="var(--viz-text-3)" strokeWidth="1.5" />
-        <rect
-          x="568"
-          y="77"
-          width="112"
-          height="54"
-          rx="13"
-          fill="rgba(74,140,255,0.08)"
-          stroke="rgba(74,140,255,0.34)"
+        <GateNode
+          tone="neutral"
+          title="completion"
+          style={{
+            left: foPct(432, 'w'),
+            top: foPct(77, 'h'),
+            width: foPct(118, 'w'),
+            height: foPct(54, 'h'),
+          }}
         />
-        <text x="624" y="100" textAnchor="middle" className="font-mono" fontSize="13" fontWeight="500" fill="var(--viz-text)">
-          200 OK
-        </text>
-        <text x="624" y="117" textAnchor="middle" className="font-mono" fontSize="10" fill="var(--viz-text-3)">
-          either way
-        </text>
-      </svg>
+        <GateNode
+          title="200 OK"
+          style={{
+            left: foPct(568, 'w'),
+            top: foPct(77, 'h'),
+            width: foPct(112, 'w'),
+            height: foPct(54, 'h'),
+          }}
+        />
+      </div>
       <figcaption className="mt-4 text-[13.5px] text-theme-muted">
-        One step differs. Hover a branch to trace it: the reply is a success on both.
+        One step differs. Hover a branch to trace it — both reply 200 OK, only the
+        memory in the reply changes.
       </figcaption>
     </figure>
   )
@@ -1728,16 +2000,19 @@ function FailsOpenDiagram() {
 
 const FAILURE_CARDS = [
   {
+    icon: ServerCrash,
     eyebrow: 'Context read fails',
     title: 'The call still goes out',
     body: 'No bundle is injected, the error is logged, and the completion is forwarded as though no subject had been supplied. The client sees a normal reply with no memory in it.',
   },
   {
+    icon: Clock3,
     eyebrow: 'Episode write fails',
     title: 'The client never notices',
     body: 'The write happens after the reply has been sent, so a failure there cannot affect the response. That turn is missing from the subject’s history and the next one carries on from what is stored.',
   },
   {
+    icon: TriangleAlert,
     eyebrow: 'OpenRouter fails',
     title: 'The upstream error reaches you',
     body: 'Upstream status codes and error bodies are relayed rather than rewritten, so your existing error handling keeps working. Nothing is written to memory for a turn that produced no answer.',
@@ -1749,7 +2024,6 @@ function FailsOpenSection() {
     <Band id="failsopen" surface>
       <BandHead
         id="fails-open-heading"
-        eyebrow="Fails open"
         lede={
           <>
             If context assembly or the episode write fails, whether the server is
@@ -1760,8 +2034,7 @@ function FailsOpenSection() {
           </>
         }
       >
-        An enhancement,{' '}
-        <span className="text-gradient-brand">never a hard dependency</span>
+        An enhancement, never a hard dependency
       </BandHead>
 
       <Rise className="mt-9">
@@ -1780,8 +2053,9 @@ function FailsOpenSection() {
       <Rise className="mt-8 grid gap-[18px] md:grid-cols-3">
         {FAILURE_CARDS.map((card) => (
           <div key={card.eyebrow} className={`${CARD} min-w-0 p-[22px]`}>
-            <Eyebrow>{card.eyebrow}</Eyebrow>
-            <div className="mt-3 text-[15px] font-semibold text-theme-primary">{card.title}</div>
+            <IconBadge icon={card.icon} size="sm" />
+            <Eyebrow className="mt-3">{card.eyebrow}</Eyebrow>
+            <div className="mt-1.5 text-[15px] font-semibold text-theme-primary">{card.title}</div>
             <p className="mt-2.5 text-sm leading-[1.6] text-theme-secondary">{card.body}</p>
           </div>
         ))}
@@ -1797,10 +2071,9 @@ function ConfigSection() {
     <Band id="config">
       <BandHead
         id="config-heading"
-        eyebrow="Configuration"
         lede="Everything is read from the environment, so the same image runs on a laptop and behind a gateway with no code change. The first two are required for memory to work at all; the last two decide who is allowed to name a subject."
       >
-        Four settings decide <span className="text-gradient-brand">how it behaves</span>
+        Four settings decide how it behaves
       </BandHead>
 
       <Rise className="mt-8">
@@ -1903,8 +2176,8 @@ function QuickStartSection() {
 
   return (
     <Band id="start" tier="lead" surface>
-      <BandHead id="quick-start-heading" tier="lead" eyebrow="Quick start">
-        Running in <span className="text-gradient-brand">three commands</span>
+      <BandHead id="quick-start-heading" tier="lead">
+        Running in three commands
       </BandHead>
 
       <Rise
@@ -1991,22 +2264,22 @@ function QuickStartSection() {
         <div className={`${CARD} min-w-0 p-6`}>
           <Eyebrow>Before you put it in front of users</Eyebrow>
           <ul className="mt-4 flex list-none flex-col gap-3.5 p-0">
-            <Bullet>
-              Decide how subjects are trusted. A trusted header is right on a private
-              network; anything public needs signed tokens.
-            </Bullet>
-            <Bullet>
-              Pick subject ids that are stable for the life of the user, not per
-              install or per device.
-            </Bullet>
-            <Bullet>
-              Point your health check at <C>/health</C> and watch the log for context
-              and episode failures, since neither one surfaces as a request error.
-            </Bullet>
-            <Bullet muted>
-              Talking to Statewave directly instead of through the proxy? The{' '}
+            <IconRow icon={ShieldCheck}>
+              Decide how subjects are trusted: a trusted header on a private network,
+              signed tokens for anything public.
+            </IconRow>
+            <IconRow icon={KeyRound}>
+              Pick subject ids stable for the user&apos;s lifetime, not per install or
+              device.
+            </IconRow>
+            <IconRow icon={Search}>
+              Point your health check at <C>/health</C>; context and episode failures
+              never surface as a request error.
+            </IconRow>
+            <IconRow icon={Waypoints} tone="muted">
+              Talking to Statewave directly? The{' '}
               <L to="/developers">Python and TypeScript SDKs</L> cover that path.
-            </Bullet>
+            </IconRow>
           </ul>
         </div>
       </Rise>
@@ -2016,6 +2289,52 @@ function QuickStartSection() {
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
+/* ─── Closing CTA ────────────────────────────────────────────────────────── *
+ * Same `cta-card`/`cta-card-glow` closing pattern as HomePage and the /vs/*
+ * pages (src/index.css), so the page ends the way the rest of the site does
+ * rather than inventing its own send-off. Buttons mirror the hero's exact
+ * pair (same targets, same arrow-on-hover affordance) so the page opens and
+ * closes on the same action. */
+function CTASection() {
+  return (
+    <Section>
+      <div className="cta-card relative overflow-hidden rounded-[2.5rem] border border-brand-500/25 bg-surface-1/55 px-6 py-20 text-center">
+        <div className="cta-card-glow absolute inset-0" aria-hidden="true" />
+        <div
+          className="absolute inset-x-20 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/60 to-transparent"
+          aria-hidden="true"
+        />
+
+        <div className="relative z-10 mx-auto max-w-2xl">
+          <Heading
+            id="give-openrouter-memory"
+            className="font-heading text-4xl md:text-[56px] font-bold leading-[1.05] tracking-[-0.04em] text-theme-primary"
+          >
+            Give OpenRouter calls <span className="text-gradient-brand">persistent memory</span>
+          </Heading>
+
+          <p className="mx-auto mt-6 max-w-xl text-[17px] leading-[1.6] text-theme-secondary/85">
+            Self-host the Apache 2.0 proxy, point your existing client at it, and
+            every call ships with the context of the ones before it.
+          </p>
+
+          <div className="mt-10 flex flex-wrap justify-center gap-4">
+            <Button to="/openrouter#start" size="lg">
+              <span>Get started</span>
+              <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">
+                →
+              </span>
+            </Button>
+            <Button href={REPO_URL} variant="secondary" size="lg">
+              View on GitHub
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Section>
+  )
+}
+
 export function OpenRouterPage() {
   // JSON-LD for this route lives in lib/page-schema.ts so the prerenderer
   // emits it too; passing it here would reach the client only.
@@ -2024,8 +2343,10 @@ export function OpenRouterPage() {
   return (
     <div className="bg-surface-0">
       <HeroSection />
-      <SectionNav sections={NAV_SECTIONS} label="Proxy documentation sections" />
+      <BenefitsSection />
+      <SectionDivider />
       <DiffSection />
+      <SectionDivider />
       <FlowSection />
       <EndpointsSection />
       <SubjectsSection />
@@ -2034,6 +2355,7 @@ export function OpenRouterPage() {
       <ConfigSection />
       <QuickStartSection />
       <PageFaq route="/openrouter" />
+      <CTASection />
     </div>
   )
 }
