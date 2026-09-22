@@ -1,5 +1,5 @@
 import { motion, useReducedMotion, type Variants } from 'framer-motion'
-import { useState, type CSSProperties, type ReactNode } from 'react'
+import { Fragment, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import {
   Send,
@@ -50,6 +50,14 @@ const CARD =
   'hover:shadow-[0_18px_50px_rgba(122,92,255,0.14)] ' +
   'focus-within:-translate-y-0.5 focus-within:border-brand-500/45 ' +
   'focus-within:shadow-[0_18px_50px_rgba(122,92,255,0.14)]'
+
+/* Secondary notes — the caveats and edge cases that follow a diagram or a
+ * code panel — sit as open columns under a hairline rather than in CARD.
+ * Every block in a section was boxed, so a diagram, a code panel and a row
+ * of notes stacked into one wall of borders with ~20px between them. The
+ * primary artefacts keep their box; the notes that comment on them don't
+ * need one, and the section gets the air the boxes were taking. */
+const NOTE = 'min-w-0 border-t border-brand-500/25 pt-5'
 
 /* ─── Page shell ─────────────────────────────────────────────────────────────
  * The page is one argument, not nine equal chapters, so the section shells
@@ -307,6 +315,7 @@ function NodeCard({
   eyebrow,
   title,
   dashed = false,
+  stacked = false,
   className = '',
 }: {
   icon: LucideIcon
@@ -314,11 +323,19 @@ function NodeCard({
   eyebrow: string
   title: string
   dashed?: boolean
+  /** Icon above the text, and text that wraps instead of truncating — for
+   *  cards that share a row's width equally rather than sizing to content. */
+  stacked?: boolean
   className?: string
 }) {
+  const clip = stacked ? '' : 'truncate'
   return (
     <div
-      className={`flex min-w-[190px] shrink-0 items-center gap-3 rounded-xl p-3.5 ${className}`}
+      className={`flex rounded-xl ${
+        stacked
+          ? 'min-w-0 flex-col items-start gap-3 p-4'
+          : 'min-w-[190px] shrink-0 items-center gap-3 p-3.5'
+      } ${className}`}
       style={{
         background: 'var(--viz-card)',
         border: `1px ${dashed ? 'dashed' : 'solid'} ${
@@ -329,12 +346,12 @@ function NodeCard({
       <IconBadge icon={icon} tone={tone} size="sm" />
       <div className="min-w-0">
         <div
-          className="truncate font-mono text-[10px] uppercase tracking-[0.1em]"
+          className={`${clip} font-mono text-[10px] uppercase tracking-[0.1em]`}
           style={{ color: 'var(--viz-text-3)' }}
         >
           {eyebrow}
         </div>
-        <div className="mt-0.5 truncate text-[13.5px] font-medium text-theme-primary">
+        <div className={`${clip} mt-0.5 text-[13.5px] font-medium text-theme-primary`}>
           {title}
         </div>
       </div>
@@ -1193,25 +1210,162 @@ const FLOW_ICONS: Record<string, LucideIcon> = {
  * sits last in the same row, dashed, joined by a dashed connector — the
  * same "branches off the main path" idea the old SVG fork drew, without
  * needing a second axis to lay it out on. */
+/* From lg the four steps share the full content width and the episode write
+ * drops below step 04 on a dashed branch. As a fifth card in the same row the
+ * figure was ~1500px of min-content: in a 1280px container it scrolled, cut
+ * the last card mid-word and showed the scrollbar as a bar under the caption.
+ * Below lg the original scrolling row stays. */
+const FLOW_GRID = 'lg:grid-cols-[1fr_40px_1fr_40px_1fr_40px_1fr]'
+
+/* Played once when the row scrolls into view: 01→04 light up in order, and
+ * only then does the dashed branch draw down to the episode write — the
+ * "written after" in the heading, shown rather than stated. Reduced motion
+ * gets the finished state. */
+/** Whether `ref` is at least `amount` visible, via a native observer. */
+function useSeen<T extends Element>(amount: number, once = false) {
+  const ref = useRef<T>(null)
+  // No observer (old browser, test env): show the finished state.
+  const [seen, setSeen] = useState(() => typeof IntersectionObserver === 'undefined')
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        const hit = entry.intersectionRatio >= amount
+        if (once) {
+          if (!hit) return
+          setSeen(true)
+          io.disconnect()
+        } else setSeen(hit)
+      },
+      { threshold: [0, amount] },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [amount, once])
+  return [ref, seen] as const
+}
+
+const FLOW_STEP_MS = 420
+const FLOW_BRANCH = FLOW_STEPS.length // step index at which the write appears
+const FLOW_FADE =
+  'transition-[opacity,transform] duration-[400ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] motion-reduce:transition-none'
+
+function useFlowSequence() {
+  const [ref, inView] = useSeen<HTMLDivElement>(0.6, true)
+  const reduced = useReducedMotion() ?? false
+  const [lit, setLit] = useState(-1)
+
+  useEffect(() => {
+    if (!inView || reduced) return
+    const timers = Array.from({ length: FLOW_BRANCH + 1 }, (_, i) =>
+      window.setTimeout(() => setLit(i), 250 + i * FLOW_STEP_MS),
+    )
+    return () => timers.forEach(window.clearTimeout)
+  }, [inView, reduced])
+
+  return { ref, lit: reduced ? FLOW_BRANCH : lit }
+}
+
 function RequestFlowDiagram() {
+  const { ref, lit } = useFlowSequence()
+  const on = (i: number) => lit >= i
+
   return (
-    <figure className="sw-scroll-x m-0 min-w-0 overflow-x-auto">
-      <div className="flex min-w-max items-center pb-1">
+    <figure className="m-0 min-w-0">
+      <div ref={ref} className={`hidden lg:grid ${FLOW_GRID}`}>
         {FLOW_STEPS.map((step, i) => (
-          <div key={step.n} className="flex items-center">
-            <NodeCard icon={FLOW_ICONS[step.n]} eyebrow={step.n} title={step.title} />
-            <NodeConnector dashed={i === FLOW_STEPS.length - 1} />
-          </div>
+          <Fragment key={step.n}>
+            {i > 0 && (
+              <div className={`flex ${FLOW_FADE}`} style={{ opacity: on(i) ? 1 : 0.25 }}>
+                <NodeConnector />
+              </div>
+            )}
+            <div
+              className={`relative flex min-w-0 rounded-xl ${FLOW_FADE}`}
+              style={{
+                opacity: on(i) ? 1 : 0.4,
+                transform: lit === i ? 'translateY(-3px)' : 'none',
+              }}
+            >
+              <NodeCard
+                stacked
+                icon={FLOW_ICONS[step.n]}
+                eyebrow={step.n}
+                title={step.title}
+                className="w-full"
+              />
+              {/* The step being walked gets the accent ring; it hands on as the next one lights. */}
+              <div
+                aria-hidden="true"
+                className={`pointer-events-none absolute inset-0 rounded-xl ${FLOW_FADE}`}
+                style={{
+                  opacity: lit === i ? 1 : 0,
+                  boxShadow: '0 0 0 1px var(--color-accent), 0 8px 28px -10px var(--color-accent)',
+                }}
+              />
+            </div>
+          </Fragment>
         ))}
-        <NodeCard
-          icon={Clock3}
-          eyebrow="async · off the critical path"
-          title="Episode written back"
-          dashed
-          className="min-w-[230px]"
-        />
       </div>
-      <figcaption className="mt-3.5 text-[13.5px] text-theme-muted">
+      <div className={`hidden lg:grid ${FLOW_GRID}`}>
+        {/* The caption fills the space left of the branch; the figcaption
+            below carries it for assistive tech and for the scrolling row. */}
+        <p
+          aria-hidden="true"
+          className="col-span-5 self-end pb-4 text-[13.5px] text-theme-muted"
+        >
+          One path through the proxy. The write happens after the reply, not before it.
+        </p>
+        <div className="col-start-7 flex flex-col items-center">
+          <div
+            aria-hidden="true"
+            className={`h-8 w-px origin-top ${FLOW_FADE}`}
+            style={{
+              transform: `scaleY(${on(FLOW_BRANCH) ? 1 : 0})`,
+              backgroundImage: 'linear-gradient(to bottom, var(--viz-indigo) 50%, transparent 50%)',
+              backgroundSize: '1px 6px',
+              opacity: 0.7,
+            }}
+          />
+          <div
+            className={`w-full ${FLOW_FADE} delay-200`}
+            style={{
+              opacity: on(FLOW_BRANCH) ? 1 : 0,
+              transform: on(FLOW_BRANCH) ? 'none' : 'translateY(-8px)',
+            }}
+          >
+            <NodeCard
+              stacked
+              dashed
+              icon={Clock3}
+              eyebrow="async · off the critical path"
+              title="Episode written back"
+              className="w-full"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="sw-scroll-x min-w-0 overflow-x-auto lg:hidden">
+        <div className="flex min-w-max items-center pb-1">
+          {FLOW_STEPS.map((step, i) => (
+            <div key={step.n} className="flex items-center">
+              <NodeCard icon={FLOW_ICONS[step.n]} eyebrow={step.n} title={step.title} />
+              <NodeConnector dashed={i === FLOW_STEPS.length - 1} />
+            </div>
+          ))}
+          <NodeCard
+            icon={Clock3}
+            eyebrow="async · off the critical path"
+            title="Episode written back"
+            dashed
+            className="min-w-[230px]"
+          />
+        </div>
+      </div>
+      <figcaption className="mt-5 text-[13.5px] text-theme-muted lg:sr-only">
         One path through the proxy. The write happens after the reply, not before it.
       </figcaption>
     </figure>
@@ -1274,9 +1428,9 @@ function FlowSection() {
         </div>
       </Rise>
 
-      <Rise className="mt-10 grid gap-[18px] md:grid-cols-3">
+      <Rise className="mt-16 grid gap-x-10 gap-y-10 md:grid-cols-3">
         {FLOW_NOTES.map((note) => (
-          <div key={note.title} className={`${CARD} min-w-0 p-[22px]`}>
+          <div key={note.title} className={NOTE}>
             <div className="text-[15px] font-semibold text-theme-primary">{note.title}</div>
             <p className="mt-2.5 text-sm leading-[1.6] text-theme-secondary">{note.body}</p>
           </div>
@@ -1424,7 +1578,7 @@ function SubjectTimeline() {
 
   return (
     <figure
-      className="sw-scroll-x m-0 mx-auto min-w-0 max-w-[680px] overflow-x-auto"
+      className="sw-scroll-x m-0 min-w-0 max-w-[680px] overflow-x-auto"
       aria-label="Turns accumulating under one subject"
     >
       <div className="mb-3 font-mono text-xs" style={{ color: 'var(--viz-indigo)' }}>
@@ -1531,11 +1685,30 @@ function SubjectsSection() {
       {/* The diagram is the explanation, so it leads. Capped to the SVG's own
           width so the caption sits under the graphic rather than 276px to its
           left, which is what a full-width figure around a centred SVG gave. */}
-      <Rise className="mt-9">
+      {/* From lg the definitions sit beside the diagram: a 680px figure
+          centred over a full-width code panel left wide empty margins and no
+          shared left edge with the heading. Side by side, both columns start
+          on the heading's axis and end at similar heights. */}
+      <Rise className="mt-10 grid gap-x-16 gap-y-12 lg:grid-cols-[minmax(0,680px)_minmax(0,1fr)] lg:items-start">
         <SubjectTimeline />
+        <dl className="m-0 grid min-w-0 gap-x-10 gap-y-7 border-t border-brand-500/25 pt-7 md:grid-cols-2 lg:grid-cols-1 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-10">
+          {SUBJECT_FACTS.map((f) => (
+            <div key={f.term} className="min-w-0">
+              <dt
+                className="font-mono text-[11px] uppercase tracking-[0.1em]"
+                style={{ color: 'var(--viz-indigo)' }}
+              >
+                {f.term}
+              </dt>
+              <dd className="m-0 mt-1.5 text-[14.5px] leading-[1.6] text-theme-secondary">
+                {f.body()}
+              </dd>
+            </div>
+          ))}
+        </dl>
       </Rise>
 
-      <Rise className="mt-9">
+      <Rise className="mt-14">
         <CodePanel label="subject and session, over plain HTTP" code={SUBJECT_CURL}>
           <span style={kw}>curl</span> http://localhost:8080/v1/chat/completions \{'\n'}
           {'  '}-H <span style={str}>&quot;Authorization: Bearer $OPENROUTER_API_KEY&quot;</span> \
@@ -1552,27 +1725,6 @@ function SubjectsSection() {
         </CodePanel>
       </Rise>
 
-      {/* Full width rather than beside the curl panel: as a single column the
-          four definitions ran 425px against the panel's 236px, so pairing them
-          just moved the dead space from under the heading to under the code.
-          Two columns also let each row size to its taller cell. */}
-      <Rise className="mt-6">
-        <dl className={`${CARD} m-0 grid min-w-0 gap-x-8 gap-y-5 p-6 md:grid-cols-2`}>
-          {SUBJECT_FACTS.map((f) => (
-            <div key={f.term} className="min-w-0">
-              <dt
-                className="font-mono text-[11px] uppercase tracking-[0.1em]"
-                style={{ color: 'var(--viz-indigo)' }}
-              >
-                {f.term}
-              </dt>
-              <dd className="m-0 mt-1.5 text-[14.5px] leading-[1.6] text-theme-secondary">
-                {f.body()}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </Rise>
     </Band>
   )
 }
@@ -1877,12 +2029,41 @@ const FO_ICONS: Record<'healthy' | 'failed', LucideIcon> = {
 /* Same hybrid pattern as TrustGateDiagram: SVG carries only the fork/merge
  * connector paths, every node is an HTML card. The hover/keyboard trace
  * moves from the old SVG <g> onto the card itself via `interactive`. */
+/* The trace used to need a hover, which touch never gives and most readers
+ * never try. In view, it now walks the healthy branch, then the failed one —
+ * both end at 200 OK — twice, and settles. Any hover or focus hands control
+ * to the reader for good. Reduced motion keeps the static figure. */
+const FO_AUTO: ('healthy' | 'failed' | null)[] = ['healthy', 'failed', null, 'healthy', 'failed', null]
+const FO_AUTO_MS = 1500
+
+function useAutoTrace(active: boolean) {
+  const [ref, inView] = useSeen<HTMLDivElement>(0.6)
+  const reduced = useReducedMotion() ?? false
+  const [step, setStep] = useState(-1)
+
+  useEffect(() => {
+    if (!inView || reduced || !active || step >= FO_AUTO.length - 1) return
+    const t = window.setTimeout(() => setStep((s) => s + 1), step < 0 ? 600 : FO_AUTO_MS)
+    return () => window.clearTimeout(t)
+  }, [inView, reduced, active, step])
+
+  return { ref, auto: active && step >= 0 ? FO_AUTO[step] : null }
+}
+
 function FailsOpenDiagram() {
-  const [trace, setTrace] = useState<'healthy' | 'failed' | null>(null)
+  const [userTrace, setUserTrace] = useState<'healthy' | 'failed' | null>(null)
+  const [touched, setTouched] = useState(false)
+  const { ref, auto } = useAutoTrace(!touched)
+  const trace = touched ? userTrace : auto
+  const setTrace = (t: 'healthy' | 'failed' | null) => {
+    setTouched(true)
+    setUserTrace(t)
+  }
 
   return (
     <figure className="sw-scroll-x m-0 mx-auto min-w-0 max-w-[680px] overflow-x-auto">
       <div
+        ref={ref}
         className="relative min-w-[540px] max-w-[680px]"
         style={{ aspectRatio: `${FO_VIEW.w} / ${FO_VIEW.h}` }}
       >
@@ -2022,37 +2203,46 @@ const FAILURE_CARDS = [
 function FailsOpenSection() {
   return (
     <Band id="failsopen" surface>
-      <BandHead
-        id="fails-open-heading"
-        lede={
-          <>
-            If context assembly or the episode write fails, whether the server is
-            down, the key is wrong, or the call times out, it is logged and the
-            completion still goes through, just without memory for that turn. A
-            Statewave outage degrades your app&apos;s{' '}
-            <L to="/benchmarks">memory quality</L>. It does not take it down.
-          </>
-        }
-      >
-        An enhancement, never a hard dependency
-      </BandHead>
-
-      <Rise className="mt-9">
-        <FailsOpenDiagram />
-      </Rise>
-
-      <Rise className="mt-6">
-        <div className={`${CARD} p-5`}>
-          <p className="text-[14.5px] leading-[1.6] text-theme-secondary">
-            On shutdown, in-flight episode writes are drained before the HTTP client
-            closes, since that is the only place a turn exists before Statewave has it.
-          </p>
+      {/* From xl the diagram sits beside the heading: under a 62ch lede it was
+          centred in the band, off the heading's axis, with the right half of
+          the band empty above it. The shutdown note stays under the figure
+          it footnotes. */}
+      <div className="grid gap-x-12 xl:grid-cols-[minmax(0,1fr)_680px] xl:items-start">
+        <div>
+          <BandHead
+            id="fails-open-heading"
+            lede={
+              <>
+                If context assembly or the episode write fails, whether the server is
+                down, the key is wrong, or the call times out, it is logged and the
+                completion still goes through, just without memory for that turn. A
+                Statewave outage degrades your app&apos;s{' '}
+                <L to="/benchmarks">memory quality</L>. It does not take it down.
+              </>
+            }
+          >
+            An enhancement, never a hard dependency
+          </BandHead>
         </div>
-      </Rise>
+        <div>
+          <Rise className="mt-9 xl:mt-0">
+            <FailsOpenDiagram />
+          </Rise>
 
-      <Rise className="mt-8 grid gap-[18px] md:grid-cols-3">
+          {/* Held to the diagram's column: as a full-width card it was the widest
+              box in the section, for a one-line footnote to the figure above. */}
+          <Rise className="mx-auto mt-8 max-w-[680px] xl:mx-0">
+            <p className="border-l-2 border-brand-500/40 pl-4 text-[14.5px] leading-[1.6] text-theme-secondary">
+              On shutdown, in-flight episode writes are drained before the HTTP client
+              closes, since that is the only place a turn exists before Statewave has it.
+            </p>
+          </Rise>
+        </div>
+      </div>
+
+      <Rise className="mt-16 grid gap-x-10 gap-y-10 md:grid-cols-3">
         {FAILURE_CARDS.map((card) => (
-          <div key={card.eyebrow} className={`${CARD} min-w-0 p-[22px]`}>
+          <div key={card.eyebrow} className={NOTE}>
             <IconBadge icon={card.icon} size="sm" />
             <Eyebrow className="mt-3">{card.eyebrow}</Eyebrow>
             <div className="mt-1.5 text-[15px] font-semibold text-theme-primary">{card.title}</div>
