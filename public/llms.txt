@@ -30,6 +30,7 @@ Statewave stores immutable episodes, compiles them into typed memories with prov
 
 ## Comparisons
 
+- [Alternatives](https://www.statewave.ai/alternatives) — every Statewave comparison in one place: Mem0, Letta, Zep, and Supermemory.
 - [Statewave vs Mem0](https://www.statewave.ai/vs/mem0) — deterministic, token-bounded context assembly with policy enforcement and integrity-hashed receipts vs ranked similarity retrieval, plus LoCoMo and LongMemEval results measured on Mem0's own harness.
 - [Statewave vs Letta](https://www.statewave.ai/vs/letta) — runtime-managed vs agent-managed memory: Letta's agent edits and searches its own memory with tool calls; Statewave assembles the bundle mechanically.
 - [Statewave vs Zep](https://www.statewave.ai/vs/zep) — inspectable bundle vs opaque Context Block: typed, provenance-traced memories with per-row confidence and validity against a knowledge-graph string.
