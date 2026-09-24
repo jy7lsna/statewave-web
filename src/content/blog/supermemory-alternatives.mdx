@@ -50,7 +50,7 @@ Another [issue](https://github.com/supermemoryai/supermemory/issues/1413) report
 Supermemory Cloud documents organizations, roles, scoped keys, logs, per-tag access, and compliance options. Some teams need a different control: a deterministic decision about which memories may enter a model call, plus a durable record of the selected bytes and their sources. That requirement points toward a policy-oriented memory runtime rather than a broader context service.
 
 <figure className="my-8">
-<img src="/images/blog/supermemory-alternatives/image1.png" alt="Four deployment surfaces for Supermemory: an open repository under MIT, a local binary capped at 10,000 documents, a supported Scale self-host plan, and an Enterprise air-gapped option." width="1872" height="1053" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<img src="/images/blog/supermemory-alternatives/image1.png" alt="Four deployment surfaces for Supermemory: an open repository under MIT, a local binary capped at 10,000 documents, a supported Scale self-host plan, and an Enterprise air-gapped option." width="1600" height="897" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
 <figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">The deployment and support boundaries across Supermemory's repository, local binary, cloud, and enterprise paths.</figcaption>
 </figure>
 
@@ -83,7 +83,7 @@ The table compares the operational shape of each option. "Open source" refers to
 | **Letta** | complete stateful agents | agent-managed memory blocks and MemFS | open agent runtime and App Server | replaces more than the memory component |
 
 <figure className="my-8">
-<img src="/images/blog/supermemory-alternatives/image2.png" alt="Comparison matrix matching Statewave, OpenViking, Hindsight, Mem0, Graphiti and Letta against a memory API, RAG or files, a temporal graph, reflection, and agent runtime." width="1872" height="1053" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<img src="/images/blog/supermemory-alternatives/image2.png" alt="Comparison matrix matching Statewave, OpenViking, Hindsight, Mem0, Graphiti and Letta against a memory API, RAG or files, a temporal graph, reflection, and agent runtime." width="1600" height="898" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
 <figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">A comparison matrix matching each Supermemory replacement to memory, RAG, graph, learning, and runtime needs.</figcaption>
 </figure>
 
@@ -120,7 +120,7 @@ Migration is clean when the application already owns its prompts and agent loop.
 Statewave is not a replacement for Supermemory's multimodal RAG, managed cloud, or ontology graph. It extracts entities per memory to improve retrieval, but it does not model relationships between them or support graph traversal. It is the better fit when interaction memory must remain inside your Postgres estate and the model's context needs policy and evidence. See the [self-hosted Postgres architecture](/blog/self-hosted-memory-postgres-pgvector) and the [provenance model](/blog/agent-memory-provenance-audit-trails) for the design details, or the [Statewave architecture overview](https://github.com/smaramwbc/statewave-docs/blob/main/architecture/overview.md) for the full pipeline.
 
 <figure className="my-8">
-<img src="/images/blog/supermemory-alternatives/image4.png" alt="A five-step migration map: export conversations and facts, record them as append-only episodes, compile typed memories, apply policy and sensitivity controls, then assemble a token-bounded receipt." width="1872" height="1053" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<img src="/images/blog/supermemory-alternatives/image4.png" alt="A five-step migration map: export conversations and facts, record them as append-only episodes, compile typed memories, apply policy and sensitivity controls, then assemble a token-bounded receipt." width="1600" height="897" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
 <figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">How Statewave converts interaction episodes into governed, receipt-backed context.</figcaption>
 </figure>
 
@@ -193,7 +193,7 @@ Use the narrowest test that reflects production. A feature checklist will hide t
 A user profile, document corpus, coding project, account timeline, and entity graph require different scopes. Write the identifier you expect on every read and delete call. If the answer is unclear, the data model is not ready.
 
 <figure className="my-8">
-<img src="/images/blog/supermemory-alternatives/image10.png" alt="A decision tree starting from 'what must persist?' and routing user or account history to Statewave, project files and skills to OpenViking, learned observations to Hindsight, and entity relationships to Graphiti." width="1872" height="1053" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<img src="/images/blog/supermemory-alternatives/image10.png" alt="A decision tree starting from 'what must persist?' and routing user or account history to Statewave, project files and skills to OpenViking, learned observations to Hindsight, and entity relationships to Graphiti." width="1600" height="894" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
 <figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">A decision path for choosing among the six Supermemory alternatives.</figcaption>
 </figure>
 
@@ -210,7 +210,7 @@ Load-test the exact local binary, container, or database topology you plan to op
 Supermemory bills unique ingested tokens, queries, and operations. Hindsight bills retain and recall volume plus reflect calls. Zep bills episode bytes. Self-hosted projects move more cost into databases and model providers. Use one month of representative messages and files so that pricing units map to your data rather than an invented average.
 
 <figure className="my-8">
-<img src="/images/blog/supermemory-alternatives/image11.png" alt="A production evaluation scorecard with four panels: retrieval at a fixed token cap, control where denied data never enters the prompt, operations covering restarts and noisy tenants, and cost replayed against one month of real traffic." width="1872" height="1053" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<img src="/images/blog/supermemory-alternatives/image11.png" alt="A production evaluation scorecard with four panels: retrieval at a fixed token cap, control where denied data never enters the prompt, operations covering restarts and noisy tenants, and cost replayed against one month of real traffic." width="1600" height="903" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
 <figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">A production evaluation scorecard for testing retrieval, control, deployment, and cost.</figcaption>
 </figure>
 
