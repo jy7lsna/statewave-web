@@ -227,7 +227,7 @@ export const PAGE_META: Record<RouteKey, PageMeta> = {
     changefreq: 'monthly',
   },
   '/alternatives': {
-    title: 'Statewave Alternatives — Compare vs. Mem0, Letta, Zep & Supermemory',
+    title: 'Statewave vs. Mem0, Letta, Zep & Supermemory',
     description:
       'Every Statewave comparison in one place: deterministic, token-bounded context assembly with provenance and policy enforcement, measured against Mem0, Letta, Zep, and Supermemory’s own retrieval models. Apache-2.0, self-hosted on Postgres.',
     breadcrumbLabel: 'Alternatives',

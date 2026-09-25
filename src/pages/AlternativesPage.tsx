@@ -96,7 +96,7 @@ export function AlternativesPage() {
           </p>
 
           <h1 className="font-heading text-4xl font-bold leading-[0.98] tracking-[-0.03em] text-theme-primary sm:text-5xl md:text-[56px]">
-            Statewave <span className="text-gradient-brand">alternatives</span>
+            Statewave <span className="text-gradient-brand">vs.</span> Mem0, Letta, Zep & Supermemory
           </h1>
 
           <p className="mt-7 max-w-2xl text-[17px] leading-[1.7] text-theme-secondary/90 sm:text-[19px]">
