@@ -17,6 +17,8 @@ If the reason for leaving Zep is to run memory on Postgres with retrieval policy
 
 Zep is no longer one interchangeable open-source memory server. Zep describes its managed service as a Context Lake of many governed graphs, and its open-source graph engine is Graphiti. Any useful comparison must decide which of those two layers the team is replacing.
 
+We build Statewave, so weigh the first entry accordingly. Every competitor claim below links to the vendor's own page so you can check it.
+
 ## What does Zep do well?
 
 Zep's strongest idea is that agent context changes over time. Raw episodes become entities and relationships with temporal meaning, so the system can distinguish a current fact from an older fact that was once true.
@@ -31,7 +33,7 @@ The reasons usually come from the managed product boundary, the graph infrastruc
 
 ### The former Community Edition is not the current self-hosted Zep product
 
-Zep's official FAQ states that the old Community Edition is deprecated and no longer supported. The open-source route is Graphiti. Teams that need the same managed product surface inside their own environment must evaluate Enterprise BYOC rather than assume that the old community server maps to the current cloud.
+The [getzep/zep README](https://github.com/getzep/zep#readme) states that the old Community Edition is deprecated and no longer supported, a change [announced](https://blog.getzep.com/announcing-a-new-direction-for-zeps-open-source-strategy/) in April 2025. The open-source route is Graphiti. Teams that need the same managed product surface inside their own environment must evaluate Enterprise BYOC rather than assume that the old community server maps to the current cloud.
 
 This is the first migration fork: adopt Graphiti and build the service around it, negotiate a Zep BYOC deployment, or choose a different memory runtime.
 
@@ -111,7 +113,7 @@ This architecture replaces Zep's episode ingestion and context delivery without 
 
 The target-specific reason to rank Statewave first is operational evidence. It runs as one Python service plus Postgres with pgvector, rather than a memory service plus a graph database.
 
-The published eval suite runs 56 assertions, and context assembly is bounded by a token budget the caller supplies on each request. Retrieval policy, sensitivity labels, provenance, subject deletion, and state-assembly receipts are first-class parts of the same runtime.
+The published eval suite runs 56 assertions across provenance, idempotent compilation, token budgets, session-aware ranking, repeat-issue detection, and support handoff, and context assembly is bounded by a token budget the caller supplies on each request. Retrieval policy, sensitivity labels, provenance, subject deletion, and state-assembly receipts are first-class parts of the same runtime.
 
 A practical migration maps each Zep Episode to a Statewave episode. Preserve the user, thread, or account as subject_id; keep timestamps and external IDs; store message or event type in metadata; then compile in the background. Run Zep and Statewave side by side until the new path passes four tests: changed facts, cross-session recall, denied sensitive context, and subject deletion.
 
