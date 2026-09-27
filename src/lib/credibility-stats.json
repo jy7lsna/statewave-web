@@ -1,10 +1,10 @@
 {
-  "github_stars": 351,
+  "github_stars": 352,
   "github_forks": 29,
-  "docker_pulls": 16779,
+  "docker_pulls": 17344,
   "pypi_version": "1.5.0",
   "pypi_downloads_month": 222,
   "npm_version": "1.5.0",
-  "npm_downloads_month": 418,
-  "fetched_at": "2026-09-26T10:34:39.063Z"
+  "npm_downloads_month": 464,
+  "fetched_at": "2026-09-27T11:07:16.438Z"
 }
