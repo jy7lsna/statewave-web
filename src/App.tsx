@@ -49,7 +49,7 @@ export default function App() {
           <Route path="/vs/letta" element={<StatewaveVsLettaPage />} />
           <Route path="/vs/zep" element={<StatewaveVsZepPage />} />
           <Route path="/vs/supermemory" element={<StatewaveVsSupermemoryPage />} />
-          <Route path="/alternatives" element={<AlternativesPage />} />
+          <Route path="/vs" element={<AlternativesPage />} />
           <Route path="/connectors" element={<ConnectorsPage />} />
           <Route path="/developers" element={<DevelopersPage />} />
           <Route path="/launch" element={<LaunchPage />} />

@@ -47,11 +47,11 @@ export type RouteKey =
   | '/use-cases/personal-assistant-memory'
   | '/use-cases/multi-agent-shared-context'
   | '/use-cases/grounded-shop-assistant'
+  | '/vs'
   | '/vs/mem0'
   | '/vs/letta'
   | '/vs/zep'
   | '/vs/supermemory'
-  | '/alternatives'
   | '/connectors'
   | '/developers'
   | '/about'
@@ -72,11 +72,11 @@ export const PUBLIC_ROUTES: readonly RouteKey[] = [
   '/use-cases/personal-assistant-memory',
   '/use-cases/multi-agent-shared-context',
   '/use-cases/grounded-shop-assistant',
+  '/vs',
   '/vs/mem0',
   '/vs/letta',
   '/vs/zep',
   '/vs/supermemory',
-  '/alternatives',
   '/connectors',
   '/developers',
   '/about',
@@ -226,7 +226,7 @@ export const PAGE_META: Record<RouteKey, PageMeta> = {
     priority: 0.7,
     changefreq: 'monthly',
   },
-  '/alternatives': {
+  '/vs': {
     title: 'Statewave vs. Mem0, Letta, Zep & Supermemory',
     description:
       'Every Statewave comparison in one place: deterministic, token-bounded context assembly with provenance and policy enforcement, measured against Mem0, Letta, Zep, and Supermemory’s own retrieval models. Apache-2.0, self-hosted on Postgres.',
