@@ -234,7 +234,7 @@ export function AlternativesPage() {
         </div>
       </Section>
 
-      <PageFaq route="/alternatives" />
+      <PageFaq route="/vs" />
 
       <Section>
         <div className="cta-card relative overflow-hidden rounded-[2.5rem] border border-brand-500/25 bg-surface-1/55 px-6 py-16 text-center sm:py-20">
