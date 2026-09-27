@@ -43,13 +43,36 @@ const MATRIX: ReadonlyArray<MatrixRow> = [
   {
     name: 'Supermemory',
     retrieval: 'Hybrid vector + keyword search with a context-aware reranker',
-    deployment: 'Self-hostable binary (10k-doc local cap) or a managed hosted platform',
+    deployment: 'Self-hostable binary (10k-doc cap stated for the local build since v0.0.7) or a managed hosted platform',
   },
   {
     name: 'Statewave',
     retrieval: 'Deterministic assembly, ranked to a token budget',
     deployment: 'Apache 2.0 throughout, runs fully offline',
     statewave: true,
+  },
+]
+
+interface AlternativesPost {
+  href: string
+  title: string
+  description: string
+}
+
+/* Only posts guaranteed to exist wherever this page ships — the live Mem0
+ * post plus whatever alternatives post is bundled in the same PR as this
+ * hub. Posts still in a separate open PR are added here once merged, to
+ * avoid linking a slug that 404s until that PR lands too. */
+const ALTERNATIVES_POSTS: ReadonlyArray<AlternativesPost> = [
+  {
+    href: '/blog/open-source-alternatives-to-mem0',
+    title: '6 Best Open-Source Alternatives to Mem0',
+    description: "What Mem0's self-hosted build leaves out, and how to pick a replacement by requirement.",
+  },
+  {
+    href: '/blog/supermemory-alternatives',
+    title: '6 Best Open-Source Supermemory Alternatives',
+    description: "The four deployment surfaces behind Supermemory's \"open source\" claim, and how to pick a narrower replacement.",
   },
 ]
 
@@ -185,6 +208,32 @@ export function AlternativesPage() {
         </div>
       </Section>
 
+      <Section className="!pt-0">
+        <Heading
+          id="alternatives-posts"
+          className="font-heading text-2xl font-bold tracking-[-0.02em] text-theme-primary sm:text-3xl"
+        >
+          Open-source alternatives, by product
+        </Heading>
+
+        <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-theme-muted">
+          Longer comparisons that go beyond Statewave — six alternatives to each product, evaluated on their own merits.
+        </p>
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          {ALTERNATIVES_POSTS.map((post) => (
+            <Link
+              key={post.href}
+              to={post.href}
+              className="group flex flex-col rounded-2xl border border-theme-border bg-surface-1/45 p-5 transition-all duration-200 hover:-translate-y-1 hover:border-theme-border-hover hover:bg-surface-1/55"
+            >
+              <h3 className="text-base font-semibold text-theme-primary">{post.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-theme-muted">{post.description}</p>
+            </Link>
+          ))}
+        </div>
+      </Section>
+
       <PageFaq route="/alternatives" />
 
       <Section>
@@ -209,9 +258,9 @@ export function AlternativesPage() {
             </Heading>
 
             <p className="mt-5 text-[17px] leading-[1.7] text-theme-secondary/85">
-              Statewave is open source and self-hosted, so you can benchmark
-              it against any memory system yourself using the public,
-              reproducible benchmark suite.
+              Statewave is open source and self-hosted, so you can reproduce
+              our published comparison yourself, or use the same harness as
+              the starting point for benchmarking your own memory system.
             </p>
 
             <div className="mt-8 flex flex-wrap justify-center gap-3">
