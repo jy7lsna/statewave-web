@@ -17,6 +17,8 @@ For product teams that need a self-hosted memory service with policy checks, pro
 
 Supermemory is difficult to replace with a single tool because it combines four jobs: conversational memory, document retrieval, user profiles, and local memory for coding agents. The right alternative depends on which of those jobs is creating value and which boundary is creating friction.
 
+We build Statewave, so weigh the first entry accordingly. Every competitor claim below links to the vendor's own page so you can check it.
+
 ## Why do developers choose Supermemory?
 
 Supermemory removes a large amount of context infrastructure from an application. One API can ingest conversations and files, extract atomic memories, maintain profiles, search a graph, and retrieve document chunks.
@@ -47,7 +49,7 @@ Another [issue](https://github.com/supermemoryai/supermemory/issues/1413) report
 
 ### Governance may need to happen before retrieval, not after it
 
-Supermemory Cloud documents organizations, roles, scoped keys, logs, per-tag access, and compliance options. Some teams need a different control: a deterministic decision about which memories may enter a model call, plus a durable record of the selected bytes and their sources. That requirement points toward a policy-oriented memory runtime rather than a broader context service.
+[Supermemory Cloud documents](https://supermemory.ai/docs/overview/security) organizations, roles, scoped keys, logs, per-tag access, and compliance options. Some teams need a different control: a deterministic decision about which memories may enter a model call, plus a durable record of the selected bytes and their sources. That requirement points toward a policy-oriented memory runtime rather than a broader context service.
 
 <figure className="my-8">
 <img src="/images/blog/supermemory-alternatives/image1.png" alt="Four deployment surfaces for Supermemory: an open repository under MIT, a local binary capped at 10,000 documents, a supported Scale self-host plan, and an Enterprise air-gapped option." width="1600" height="897" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
@@ -113,7 +115,7 @@ Each option below replaces a different part of Supermemory. Statewave is first b
 
 That sequence matters for support agents, internal copilots, and workflow agents. A vector search result only says what was similar. A Statewave receipt records which context was assembled, while provenance connects each compiled fact to the raw event behind it. Sensitivity labels can travel with a memory, and subject deletion removes the subject's episodes and memories.
 
-Statewave's public proof for this comparison is operational rather than a recycled leaderboard claim. The published eval suite runs 56 assertions across recall, compilation, ranking, provenance, token budgets, and repeat-issue workflows. In Statewave's own personal assistant reference demo, compiled context used 73% fewer tokens than replaying the raw history. Those results describe the published setups, not every workload.
+Statewave's public proof for this comparison is operational rather than a recycled leaderboard claim. The published eval suite runs 56 assertions across provenance, idempotent compilation, token budgets, session-aware ranking, repeat-issue detection, and support handoff. In Statewave's own personal assistant reference demo, compiled context used 73% fewer tokens than replaying the raw history. Those results describe the published setups, not every workload.
 
 Migration is clean when the application already owns its prompts and agent loop. Keep Supermemory and Statewave in shadow mode for a representative set of subjects. Send new interaction events to Statewave, compile them, then compare the returned bundle against Supermemory search and profile output. Test changed preferences, deletion, sensitive memories, tenant boundaries, and a strict token cap before moving reads.
 
