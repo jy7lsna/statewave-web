@@ -17,7 +17,7 @@ If the reason for leaving Zep is to run memory on Postgres with retrieval policy
 
 Zep is no longer one interchangeable open-source memory server. Zep describes its managed service as a Context Lake of many governed graphs, and its open-source graph engine is Graphiti. Any useful comparison must decide which of those two layers the team is replacing.
 
-We build Statewave, so weigh the first entry accordingly. Every competitor claim below links to the vendor's own page so you can check it.
+We build Statewave, so weigh the first entry accordingly. Competitor claims come from each vendor's own repository, documentation and pricing pages, and the main sources are linked.
 
 ## What does Zep do well?
 
@@ -25,7 +25,7 @@ Zep's strongest idea is that agent context changes over time. Raw episodes becom
 
 The managed product adds operations at scale: projects, users, retrieval, entity and edge types, logs, webhooks, analytics, security options, and enterprise deployment. [Graphiti](https://github.com/getzep/graphiti) provides the Apache-2.0 temporal graph engine for teams willing to build the surrounding service.
 
-That separation is explicit in Zep's own [Zep versus Graphiti guide](https://help.getzep.com/zep-vs-graphiti): Graphiti builds one graph, while Zep operates a large population of graphs and supplies the product controls around them.
+That separation is explicit in Zep's own [Zep versus Graphiti guide](https://help.getzep.com/zep-vs-graphiti): Graphiti is the graph framework you operate yourself, while Zep runs millions of Context Graphs as a managed, governed service and supplies the product controls around them.
 
 ## Why do teams look for Zep alternatives?
 
@@ -83,7 +83,7 @@ The six options below are ranked by fit for the reasons above, not by GitHub sta
 | **Graphiti** | Zep's temporal graph engine | Neo4j, FalkorDB, or Neptune | use Zep for managed operation | requires surrounding identity and operations work |
 | **Hindsight** | recall plus learned observations and reflection | PostgreSQL or embedded pg0 | yes | more model work and a larger memory pipeline |
 | **Cognee** | document and code knowledge graphs | relational + graph + vector stores | yes | more backend choices and configuration |
-| **Mem0** | familiar per-user memory API | configurable vector store, optional graph path | yes | verify OSS and cloud feature boundaries |
+| **Mem0** | familiar per-user memory API | configurable vector store; graph memory is Platform-only | yes | verify OSS and cloud feature boundaries |
 | **Letta** | stateful agent runtime with editable memory | agent memory blocks, transcript, MemFS | yes | replaces the agent runtime, not only memory |
 
 <figure className="my-8">
@@ -107,13 +107,13 @@ Statewave comes first for teams that want an independent memory runtime without 
 <img src="/images/blog/zep-alternatives/image3.jpg" alt="The smaramwbc/statewave repository on GitHub, described as an open-source memory runtime for AI agents with reproducible, provenance-tagged context bundles." width="1568" height="621" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
 </figure>
 
-[Statewave](https://github.com/smaramwbc/statewave) keeps raw history and durable memory apart. Episodes go in unchanged, a compiler derives typed memories that link back to them, and each context request is ranked under a token budget, filtered by policy, and stored as a receipt. The [architecture overview](https://github.com/smaramwbc/statewave-docs/blob/main/architecture/overview.md) covers the pipeline in detail.
+[Statewave](https://github.com/smaramwbc/statewave) keeps raw history and durable memory apart. Episodes go in unchanged, a compiler derives typed memories that link back to them, and each context request is ranked under a token budget, checked against policy, and can be recorded as a receipt (opt-in). The [architecture overview](https://github.com/smaramwbc/statewave-docs/blob/main/architecture/overview.md) covers the pipeline in detail.
 
 This architecture replaces Zep's episode ingestion and context delivery without recreating an entity graph. The primary scope is a subject, such as a user, account, support case, agent, or repository. That is often a better match for customer support and workflow automation than a graph per user.
 
 The target-specific reason to rank Statewave first is operational evidence. It runs as one Python service plus Postgres with pgvector, rather than a memory service plus a graph database.
 
-The published eval suite runs 56 assertions across provenance, idempotent compilation, token budgets, session-aware ranking, repeat-issue detection, and support handoff, and context assembly is bounded by a token budget the caller supplies on each request. Retrieval policy, sensitivity labels, provenance, subject deletion, and state-assembly receipts are first-class parts of the same runtime.
+The published eval suite runs 55 assertions across provenance, idempotent compilation, token budgets, session-aware ranking, repeat-issue detection, and support handoff, and context assembly is bounded by a token budget the caller supplies on each request. Retrieval policy, sensitivity labels, provenance, subject deletion, and state-assembly receipts are first-class parts of the same runtime.
 
 A practical migration maps each Zep Episode to a Statewave episode. Preserve the user, thread, or account as subject_id; keep timestamps and external IDs; store message or event type in metadata; then compile in the background. Run Zep and Statewave side by side until the new path passes four tests: changed facts, cross-session recall, denied sensitive context, and subject deletion.
 
@@ -172,7 +172,7 @@ That flexibility increases the configuration surface. The official install docum
 
 [Mem0](https://github.com/mem0ai/mem0) offers a conventional memory abstraction with a large integration ecosystem. It is a reasonable replacement when Zep's temporal graph is more than the application needs and the goal is to store, search, update, and delete per-user memories through a compact API.
 
-The Apache-2.0 core supports self-hosting, while the managed service supplies a production path. Treat them as related but distinct surfaces during evaluation. Confirm which edition supplies graph features, event history, access controls, observability, and support.
+The Apache-2.0 core supports self-hosting, while the managed service supplies a production path. Treat them as related but distinct surfaces during evaluation. Graph memory is Platform-only since the v3 open-source SDK; confirm which edition supplies event history, access controls, observability, and support.
 
 Choose Mem0 when API familiarity and integrations have more value than explicit temporal-graph semantics or policy-bound context assembly. If you're weighing Mem0 specifically, see [six open-source alternatives to Mem0](/blog/open-source-alternatives-to-mem0).
 
