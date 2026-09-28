@@ -339,7 +339,7 @@ export const POST_FAQ: Readonly<Record<string, readonly FaqEntry[]>> = {
     {
       question: 'Can a session-aware agent hand off to a human mid-ticket?',
       answer:
-        "Yes, that is what the handoff pack is for. POST /v1/handoff returns a token-bounded brief with the customer's profile facts, the active issue, the steps already attempted, related history, and the health score with its contributing factors. It also emits a receipt, so the human can see exactly what the agent had in context.",
+        "Yes, that is what the handoff pack is for. POST /v1/handoff returns a token-bounded brief with the customer's profile facts, the active issue, the steps already attempted, related history, and the health score with its contributing factors. When receipts are enabled it also emits one, so the human can see exactly what the agent had in context.",
     },
   ],
   'repeat-issue-detection-customer-support-automation': [
@@ -437,7 +437,7 @@ export const POST_FAQ: Readonly<Record<string, readonly FaqEntry[]>> = {
     {
       question: 'Is Supermemory open source?',
       answer:
-        'The main repository is MIT licensed. The packaged local server and supported self-hosted offers have separate workload and support boundaries, including a 10,000-document limit on the local release since server v0.0.7 and supported self-hosting on Scale and Enterprise.',
+        'The main repository is MIT licensed. The packaged local server and supported self-hosted offers have separate workload and support boundaries, including a 10,000-document limit on the local release, first stated in the server v0.0.7 release notes and supported self-hosting on Scale and Enterprise.',
     },
     {
       question: 'What is the closest open-source Supermemory alternative?',

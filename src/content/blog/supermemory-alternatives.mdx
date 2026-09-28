@@ -17,7 +17,7 @@ For product teams that need a self-hosted memory service with policy checks, pro
 
 Supermemory is difficult to replace with a single tool because it combines four jobs: conversational memory, document retrieval, user profiles, and local memory for coding agents. The right alternative depends on which of those jobs is creating value and which boundary is creating friction.
 
-We build Statewave, so weigh the first entry accordingly. Every competitor claim below links to the vendor's own page so you can check it.
+We build Statewave, so weigh the first entry accordingly. Competitor claims come from each vendor's own repository, documentation and pricing pages, and the main sources are linked.
 
 ## Why do developers choose Supermemory?
 
@@ -35,7 +35,7 @@ The clearest reasons aren't a lack of features. They are product scope, deployme
 
 The [Supermemory repository](https://github.com/supermemoryai/supermemory) is MIT licensed. The local release is described as "Supermemory Lite" and enforces a limit of 10,000 documents, first stated in the [server v0.0.7 release notes](https://github.com/supermemoryai/supermemory/releases). The later v0.0.8 notes do not restate the cap, so confirm it against the build you plan to run. Supported self-hosted deployments appear on the **$399 per month Scale plan** and Enterprise, while fully air-gapped deployment is an Enterprise option on the [pricing page](https://supermemory.ai/pricing/).
 
-That gives developers three distinct questions to resolve: Can we modify the code? Can the packaged local server carry our workload? Who supports the production deployment? An MIT license answers the first question, not the other two.
+That gives developers three distinct questions to resolve: Can we modify the code? Can the packaged local server carry our workload? Who supports the production deployment? The MIT license covers the published repository, but the self-hosted server ships only as a release binary, so the license does not answer any of the three questions for the server.
 
 ### A single context platform may be broader than the application needs
 
@@ -45,11 +45,11 @@ Supermemory includes memory extraction, profiles, hybrid search, graph traversal
 
 The one-binary experience trades infrastructure setup for an embedded data path. One public [issue report](https://github.com/supermemoryai/supermemory/issues/1366) measured roughly 7 GB of resident memory with about 5,000 memories and a 2 GB store because the PGlite memory filesystem held the corpus in RAM.
 
-Another [issue](https://github.com/supermemoryai/supermemory/issues/1413) reports full-database snapshots every ten seconds on a non-trivial store. These are issue reports, not universal benchmarks, but they are good reasons to load-test the exact local release before treating laptop convenience as a server architecture.
+Another [issue](https://github.com/supermemoryai/supermemory/issues/1413) reports full-database snapshots every ten seconds on a non-trivial store; the maintainer says v0.0.7 skips ticks with no writes, but a tick with writes still snapshots the whole database. These are issue reports, not universal benchmarks, but they are good reasons to load-test the exact local release before treating laptop convenience as a server architecture.
 
 ### Governance may need to happen before retrieval, not after it
 
-[Supermemory Cloud documents](https://supermemory.ai/docs/overview/security) organizations, roles, scoped keys, logs, per-tag access, and compliance options. Some teams need a different control: a deterministic decision about which memories may enter a model call, plus a durable record of the selected bytes and their sources. That requirement points toward a policy-oriented memory runtime rather than a broader context service.
+[Supermemory Cloud documents](https://supermemory.ai/docs/overview/security) organizations, scoped keys, per-tag access, and compliance options. Some teams need a different control: a deterministic decision about which memories may enter a model call, plus a durable record of the selected bytes and their sources. That requirement points toward a policy-oriented memory runtime rather than a broader context service.
 
 <figure className="my-8">
 <img src="/images/blog/supermemory-alternatives/image1.png" alt="Four deployment surfaces for Supermemory: an open repository under MIT, a local binary capped at 10,000 documents, a supported Scale self-host plan, and an Enterprise air-gapped option." width="1600" height="897" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
@@ -80,7 +80,7 @@ The table compares the operational shape of each option. "Open source" refers to
 | **Statewave** | policy-bound application memory | episodes plus typed memories | Postgres + pgvector, Apache-2.0 | no managed cloud or entity-relationship graph |
 | **OpenViking** | browsable context across files, memory, and skills | hierarchical viking:// filesystem | server under AGPL-3.0 | broader context platform and copyleft license |
 | **Hindsight** | agents that learn and reflect | facts, experiences, observations, mental models | MIT server on Postgres or embedded pg0 | more model work and a larger runtime surface |
-| **Mem0** | conventional memory API with a managed option | extracted memories with optional graph features | Apache-2.0 core | cloud and OSS capabilities must be checked separately |
+| **Mem0** | conventional memory API with a managed option | extracted memories; graph memory is Platform-only since the v3 open-source SDK | Apache-2.0 core | cloud and OSS capabilities must be checked separately |
 | **Graphiti** | temporal entity relationships | episode, entity, and time-aware relation graph | Apache-2.0 with Neo4j, FalkorDB, or Neptune | you operate the graph and application services around it |
 | **Letta** | complete stateful agents | agent-managed memory blocks and MemFS | open agent runtime and App Server | replaces more than the memory component |
 
@@ -111,11 +111,11 @@ Each option below replaces a different part of Supermemory. Statewave is first b
 <img src="/images/blog/supermemory-alternatives/image3.jpg" alt="The smaramwbc/statewave repository on GitHub, described as an open-source memory runtime for AI agents with reproducible, provenance-tagged context bundles." width="1568" height="621" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
 </figure>
 
-[Statewave](https://github.com/smaramwbc/statewave) records conversations, tool calls, and decisions as append-only episodes. A compiler produces typed memories with confidence, validity, and source episode IDs. Retrieval then ranks memory under a token budget, evaluates YAML policy, and emits a ULID-addressable state-assembly receipt with a byte-level integrity hash.
+[Statewave](https://github.com/smaramwbc/statewave) records conversations, tool calls, and decisions as append-only episodes. A compiler produces typed memories with confidence, validity, and source episode IDs. Retrieval then ranks memory under a token budget, evaluates YAML policy and, when receipts are enabled, emits a ULID-addressable state-assembly receipt with a byte-level integrity hash.
 
 That sequence matters for support agents, internal copilots, and workflow agents. A vector search result only says what was similar. A Statewave receipt records which context was assembled, while provenance connects each compiled fact to the raw event behind it. Sensitivity labels can travel with a memory, and subject deletion removes the subject's episodes and memories.
 
-Statewave's public proof for this comparison is operational rather than a recycled leaderboard claim. The published eval suite runs 56 assertions across provenance, idempotent compilation, token budgets, session-aware ranking, repeat-issue detection, and support handoff. In Statewave's own personal assistant reference demo, compiled context used 73% fewer tokens than replaying the raw history. Those results describe the published setups, not every workload.
+Statewave's public proof for this comparison is operational rather than a recycled leaderboard claim. The published eval suite runs 55 assertions across provenance, idempotent compilation, token budgets, session-aware ranking, repeat-issue detection, and support handoff. In Statewave's own personal assistant reference demo, compiled context used 73% fewer tokens than replaying the raw history. Those results describe the published setups, not every workload.
 
 Migration is clean when the application already owns its prompts and agent loop. Keep Supermemory and Statewave in shadow mode for a representative set of subjects. Send new interaction events to Statewave, compile them, then compare the returned bundle against Supermemory search and profile output. Test changed preferences, deletion, sensitive memories, tenant boundaries, and a strict token cap before moving reads.
 
@@ -237,7 +237,7 @@ Supermemory, Mem0, Zep, Graphiti, OpenViking, Hindsight and Letta are trademarks
 </summary>
 <div className="px-7 pb-7">
 <div className="h-px bg-theme-primary/10 mb-6" />
-<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">The main repository is MIT licensed. The packaged local server and supported self-hosted offers have separate workload and support boundaries, including a 10,000-document limit on the local release since server v0.0.7 and supported self-hosting on Scale and Enterprise.</p>
+<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">The main repository is MIT licensed. The packaged local server and supported self-hosted offers have separate workload and support boundaries, including a 10,000-document limit on the local release, first stated in the server v0.0.7 release notes and supported self-hosting on Scale and Enterprise.</p>
 </div>
 </details>
 
