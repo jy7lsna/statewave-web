@@ -4,7 +4,6 @@ import { Link } from 'react-router'
 import { Section } from '../components/Section'
 import { Heading } from '../components/Heading'
 import { usePageSEO } from '../lib/seo'
-import { howToJsonLd } from '../lib/seo-meta'
 import { useChatWidget, useTrackDemoCta } from '../lib/widget-context-api'
 import { HeroInstallCommand } from '../components/HeroInstallCommand'
 import {
@@ -22,7 +21,8 @@ export function DevelopersPage() {
   // The install/quickstart HowTo lives here, where the actual steps are
   // shown — not statically in index.html, where it would ride along on every
   // route. Google retired HowTo rich results, but answer engines still read it.
-  usePageSEO({ jsonLd: [howToJsonLd()] })
+  // HowTo JSON-LD comes from routeJsonLd (lib/page-schema.ts).
+  usePageSEO({})
   const { openWidget } = useChatWidget()
   const liveDemoRef = useRef<HTMLButtonElement>(null)
   useTrackDemoCta(liveDemoRef)

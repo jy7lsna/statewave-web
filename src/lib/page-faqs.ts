@@ -222,6 +222,35 @@ export const PAGE_FAQS: Partial<Record<RouteKey, readonly FaqEntry[]>> = {
     },
   ],
 
+  '/connectors': [
+    {
+      question: 'What does a Statewave connector actually do?',
+      answer:
+        'It normalizes one source system’s events into the same Statewave episode shape, written under a stable subject prefix — repo:owner/name for code, customer: for support, community: for chat, contact: for mail. Because every connector emits the same contract, an agent queries memory by subject without knowing which tool a fact came from, and the compiler and the ranking model treat a Jira ticket and a Slack thread identically.',
+      links: [{ label: 'How compilation works', href: '/product' }],
+    },
+    {
+      question: 'Which sources can I ingest today?',
+      answer:
+        'GitHub (issues, pull requests, comments, reviews, releases), Jira, Slack, Discord, Notion, Zendesk, Intercom, Freshdesk, Gmail, n8n, Zapier, SQL databases, and local Markdown docs, ADRs, and RFCs. The MCP server runs the other direction: it exposes Statewave itself to Copilot, Claude, Cursor, and any MCP-compatible client. All of them ship as separate packages under Apache-2.0.',
+      links: [
+        { label: 'Model Context Protocol', href: 'https://modelcontextprotocol.io' },
+      ],
+    },
+    {
+      question: 'Do I have to install the whole suite?',
+      answer:
+        'No — that is why they are modular packages rather than one binary. Install only the connectors for the systems you actually run, and add more later without touching the runtime or migrating anything: a new source appends new episodes under its own subjects, and existing compiled memories are untouched. A repo-memory-only deployment is just the GitHub and Markdown packages.',
+      links: [{ label: 'Developer hub', href: '/developers' }],
+    },
+    {
+      question: 'How much of my Slack does the connector read?',
+      answer:
+        'Only what you allow. It authenticates with a bot token and requires an explicit --channels allowlist, then pulls channel and thread history and subscribes to the Events API for messages, reactions, and pins. Direct messages (dm:<user>) and group DMs (mpim:<channel>) are opt-in behind --include-dms and --include-mpim, and stay off unless you pass them. Per-memory sensitivity labels and the policy engine then govern who can read the result.',
+      links: [{ label: 'Governance model', href: '/product' }],
+    },
+  ],
+
   '/openrouter': [
     {
       question: 'What is statewave-openrouter?',
@@ -235,7 +264,7 @@ export const PAGE_FAQS: Partial<Record<RouteKey, readonly FaqEntry[]>> = {
     {
       question: 'How much do I have to change in my code?',
       answer:
-        'Two lines: point your existing OpenAI client at the proxy base URL and add an X-Statewave-Subject header to the request. Everything else in the integration stays the same, and a request with no subject header is proxied through unchanged.',
+        'Two lines: point your existing OpenAI client at the proxy base URL and add an X-Statewave-Subject header to the request, with header trust enabled on the proxy. In JWT mode, send X-Statewave-Token instead. Everything else in the integration stays the same, and a request with no subject header is proxied through unchanged.',
     },
     {
       question: 'Does the proxy add latency to completions?',
@@ -281,37 +310,8 @@ export const PAGE_FAQS: Partial<Record<RouteKey, readonly FaqEntry[]>> = {
     {
       question: 'How do I run it in production?',
       answer:
-        'Run the published container or the pip package under uvicorn behind whatever ingress you already use, set PROXY_JWT_SECRET if untrusted clients can reach it, and point /health at your load balancer. Shutdown drains in-flight episode writes before the HTTP client closes.',
+        "Build the container or install the package from the repository and run it under uvicorn behind whatever ingress you already use, set PROXY_JWT_SECRET if untrusted clients can reach it, and point your load balancer's health check at /health. Shutdown drains in-flight episode writes before the HTTP client closes.",
       links: [{ label: 'Self-hosting guide', href: '/developers' }],
-    },
-  ],
-
-  '/connectors': [
-    {
-      question: 'What does a Statewave connector actually do?',
-      answer:
-        'It normalizes one source system’s events into the same Statewave episode shape, written under a stable subject prefix — repo:owner/name for code, customer: for support, community: for chat, contact: for mail. Because every connector emits the same contract, an agent queries memory by subject without knowing which tool a fact came from, and the compiler and the ranking model treat a Jira ticket and a Slack thread identically.',
-      links: [{ label: 'How compilation works', href: '/product' }],
-    },
-    {
-      question: 'Which sources can I ingest today?',
-      answer:
-        'GitHub (issues, pull requests, comments, reviews, releases), Jira, Slack, Discord, Notion, Zendesk, Intercom, Freshdesk, Gmail, n8n, Zapier, SQL databases, and local Markdown docs, ADRs, and RFCs. The MCP server runs the other direction: it exposes Statewave itself to Copilot, Claude, Cursor, and any MCP-compatible client. All of them ship as separate packages under Apache-2.0.',
-      links: [
-        { label: 'Model Context Protocol', href: 'https://modelcontextprotocol.io' },
-      ],
-    },
-    {
-      question: 'Do I have to install the whole suite?',
-      answer:
-        'No — that is why they are modular packages rather than one binary. Install only the connectors for the systems you actually run, and add more later without touching the runtime or migrating anything: a new source appends new episodes under its own subjects, and existing compiled memories are untouched. A repo-memory-only deployment is just the GitHub and Markdown packages.',
-      links: [{ label: 'Developer hub', href: '/developers' }],
-    },
-    {
-      question: 'How much of my Slack does the connector read?',
-      answer:
-        'Only what you allow. It authenticates with a bot token and requires an explicit --channels allowlist, then pulls channel and thread history and subscribes to the Events API for messages, reactions, and pins. Direct messages (dm:<user>) and group DMs (mpim:<channel>) are opt-in behind --include-dms and --include-mpim, and stay off unless you pass them. Per-memory sensitivity labels and the policy engine then govern who can read the result.',
-      links: [{ label: 'Governance model', href: '/product' }],
     },
   ],
 

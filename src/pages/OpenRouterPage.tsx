@@ -928,7 +928,7 @@ function BenefitsSection() {
 
 /* ─── The diff ───────────────────────────────────────────────────────────── */
 
-const BEFORE_PY = `client = OpenAI(api_key="sk-or-...")
+const BEFORE_PY = `client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key="sk-or-...")
 
 client.chat.completions.create(
     model="openai/gpt-4o",
@@ -960,6 +960,8 @@ const DIFF_LINES: DiffLine[] = [
     before: () => (
       <>
         <span style={txt}>client</span> = <span style={kw}>OpenAI</span>(
+        <span style={attr}>base_url</span>=
+        <span style={str}>&quot;https://openrouter.ai/api/v1&quot;</span>,{' '}
         <span style={attr}>api_key</span>=<span style={str}>&quot;sk-or-...&quot;</span>)
       </>
     ),
@@ -1055,7 +1057,7 @@ function DiffSection() {
       <BandHead
         id="the-diff"
         tier="lead"
-        lede="Two lines. Everything else in your integration stays exactly as it is. No subject header means plain pass-through, so memory is opt-in per request rather than a global mode."
+        lede="Two lines, with header trust enabled on the proxy; in JWT mode, send X-Statewave-Token instead. Everything else in your integration stays exactly as it is. A request with no subject gets no memory, so memory is opt-in per request rather than a global mode."
       >
         A base URL and <span className="text-gradient-brand">one header</span>
       </BandHead>
@@ -1372,7 +1374,7 @@ function RequestFlowDiagram() {
 
 const FLOW_NOTES = [
   {
-    title: 'No added latency.',
+    title: 'No added write latency.',
     body: 'The episode write is fire-and-forget. It happens after the reply is already on its way to the client.',
   },
   {
@@ -1414,7 +1416,7 @@ function FlowSection() {
           <Eyebrow>What it leaves alone</Eyebrow>
           <ul className="mt-3.5 flex list-none flex-col gap-3 p-0">
             <IconRow icon={Minus} tone="muted">
-              No subject header: a plain pass-through, byte for byte.
+              No subject header: no context fetched, no episode written.
             </IconRow>
             <IconRow icon={Minus} tone="muted">
               Non-completion paths such as <C>/v1/models</C> forward as-is.
@@ -2182,7 +2184,7 @@ const FAILURE_CARDS = [
     icon: ServerCrash,
     eyebrow: 'Context read fails',
     title: 'The call still goes out',
-    body: 'No bundle is injected, the error is logged, and the completion is forwarded as though no subject had been supplied. The client sees a normal reply with no memory in it.',
+    body: 'No bundle is injected, the error is logged, and the completion goes through without memory. The turn is still written back afterwards. The client sees a normal reply with no memory in it.',
   },
   {
     icon: Clock3,
@@ -2259,7 +2261,7 @@ function ConfigSection() {
     <Band id="config">
       <BandHead
         id="config-heading"
-        lede="Everything is read from the environment, so the same image runs on a laptop and behind a gateway with no code change. The first three are required for memory to work at all; the rest decide who is allowed to name a subject and which tenant it's written to."
+        lede="Everything is read from the environment, so the same image runs on a laptop and behind a gateway with no code change. OPENROUTER_API_KEY (unless clients send their own key), STATEWAVE_URL and one trust setting (STATEWAVE_TRUST_CLIENT_SUBJECT or PROXY_JWT_SECRET) are required for memory to work at all; the rest decide who is allowed to name a subject and which tenant it's written to."
       >
         The settings that decide how it behaves
       </BandHead>
@@ -2272,11 +2274,11 @@ function ConfigSection() {
             [
               'OPENROUTER_API_KEY',
               'The key used for upstream calls when the client does not send its own.',
-              <span className="whitespace-nowrap text-theme-muted">Always</span>,
+              <span className="text-theme-muted">When clients do not send their own key</span>,
             ],
             [
               'STATEWAVE_URL',
-              'Where the memory runtime lives. Without it, requests are proxied with no memory.',
+              'Where the memory runtime lives. Defaults to http://localhost:8000.',
               <span className="whitespace-nowrap text-theme-muted">Always</span>,
             ],
             [
@@ -2307,14 +2309,15 @@ function ConfigSection() {
               'STATEWAVE_CALLER_ID / STATEWAVE_CALLER_TYPE',
               'Identifies the caller to Statewave.',
               <span className="text-theme-muted">
-                Any tenant with <C>require_caller_identity</C> turned on
+                Optional; overrides the default caller <C>openrouter-gateway</C>
               </span>,
             ],
             [
               'STATEWAVE_TENANT_ID',
               <>
-                Pins which tenant the turn is written to. Without it, the caller&apos;s{' '}
-                <C>X-Tenant-ID</C> header decides, even in JWT mode.
+                Pins which tenant the turn is written to. Without it, JWT mode takes the
+                tenant from the token&apos;s <C>tenant</C> claim; otherwise the caller&apos;s{' '}
+                <C>X-Tenant-ID</C> header decides.
               </>,
               <span className="text-theme-muted">Any multi-tenant deployment</span>,
             ],
@@ -2338,11 +2341,12 @@ function ConfigSection() {
 const PIP_CMD = `git clone https://github.com/smaramwbc/statewave-openrouter
 cd statewave-openrouter
 pip install .
-cp .env.example .env     # set OPENROUTER_API_KEY and STATEWAVE_URL
+cp .env.example .env     # set OPENROUTER_API_KEY, STATEWAVE_URL and STATEWAVE_TRUST_CLIENT_SUBJECT=1
 uvicorn statewave_openrouter:app --env-file .env --port 8080`
 
 const DOCKER_CMD = `git clone https://github.com/smaramwbc/statewave-openrouter
 cd statewave-openrouter
+cp .env.example .env     # set the three required settings
 docker build -t statewave-openrouter .
 docker run --rm -p 8080:8080 --env-file .env statewave-openrouter`
 
@@ -2391,7 +2395,7 @@ function QuickStartSection() {
   return (
     <Band id="start" tier="lead" surface>
       <BandHead id="quick-start-heading" tier="lead">
-        Running in three commands
+        Running in five commands
       </BandHead>
 
       <Rise
@@ -2435,7 +2439,7 @@ function QuickStartSection() {
               <span style={kw}>cd</span> statewave-openrouter{'\n'}
               <span style={kw}>pip</span> install .{'\n'}
               <span style={kw}>cp</span> .env.example .env{'     '}
-              <span style={dim}># set OPENROUTER_API_KEY and STATEWAVE_URL</span>
+              <span style={dim}># set OPENROUTER_API_KEY, STATEWAVE_URL and STATEWAVE_TRUST_CLIENT_SUBJECT=1</span>
               {'\n'}
               <span style={kw}>uvicorn</span> statewave_openrouter:app --env-file .env --port{' '}
               <span style={str}>8080</span>
@@ -2445,6 +2449,9 @@ function QuickStartSection() {
               <span style={kw}>git</span> clone https://github.com/smaramwbc/statewave-openrouter
               {'\n'}
               <span style={kw}>cd</span> statewave-openrouter{'\n'}
+              <span style={kw}>cp</span> .env.example .env{'     '}
+              <span style={dim}># set the three required settings</span>
+              {'\n'}
               <span style={kw}>docker</span> build -t statewave-openrouter .{'\n'}
               <span style={kw}>docker</span> run --rm -p <span style={str}>8080:8080</span>{' '}
               --env-file .env statewave-openrouter
@@ -2499,7 +2506,8 @@ function QuickStartSection() {
             <IconRow icon={ShieldAlert}>
               Pin <C>STATEWAVE_TENANT_ID</C> before any multi-tenant deployment. Without
               it, a caller&apos;s <C>X-Tenant-ID</C> header decides which tenant the turn
-              is written to, even when the caller is authenticated by JWT.
+              is written to, unless the proxy runs in JWT mode, where the token&apos;s{' '}
+              <C>tenant</C> claim decides.
             </IconRow>
             <IconRow icon={Waypoints} tone="muted">
               Talking to Statewave directly? The{' '}

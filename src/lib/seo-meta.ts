@@ -39,7 +39,7 @@ export const REPOS = {
 /** Last substantive revision of /openrouter. A constant, not the build
  *  date: a timestamp that moves on every deploy is not a freshness
  *  signal, it is noise, and answer engines discount it. */
-export const OPENROUTER_LAST_UPDATED = '2026-09-17'
+export const OPENROUTER_LAST_UPDATED = '2026-09-28'
 
 /* ─── Route table ────────────────────────────────────────────────────────── */
 
