@@ -59,22 +59,16 @@ interface AlternativesPost {
   description: string
 }
 
-/* Only posts guaranteed to exist wherever this page ships — the live Mem0
- * post plus whatever alternatives post is bundled in the same PR as this
- * hub. Posts still in a separate open PR are added here once merged, to
- * avoid linking a slug that 404s until that PR lands too. */
-const ALTERNATIVES_POSTS: ReadonlyArray<AlternativesPost> = [
-  {
-    href: '/blog/open-source-alternatives-to-mem0',
-    title: '6 Best Open-Source Alternatives to Mem0',
-    description: "What Mem0's self-hosted build leaves out, and how to pick a replacement by requirement.",
-  },
-  {
-    href: '/blog/supermemory-alternatives',
-    title: '6 Best Open-Source Supermemory Alternatives',
-    description: "The four deployment surfaces behind Supermemory's \"open source\" claim, and how to pick a narrower replacement.",
-  },
-]
+/* Every *alternatives* post in the repo, read from its frontmatter at build
+ * time (only the frontmatter export is imported, not the post body). A post
+ * that lands in a later PR joins the hub without an edit here, and a slug
+ * that does not exist yet can never be linked. Newest first. */
+type PostFrontmatter = { title: string; slug: string; description: string; date: string }
+const ALTERNATIVES_POSTS: ReadonlyArray<AlternativesPost> = Object.values(
+  import.meta.glob<PostFrontmatter>('../content/blog/*alternatives*.mdx', { eager: true, import: 'frontmatter' }),
+)
+  .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+  .map((fm) => ({ href: `/blog/${fm.slug}`, title: fm.title.replace(/ \(\d{4}\)$/, ''), description: fm.description }))
 
 const COMPARISONS: ReadonlyArray<ComparisonCard> = [
   {
@@ -82,7 +76,7 @@ const COMPARISONS: ReadonlyArray<ComparisonCard> = [
     href: '/vs/mem0',
     subtitle: 'Deterministic Context vs. Ranked Retrieval',
     description:
-      'Mem0 ranks memories by relevance for an id you pass. Statewave compiles episodes into typed memories with a fixed scoring model, policy on the read path, and an integrity-hashed receipt.',
+      'Mem0 ranks memories by relevance for an id you pass. Statewave compiles episodes into typed memories with a fixed scoring model, policy on the read path, and an optional integrity-hashed receipt.',
   },
   {
     name: 'Letta',
@@ -103,7 +97,7 @@ const COMPARISONS: ReadonlyArray<ComparisonCard> = [
     href: '/vs/supermemory',
     subtitle: 'Deterministic Bundle vs. Reranked Search',
     description:
-      'Supermemory does hybrid vector-plus-keyword search with context-aware reranking. Statewave assembles a deterministic bundle with per-row provenance and an integrity-hashed receipt.',
+      'Supermemory does hybrid vector-plus-keyword search with context-aware reranking. Statewave assembles a deterministic bundle with per-row provenance and an optional integrity-hashed receipt.',
   },
 ]
 
