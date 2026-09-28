@@ -26,7 +26,6 @@ import { CodeCopyButton } from '../components/CodeCopyButton'
 import { PageFaq } from '../components/PageFaq'
 import { Section } from '../components/Section'
 import { usePageSEO } from '../lib/seo'
-import { OPENROUTER_PROXY_VERSION as VERSION } from '../lib/seo-meta'
 
 /* Landing page for statewave-openrouter, the OpenAI-compatible proxy that
  * gives OpenRouter calls persistent memory.
@@ -849,11 +848,10 @@ function HeroSection() {
               style={{ borderTop: '1px solid var(--viz-border)' }}
             >
               {[
-                '40 unit tests',
+                '36 unit tests',
                 'Python 3.11–3.13',
                 '3 memory-aware endpoints',
                 'Apache 2.0',
-                `v${VERSION}`,
               ].map((item, i) => (
                 <span key={item} className="flex items-center gap-2.5">
                   {i > 0 && (
@@ -2261,9 +2259,9 @@ function ConfigSection() {
     <Band id="config">
       <BandHead
         id="config-heading"
-        lede="Everything is read from the environment, so the same image runs on a laptop and behind a gateway with no code change. The first two are required for memory to work at all; the last two decide who is allowed to name a subject."
+        lede="Everything is read from the environment, so the same image runs on a laptop and behind a gateway with no code change. The first three are required for memory to work at all; the rest decide who is allowed to name a subject and which tenant it's written to."
       >
-        Four settings decide how it behaves
+        The settings that decide how it behaves
       </BandHead>
 
       <Rise className="mt-8">
@@ -2282,6 +2280,13 @@ function ConfigSection() {
               <span className="whitespace-nowrap text-theme-muted">Always</span>,
             ],
             [
+              'STATEWAVE_API_KEY',
+              'The key Statewave itself requires, when the server enforces one. The proxy fails open, so a missing key means a normal reply with no memory and no error.',
+              <span className="text-theme-muted">
+                Whenever the Statewave server requires an API key
+              </span>,
+            ],
+            [
               'STATEWAVE_TRUST_CLIENT_SUBJECT',
               'Takes the subject header at face value.',
               <span className="text-theme-muted">
@@ -2297,6 +2302,21 @@ function ConfigSection() {
               <span className="text-theme-muted">
                 Anything reachable by clients you do not control
               </span>,
+            ],
+            [
+              'STATEWAVE_CALLER_ID / STATEWAVE_CALLER_TYPE',
+              'Identifies the caller to Statewave.',
+              <span className="text-theme-muted">
+                Any tenant with <C>require_caller_identity</C> turned on
+              </span>,
+            ],
+            [
+              'STATEWAVE_TENANT_ID',
+              <>
+                Pins which tenant the turn is written to. Without it, the caller&apos;s{' '}
+                <C>X-Tenant-ID</C> header decides, even in JWT mode.
+              </>,
+              <span className="text-theme-muted">Any multi-tenant deployment</span>,
             ],
           ]}
         />
@@ -2315,12 +2335,16 @@ function ConfigSection() {
 
 /* ─── Quick start ────────────────────────────────────────────────────────── */
 
-const PIP_CMD = `pip install statewave-openrouter
+const PIP_CMD = `git clone https://github.com/smaramwbc/statewave-openrouter
+cd statewave-openrouter
+pip install .
 cp .env.example .env     # set OPENROUTER_API_KEY and STATEWAVE_URL
-uvicorn statewave_openrouter:app --port 8080 --env-file .env`
+uvicorn statewave_openrouter:app --env-file .env --port 8080`
 
-const DOCKER_CMD = `docker run --rm -p 8080:8080 --env-file .env \\
-  ghcr.io/smaramwbc/statewave-openrouter:${VERSION}`
+const DOCKER_CMD = `git clone https://github.com/smaramwbc/statewave-openrouter
+cd statewave-openrouter
+docker build -t statewave-openrouter .
+docker run --rm -p 8080:8080 --env-file .env statewave-openrouter`
 
 const VERIFY_CMD = `curl http://localhost:8080/health
 # {"status":"ok"}`
@@ -2406,18 +2430,24 @@ function QuickStartSection() {
         >
           {isPip ? (
             <>
-              <span style={kw}>pip</span> install statewave-openrouter{'\n'}
+              <span style={kw}>git</span> clone https://github.com/smaramwbc/statewave-openrouter
+              {'\n'}
+              <span style={kw}>cd</span> statewave-openrouter{'\n'}
+              <span style={kw}>pip</span> install .{'\n'}
               <span style={kw}>cp</span> .env.example .env{'     '}
               <span style={dim}># set OPENROUTER_API_KEY and STATEWAVE_URL</span>
               {'\n'}
-              <span style={kw}>uvicorn</span> statewave_openrouter:app --port{' '}
-              <span style={str}>8080</span> --env-file .env
+              <span style={kw}>uvicorn</span> statewave_openrouter:app --env-file .env --port{' '}
+              <span style={str}>8080</span>
             </>
           ) : (
             <>
+              <span style={kw}>git</span> clone https://github.com/smaramwbc/statewave-openrouter
+              {'\n'}
+              <span style={kw}>cd</span> statewave-openrouter{'\n'}
+              <span style={kw}>docker</span> build -t statewave-openrouter .{'\n'}
               <span style={kw}>docker</span> run --rm -p <span style={str}>8080:8080</span>{' '}
-              --env-file .env \{'\n'}
-              {'  '}ghcr.io/smaramwbc/statewave-openrouter:{VERSION}
+              --env-file .env statewave-openrouter
             </>
           )}
         </pre>
@@ -2465,6 +2495,11 @@ function QuickStartSection() {
             <IconRow icon={Search}>
               Point your health check at <C>/health</C>; context and episode failures
               never surface as a request error.
+            </IconRow>
+            <IconRow icon={ShieldAlert}>
+              Pin <C>STATEWAVE_TENANT_ID</C> before any multi-tenant deployment. Without
+              it, a caller&apos;s <C>X-Tenant-ID</C> header decides which tenant the turn
+              is written to, even when the caller is authenticated by JWT.
             </IconRow>
             <IconRow icon={Waypoints} tone="muted">
               Talking to Statewave directly? The{' '}

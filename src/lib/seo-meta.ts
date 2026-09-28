@@ -36,10 +36,6 @@ export const REPOS = {
   openrouter: 'https://github.com/smaramwbc/statewave-openrouter',
 } as const
 
-/** Shipped version of the statewave-openrouter proxy. Lives here so the
- *  /openrouter page and its SoftwareApplication schema can't disagree. */
-export const OPENROUTER_PROXY_VERSION = '1.0.0'
-
 /** Last substantive revision of /openrouter. A constant, not the build
  *  date: a timestamp that moves on every deploy is not a freshness
  *  signal, it is noise, and answer engines discount it. */
@@ -396,7 +392,6 @@ export function openrouterProxyJsonLd(): JsonLd {
       'statewave-openrouter is an open-source, OpenAI-compatible HTTP proxy that gives OpenRouter calls persistent memory. It assembles a memory bundle for a subject before the call and writes the turn back as an episode after the reply.',
     applicationCategory: 'DeveloperApplication',
     operatingSystem: 'Linux, macOS, Windows',
-    softwareVersion: OPENROUTER_PROXY_VERSION,
     programmingLanguage: 'Python',
     runtimePlatform: 'Python 3.11+',
     url: `${BASE_URL}/openrouter`,
