@@ -20,7 +20,7 @@ import { usePageSEO } from '../lib/seo'
 const REPO = 'https://github.com/smaramwbc/statewave-guide'
 const ACCENT = '#2F5BF0'
 
-const NAVY = 'relative isolate mx-auto max-w-[1400px] overflow-hidden rounded-[32px] bg-[#0A1233]'
+const NAVY = 'relative isolate mx-auto max-w-[1760px] overflow-hidden rounded-[32px] bg-[#0A1233]'
 /* Hover lift follows the /about and /benchmarks card recipe. */
 const LIFT = 'transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-0.5 hover:border-[var(--viz-border-strong)] hover:shadow-[0_18px_50px_rgba(47,91,240,0.12)]'
 const CARD = `rounded-[28px] border border-[var(--viz-border)] bg-[var(--viz-card)] sw-card ${LIFT}`
@@ -28,8 +28,8 @@ const INNER = 'rounded-[20px] bg-[var(--viz-card-2)]'
 const TILE = 'rounded-[14px] border border-[var(--viz-border)] bg-[var(--viz-card)]'
 const DASHED = 'rounded-[14px] border border-dashed border-[var(--viz-border-strong)]'
 const MONO_LABEL = 'font-mono text-[11px] font-semibold tracking-[0.14em] text-theme-muted'
-const H2 = 'font-heading text-[clamp(2.25rem,4.6vw,3.75rem)] font-medium leading-[1.02] tracking-[-0.035em] text-balance'
-const EYEBROW = 'mb-[18px] text-sm font-medium'
+const H2 = 'font-heading text-[clamp(2.25rem,4.8vw,4.25rem)] font-medium leading-[1.02] tracking-[-0.035em] text-balance'
+const EYEBROW = 'mb-[18px] text-[15px] font-medium'
 const GRAD_TEXT = 'bg-[linear-gradient(90deg,#00C6FF,#4A8CFF,#8B6CFF)] bg-clip-text text-transparent'
 
 /* Site motion dialect (same cadence as /benchmarks). */
@@ -282,7 +282,7 @@ function HeroDemo() {
   const playingLabel = !paused
 
   return (
-    <div ref={box} className="relative mx-auto mt-[clamp(48px,5vw,72px)] max-w-[1160px]">
+    <div ref={box} className="relative mx-auto mt-[clamp(48px,5vw,72px)] max-w-[1260px]">
       <Rise>
         <div role="group" aria-label="Recorded walkthrough: Guide answers where to create a client, then steps through it">
           <BrowserChrome>
@@ -497,8 +497,8 @@ function HeroDemo() {
 /* ─── Sections ───────────────────────────────────────────────────────────── */
 
 function PillCta({ href, children, light = false, external = false }: { href: string; children: ReactNode; light?: boolean; external?: boolean }) {
-  const cls = `inline-flex h-12 items-center gap-3 rounded-full pl-[22px] pr-1.5 text-[15px] font-semibold transition-colors ${light ? 'bg-white text-[#0A1233] hover:bg-[#E8EDFF]' : 'bg-[#2F5BF0] text-white hover:bg-[#2448D6]'}`
-  const arrow = <span className={`inline-flex size-9 items-center justify-center rounded-full ${light ? 'bg-[#2F5BF0] text-white' : 'bg-white text-[#2F5BF0]'}`}>{external ? '→' : '↓'}</span>
+  const cls = `inline-flex h-14 items-center gap-3 rounded-full pl-6 pr-2 text-base font-semibold transition-colors ${light ? 'bg-white text-[#0A1233] hover:bg-[#E8EDFF]' : 'bg-[#2F5BF0] text-white hover:bg-[#2448D6]'}`
+  const arrow = <span className={`inline-flex size-10 items-center justify-center rounded-full ${light ? 'bg-[#2F5BF0] text-white' : 'bg-white text-[#2F5BF0]'}`}>{external ? '→' : '↓'}</span>
   return external ? <Ext href={href} className={cls}>{children}{arrow}</Ext> : <a href={href} className={cls}>{children}{arrow}</a>
 }
 
@@ -509,12 +509,12 @@ function HeroSection() {
         {/* One wash, under the demo. The only glow on the page. */}
         <div aria-hidden="true" className="absolute left-1/2 top-[clamp(380px,40vw,470px)] -z-10 h-[760px] w-[min(1300px,120%)] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(74,120,255,.5),rgba(74,120,255,.16)_55%,transparent)]" />
         <Stagger>
-          <Rise className="mx-auto max-w-[720px] text-center">
+          <Rise className="mx-auto max-w-[820px] text-center">
             <p className="mb-[18px] font-mono text-[11.5px] tracking-[0.14em] text-[#9DB3FF]">STATEWAVE GUIDE · OPEN SOURCE</p>
-            <Heading id="statewave-guide" level={1} className="font-heading text-[clamp(2.75rem,5.6vw,4.75rem)] font-medium leading-none tracking-[-0.045em] text-white">
+            <Heading id="statewave-guide" level={1} className="font-heading text-[clamp(2.75rem,6vw,5.5rem)] font-medium leading-none tracking-[-0.045em] text-white">
               Your app<br /><span className={GRAD_TEXT}>explains itself.</span>
             </Heading>
-            <p className="mx-auto mt-5 max-w-[560px] text-[17px] leading-[1.55] text-[rgba(222,229,255,.85)] text-balance">
+            <p className="mx-auto mt-6 max-w-[620px] text-[19px] leading-[1.55] text-[rgba(222,229,255,.85)] text-balance">
               Ask where something is, and Guide points at the real control, backed by evidence from your source code.
             </p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
@@ -648,7 +648,7 @@ function MemoryCard() {
 function TwoRulesSection() {
   return (
     <section className="px-5 py-[clamp(80px,11vw,140px)] sm:px-7">
-      <Stagger className="mx-auto max-w-[1200px]">
+      <Stagger className="mx-auto max-w-[1400px]">
         <Rise className="mx-auto max-w-[44rem] text-center">
           <p className={`${EYEBROW} text-[var(--viz-indigo)]`}>The two rules</p>
           <Heading id="the-two-rules" className={`${H2} text-theme-primary`}>Unknown is better than wrong.</Heading>
@@ -657,15 +657,15 @@ function TwoRulesSection() {
           <Rise className={`flex flex-col overflow-hidden ${CARD}`}>
             <ClaimsCard />
             <div className="px-8 pb-8 pt-5">
-              <h3 className="mb-2.5 text-2xl font-medium tracking-[-0.02em] text-theme-primary">Unknown is better than wrong.</h3>
-              <p className="leading-[1.65] text-theme-secondary text-pretty">A fact reaches the user only with source-level evidence behind it. No evidence, no sentence. The system refuses rather than guesses.</p>
+              <h3 className="mb-2.5 text-[1.7rem] font-medium tracking-[-0.02em] text-theme-primary">Unknown is better than wrong.</h3>
+              <p className="text-[17px] leading-[1.65] text-theme-secondary text-pretty">A fact reaches the user only with source-level evidence behind it. No evidence, no sentence. The system refuses rather than guesses.</p>
             </div>
           </Rise>
           <Rise className={`flex flex-col overflow-hidden ${CARD}`}>
             <MemoryCard />
             <div className="px-8 pb-8 pt-5">
-              <h3 className="mb-2.5 text-2xl font-medium tracking-[-0.02em] text-theme-primary">Memory remembers experience, not truth.</h3>
-              <p className="leading-[1.65] text-theme-secondary text-pretty">What you did shapes how things are presented. It can never add a button, an answer, or a permission the product doesn't have right now.</p>
+              <h3 className="mb-2.5 text-[1.7rem] font-medium tracking-[-0.02em] text-theme-primary">Memory remembers experience, not truth.</h3>
+              <p className="text-[17px] leading-[1.65] text-theme-secondary text-pretty">What you did shapes how things are presented. It can never add a button, an answer, or a permission the product doesn't have right now.</p>
             </div>
           </Rise>
         </div>
@@ -738,9 +738,9 @@ function EvidenceEditor() {
   )
   return (
     <div ref={ref} className="overflow-hidden rounded-[22px] border border-[rgba(160,180,255,.18)] bg-[#07103F] shadow-[0_40px_100px_rgba(0,0,20,.5)]">
-      <div className="flex h-11 items-center gap-4 border-b border-[rgba(160,180,255,.14)] bg-[#060C36] px-4">
+      <div className="flex h-12 items-center gap-4 border-b border-[rgba(160,180,255,.14)] bg-[#060C36] px-4">
         <div className="hidden gap-1.5 sm:flex">{[0, 1, 2].map((n) => <span key={n} className="size-2.5 rounded-full bg-[rgba(200,212,255,.22)]" />)}</div>
-        <div className="flex min-w-0 gap-1 overflow-x-auto font-mono text-xs">
+        <div className="flex min-w-0 gap-1 overflow-x-auto font-mono text-[13px]">
           {Object.keys(FILES).map((f) => (
             <button key={f} type="button" onClick={() => pick(CHAIN.findIndex((c) => c.file === f))}
               className={`shrink-0 cursor-pointer rounded-lg px-3 py-1.5 transition-colors ${FOCUS} ${f === cur.file ? 'bg-white/[.07] text-white' : 'text-[rgba(200,212,255,.6)] hover:text-white'}`}>
@@ -749,7 +749,7 @@ function EvidenceEditor() {
           ))}
         </div>
       </div>
-      <div className="min-h-[258px] overflow-x-auto py-4 font-mono text-[13px] leading-[1.85] text-[#C9D4FF]">
+      <div className="min-h-[276px] overflow-x-auto py-5 font-mono text-[15px] leading-[1.9] text-[#C9D4FF]">
         {lines.map((line, n) => n + 1 === cur.line ? (
           <div key={`${cur.file}${n}`} className="flex items-center justify-between gap-3 whitespace-pre bg-[rgba(74,120,255,.35)] px-5 text-white shadow-[inset_3px_0_0_#6E8CFF]">
             <span className="flex"><span className="w-7 shrink-0">{n + 1}</span><span>{line}</span></span>
@@ -764,13 +764,13 @@ function EvidenceEditor() {
           <span>EVIDENCE CHAIN</span><span className="font-normal tracking-[0.04em]">{cur.file}:{cur.line}</span>
         </div>
         {(['FRONTEND', 'BACKEND'] as const).map((side) => (
-          <div key={side} className="flex flex-wrap items-center gap-2 font-mono text-xs">
+          <div key={side} className="flex flex-wrap items-center gap-2 font-mono text-[13px]">
             <span className="w-full text-[10px] tracking-[0.12em] text-[rgba(200,212,255,.55)] sm:w-[76px]">{side}</span>
             {side === 'BACKEND' && edge(3)}
             {CHAIN.flatMap((c, n) => c.side !== side ? [] : n < CHAIN.length - 1 && CHAIN[n + 1].side === side ? [chip(n), edge(n)] : [chip(n)])}
           </div>
         ))}
-        <p className="mt-0.5 text-xs leading-normal text-[rgba(200,212,255,.6)]">Illustrative example; pick a node to see the line that proves it. Symbols and edge labels are not taken from a real index.</p>
+        <p className="mt-0.5 text-[13px] leading-normal text-[rgba(200,212,255,.6)]">Illustrative example; pick a node to see the line that proves it. Symbols and edge labels are not taken from a real index.</p>
       </div>
     </div>
   )
@@ -783,8 +783,8 @@ function CodeAwareSection() {
         <Stagger className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,440px),1fr))] items-center gap-[clamp(40px,5vw,72px)] px-[clamp(24px,5vw,72px)] py-[clamp(48px,7vw,96px)]">
           <Rise>
             <p className={`${EYEBROW} text-[#9DB3FF]`}>How it's different</p>
-            <Heading id="code-aware" className={`${H2} scroll-mt-32 text-white`}>The DOM is scenery. The source graph is <span className="text-[#9DB3FF]">the product.</span></Heading>
-            <p className="mt-6 max-w-[36rem] text-[17px] leading-[1.65] text-[rgba(222,229,255,.82)] text-pretty">
+            <Heading id="code-aware" className="scroll-mt-32 font-heading text-[clamp(2.25rem,3.9vw,3.5rem)] font-medium leading-[1.04] tracking-[-0.035em] text-balance text-white">The DOM is scenery. The source graph is <span className="text-[#9DB3FF]">the product.</span></Heading>
+            <p className="mt-6 max-w-[36rem] text-[18px] leading-[1.65] text-[rgba(222,229,255,.82)] text-pretty">
               A product tour knows a button exists at a position. Guide's indexer reconstructs what pressing it does, with file-and-line evidence for every edge, by statically analyzing your React + Node source with ts-morph. If a relationship can't be proven from code, it's omitted rather than guessed.
             </p>
             <ul className="mt-8 flex flex-col border-t border-[rgba(160,180,255,.16)]">
@@ -793,7 +793,7 @@ function CodeAwareSection() {
                 'Frontend and backend join on the API endpoint identity, not name-matching.',
                 'Typed relationship kinds (invokes, opens, calls_api, requires_permission, …), each carrying file + line + symbol evidence.',
               ].map((t, n) => (
-                <li key={n} className="flex gap-4 border-b border-[rgba(160,180,255,.16)] py-4 text-[15px] leading-[1.6] text-[rgba(222,229,255,.85)]">
+                <li key={n} className="flex gap-4 border-b border-[rgba(160,180,255,.16)] py-[18px] text-base leading-[1.6] text-[rgba(222,229,255,.85)]">
                   <span className="shrink-0 pt-[3px] font-mono text-xs text-[#9DB3FF]">0{n + 1}</span>{t}
                 </li>
               ))}
@@ -833,11 +833,11 @@ function VerifierSection() {
   )
   return (
     <section className="px-5 py-[clamp(80px,11vw,140px)] sm:px-7">
-      <Stagger className="mx-auto max-w-[1200px]">
+      <Stagger className="mx-auto max-w-[1400px]">
         <Rise className="max-w-[48rem]">
           <p className={`${EYEBROW} text-[var(--viz-indigo)]`}>Safety</p>
           <Heading id="verified-not-guessed" className={`${H2} text-theme-primary`}>A model chooses what to say. It can't choose what's true.</Heading>
-          <p className="mt-6 text-[17px] leading-[1.65] text-theme-secondary text-pretty">
+          <p className="mt-6 text-[18px] leading-[1.65] text-theme-secondary text-pretty">
             The application graph enumerates the claims that are provably true before a model sees anything. The model only selects from that menu and phrases it, or declines. A verifier then re-checks the selected claim before it reaches the Product Model.
           </p>
         </Rise>
@@ -1026,10 +1026,10 @@ function RuntimeSection() {
           <Heading id="runtime-context" className={`${H2} text-white`}>What's on screen right now, borrowed, never kept.</Heading>
         </Rise>
         <div ref={ref}>
-          <Rise className="mx-auto mt-14 max-w-[1080px]">
+          <Rise className="mx-auto mt-14 max-w-[1200px]">
             <div role="img" aria-label={`Runtime mockup: ${RUNTIME_POINTS[i][0]}. ${RUNTIME_POINTS[i][1]}`}><RuntimeStill mode={i} /></div>
           </Rise>
-          <div className="mx-auto mt-10 grid max-w-[1080px] grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-3">
+          <div className="mx-auto mt-10 grid max-w-[1200px] grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-3">
             {RUNTIME_POINTS.map(([t, d, icon], n) => (
               <Rise key={t}>
                 <button type="button" aria-pressed={i === n} onClick={() => pick(n)} onMouseEnter={() => pick(n)}
@@ -1037,8 +1037,8 @@ function RuntimeSection() {
                   <span className={`inline-flex size-11 items-center justify-center rounded-xl border border-[rgba(160,180,255,.3)] transition-colors duration-200 ${i === n ? 'bg-[#2F5BF0]' : 'bg-[rgba(74,120,255,.35)]'}`}>
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#fff" strokeWidth="1.5" aria-hidden="true">{icon}</svg>
                   </span>
-                  <span className="mt-[18px] block text-lg font-medium text-white">{t}</span>
-                  <span className="mt-2 block text-[15px] leading-[1.6] text-[rgba(222,229,255,.78)]">{d}</span>
+                  <span className="mt-[18px] block text-xl font-medium text-white">{t}</span>
+                  <span className="mt-2 block text-base leading-[1.6] text-[rgba(222,229,255,.78)]">{d}</span>
                   {/* Time to the next signal while it is advancing on its own. */}
                   <span aria-hidden="true" className="mt-4 block h-0.5 overflow-hidden rounded-full bg-white/10">
                     {i === n && (auto
@@ -1097,7 +1097,7 @@ function MemoryFigure() {
       </div>
       <div className="rounded-[20px] bg-[#0A1233] p-6 text-white">
         <div className="flex items-baseline gap-3"><span className="font-mono text-[11px] text-[#9DB3FF]">03</span><span className={big}>2</span><span className="text-[15px] text-[rgba(222,229,255,.82)]">events read</span></div>
-        <motion.div variants={v(MF_PATH)} className="mt-3.5 flex flex-wrap items-center gap-2 font-mono text-xs">
+        <motion.div variants={v(MF_PATH)} className="mt-3.5 flex flex-wrap items-center gap-2 font-mono text-[13px]">
           <motion.span variants={v(MF_HOP)} className="rounded-lg bg-white/10 px-2.5 py-[5px]">page</motion.span>
           <motion.span variants={v(MF_HOP)} className="text-[#9DB3FF]">→</motion.span>
           <motion.span variants={v(MF_HOP)} className="rounded-lg bg-white/10 px-2.5 py-[5px]">your backend</motion.span>
@@ -1112,12 +1112,12 @@ function MemoryFigure() {
 function MemorySection() {
   return (
     <section className="px-5 py-[clamp(80px,11vw,140px)] sm:px-7">
-      <Stagger className="mx-auto max-w-[1200px]">
+      <Stagger className="mx-auto max-w-[1400px]">
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,440px),1fr))] items-center gap-[clamp(40px,6vw,80px)]">
           <Rise>
             <p className={`${EYEBROW} text-[var(--viz-indigo)]`}>Memory</p>
             <Heading id="memory" className={`${H2} text-theme-primary`}>Remembers the person. Never rewrites the product.</Heading>
-            <p className="mt-6 max-w-[34rem] text-[17px] leading-[1.65] text-theme-secondary text-pretty">
+            <p className="mt-6 max-w-[34rem] text-[18px] leading-[1.65] text-theme-secondary text-pretty">
               Guide's memory is a closed vocabulary of six event kinds: counters and choices, never text. A walkthrough finished a thousand times is one durable record. A preference changed four times is one active value.
             </p>
           </Rise>
@@ -1165,11 +1165,11 @@ function ArchitectureSection() {
   const runtime = ['guide-core', 'guide-runtime', 'guide-actions']
   return (
     <section className="px-5 pb-[clamp(80px,11vw,140px)] sm:px-7">
-      <Stagger className="mx-auto max-w-[1200px] border-t border-[var(--viz-border)] pt-[clamp(64px,8vw,100px)]">
+      <Stagger className="mx-auto max-w-[1400px] border-t border-[var(--viz-border)] pt-[clamp(64px,8vw,100px)]">
         <Rise className="max-w-[48rem]">
           <p className={`${EYEBROW} text-[var(--viz-indigo)]`}>Architecture</p>
           <Heading id="architecture" className={`${H2} text-theme-primary`}>Eight packages. A strict boundary between each.</Heading>
-          <p className="mt-6 text-[17px] leading-[1.65] text-theme-secondary">Point at a layer to see which package owns it, or at a package to see where it sits.</p>
+          <p className="mt-6 text-[18px] leading-[1.65] text-theme-secondary">Point at a layer to see which package owns it, or at a package to see where it sits.</p>
         </Rise>
         <div className="mt-14 grid grid-cols-[repeat(auto-fit,minmax(min(100%,460px),1fr))] items-stretch gap-5">
           <Rise className={`flex flex-col p-7 ${CARD}`}>
@@ -1219,7 +1219,8 @@ function ArchitectureSection() {
 
 /* README "Quick start", with the clone URL filled in. */
 const QUICK_START: [string, string][] = [
-  ['git clone https://github.com/smaramwbc/statewave-guide && cd statewave-guide', ''],
+  ['git clone https://github.com/smaramwbc/statewave-guide', ''],
+  ['cd statewave-guide', ''],
   ['pnpm install', '# Node >= 20, pnpm 9+'],
   ['pnpm build', ''],
   ['pnpm test', '# 1500+ unit tests'],
@@ -1256,7 +1257,7 @@ const DEMO_CARDS: [ReactNode, string][] = [
 function QuickStartSection() {
   return (
     <section className="px-5 pb-[clamp(80px,11vw,140px)] sm:px-7">
-      <Stagger className="mx-auto max-w-[1200px]">
+      <Stagger className="mx-auto max-w-[1400px]">
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,440px),1fr))] items-center gap-[clamp(40px,6vw,72px)]">
           <Rise>
             <p className={`${EYEBROW} text-[var(--viz-indigo)]`}>Quick start</p>
@@ -1322,20 +1323,20 @@ const CTA_LAYERS: [string, number][] = [
 function CtaSection() {
   return (
     <section className="px-4 pb-16 pt-12">
-      <div className={`${NAVY} flex min-h-[420px] items-center`}>
-        <div aria-hidden="true" className="absolute inset-0 -z-20 bg-[radial-gradient(50%_90%_at_85%_50%,rgba(74,120,255,.75),transparent_65%)]" />
+      <div className={`${NAVY} flex min-h-[480px] items-center`}>
+        <div aria-hidden="true" className="absolute inset-0 -z-20 bg-[radial-gradient(ellipse_75%_140%_at_85%_50%,rgba(74,120,255,.62)_0%,rgba(74,120,255,.46)_14%,rgba(74,120,255,.3)_28%,rgba(74,120,255,.17)_42%,rgba(74,120,255,.08)_57%,rgba(74,120,255,.03)_72%,rgba(74,120,255,0)_100%)]" />
         <svg aria-hidden="true" viewBox="0 0 1400 420" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 -z-10 size-full">
           {CTA_LAYERS.map(([d, o]) => <path key={d} d={d} fill="none" stroke={`rgba(150,170,255,${o})`} strokeWidth="1.2" />)}
         </svg>
-        <Stagger className="relative max-w-[40rem] px-[clamp(24px,5vw,72px)] py-[clamp(48px,7vw,96px)]">
+        <Stagger className="relative max-w-[52rem] px-[clamp(24px,5vw,72px)] py-[clamp(48px,7vw,96px)]">
           <Rise>
             <p className={`${EYEBROW} text-[#9DB3FF]`}>Build it into your app</p>
-            <Heading id="build-it" className="font-heading text-[clamp(2.5rem,5.4vw,4.5rem)] font-medium leading-none tracking-[-0.04em] text-white text-balance">
+            <Heading id="build-it" className="font-heading text-[clamp(2.75rem,6.4vw,6rem)] font-medium leading-none tracking-[-0.04em] text-white text-balance">
               Let your app <span className={GRAD_TEXT}>explain itself.</span>
             </Heading>
             <div className="mt-9 flex flex-wrap gap-3">
               <PillCta href={REPO} light external>View on GitHub</PillCta>
-              <Link to="/product" className="inline-flex h-12 items-center rounded-full border border-[rgba(200,212,255,.3)] px-[22px] text-[15px] font-medium text-white transition-colors hover:bg-white/10">
+              <Link to="/product" className="inline-flex h-14 items-center rounded-full border border-[rgba(200,212,255,.3)] px-6 text-base font-medium text-white transition-colors hover:bg-white/10">
                 Explore Statewave's memory runtime
               </Link>
             </div>
