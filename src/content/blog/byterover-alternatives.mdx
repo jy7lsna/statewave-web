@@ -23,7 +23,9 @@ We build Statewave, so weigh the first entry accordingly. Every competitor claim
 
 ByteRover gives coding agents a portable project memory outside any one IDE. Developers curate knowledge into a local hierarchy, query it through CLI or MCP, and version the context through `brv vc` commands. Agent connectors make the same context available across coding tools.
 
-Its current [local versus cloud guide](https://docs.byterover.dev/local-vs-cloud) is clearer than many summaries on the web: curation, query, providers, models, connectors, the hub, and local version control work without a ByteRover account. Cloud adds team sync, multi-machine access, and backup.
+Its V3 [local versus cloud guide](https://docs.byterover.dev/local-vs-cloud) is clearer than many summaries on the web: curation, query, providers, models, connectors, the hub, and local version control work without a ByteRover account. Cloud adds team sync, multi-machine access, and backup.
+
+ByteRover V4, now the default in its docs, requires sign-in through ByteRover Desktop.
 
 The [ByteRover paper](https://arxiv.org/abs/2604.01599) describes an agent-native design in which the LLM curates, structures, and retrieves hierarchical context through tools. That makes memory part of the coding workflow rather than a passive database behind it.
 
@@ -101,7 +103,7 @@ The 21-versus-6 command count comes from one published documentation table and i
 
 ## The 6 best open-source ByteRover alternatives
 
-Statewave comes first for Statewave's ICP: teams building products where several agents and services need governed memory. The next five entries are closer to ByteRover's developer workflow in different ways.
+Statewave comes first for teams building products where several agents and services need governed memory. The next five entries are closer to ByteRover's developer workflow in different ways.
 
 ### 1. Statewave: best for governed memory shared across product agents
 
@@ -174,7 +176,7 @@ Choose it when automatic session capture is the ByteRover feature you need and m
 
 [Supermemory](https://github.com/supermemoryai/supermemory) combines conversational memory, profiles, hybrid search, document retrieval, connectors, and coding-agent plugins. Its local edition runs as one binary with an embedded graph and local embeddings, while the cloud exposes the same API surface.
 
-This is a stronger alternative when coding context must include PDFs, URLs, Drive data, and profile facts rather than only project decisions. Release notes since server v0.0.7 describe a 10,000-document limit for the local release. Supported self-hosting appears on Scale and Enterprise pricing.
+This is a stronger alternative when coding context must include PDFs, URLs, Drive data, and profile facts rather than only project decisions. The server v0.0.7 release notes first stated a 10,000-document cap for the local release. Supported self-hosting appears on Scale and Enterprise pricing.
 
 Choose Supermemory for a broad local-to-cloud context platform. Choose ByteRover or OpenViking when a versioned, browsable project hierarchy is the core requirement.
 
