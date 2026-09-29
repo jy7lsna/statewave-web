@@ -264,7 +264,7 @@ export const PAGE_FAQS: Partial<Record<RouteKey, readonly FaqEntry[]>> = {
     {
       question: 'How much do I have to change in my code?',
       answer:
-        'Two lines: point your existing OpenAI client at the proxy base URL and add an X-Statewave-Subject header to the request, with header trust enabled on the proxy. In JWT mode, send X-Statewave-Token instead. Everything else in the integration stays the same, and a request with no subject header is proxied through unchanged.',
+        'Two lines: point your existing OpenAI client at the proxy base URL and add an X-Statewave-Subject header to the request, with header trust enabled on the proxy. In JWT mode, send X-Statewave-Token instead. Everything else in the integration stays the same, and a request with no subject (no header, and in JWT mode no sub claim) gets no memory.',
     },
     {
       question: 'Does the proxy add latency to completions?',
@@ -311,7 +311,7 @@ export const PAGE_FAQS: Partial<Record<RouteKey, readonly FaqEntry[]>> = {
       question: 'How do I run it in production?',
       answer:
         "Build the container or install the package from the repository and run it under uvicorn behind whatever ingress you already use, set PROXY_JWT_SECRET if untrusted clients can reach it, and point your load balancer's health check at /health. Shutdown drains in-flight episode writes before the HTTP client closes.",
-      links: [{ label: 'Self-hosting guide', href: '/developers' }],
+      links: [{ label: 'Quick start on GitHub', href: 'https://github.com/smaramwbc/statewave-openrouter#quick-start' }],
     },
   ],
 
