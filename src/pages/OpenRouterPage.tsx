@@ -1416,7 +1416,7 @@ function FlowSection() {
           <Eyebrow>What it leaves alone</Eyebrow>
           <ul className="mt-3.5 flex list-none flex-col gap-3 p-0">
             <IconRow icon={Minus} tone="muted">
-              No subject header: no context fetched, no episode written.
+              No subject: no context fetched, no episode written.
             </IconRow>
             <IconRow icon={Minus} tone="muted">
               Non-completion paths such as <C>/v1/models</C> forward as-is.
@@ -1559,7 +1559,6 @@ function EndpointsSection() {
 /* ─── Subjects and sessions ──────────────────────────────────────────────── */
 
 const SUBJECT_CURL = `curl http://localhost:8080/v1/chat/completions \\
-  -H "Authorization: Bearer $OPENROUTER_API_KEY" \\
   -H "X-Statewave-Subject: user:42" \\
   -H "X-Statewave-Session: sess_abc" \\
   -H "Content-Type: application/json" \\
@@ -1711,8 +1710,6 @@ function SubjectsSection() {
       <Rise className="mt-14">
         <CodePanel label="subject and session, over plain HTTP" code={SUBJECT_CURL}>
           <span style={kw}>curl</span> http://localhost:8080/v1/chat/completions \{'\n'}
-          {'  '}-H <span style={str}>&quot;Authorization: Bearer $OPENROUTER_API_KEY&quot;</span> \
-          {'\n'}
           {'  '}-H <span style={str}>&quot;X-Statewave-Subject: user:42&quot;</span> \{'\n'}
           {'  '}-H <span style={str}>&quot;X-Statewave-Session: sess_abc&quot;</span> \{'\n'}
           {'  '}-H <span style={str}>&quot;Content-Type: application/json&quot;</span> \{'\n'}
@@ -2340,13 +2337,13 @@ function ConfigSection() {
 
 const PIP_CMD = `git clone https://github.com/smaramwbc/statewave-openrouter
 cd statewave-openrouter
-pip install .
+python3 -m venv .venv && . .venv/bin/activate && pip install .
 cp .env.example .env     # set OPENROUTER_API_KEY, STATEWAVE_URL and STATEWAVE_TRUST_CLIENT_SUBJECT=1
 uvicorn statewave_openrouter:app --env-file .env --port 8080`
 
 const DOCKER_CMD = `git clone https://github.com/smaramwbc/statewave-openrouter
 cd statewave-openrouter
-cp .env.example .env     # set the three required settings
+cp .env.example .env     # set the three required settings; if Statewave runs on this machine, use STATEWAVE_URL=http://host.docker.internal:8000
 docker build -t statewave-openrouter .
 docker run --rm -p 8080:8080 --env-file .env statewave-openrouter`
 
@@ -2437,7 +2434,7 @@ function QuickStartSection() {
               <span style={kw}>git</span> clone https://github.com/smaramwbc/statewave-openrouter
               {'\n'}
               <span style={kw}>cd</span> statewave-openrouter{'\n'}
-              <span style={kw}>pip</span> install .{'\n'}
+              <span style={kw}>python3</span> -m venv .venv &amp;&amp; . .venv/bin/activate &amp;&amp; <span style={kw}>pip</span> install .{'\n'}
               <span style={kw}>cp</span> .env.example .env{'     '}
               <span style={dim}># set OPENROUTER_API_KEY, STATEWAVE_URL and STATEWAVE_TRUST_CLIENT_SUBJECT=1</span>
               {'\n'}
@@ -2450,7 +2447,7 @@ function QuickStartSection() {
               {'\n'}
               <span style={kw}>cd</span> statewave-openrouter{'\n'}
               <span style={kw}>cp</span> .env.example .env{'     '}
-              <span style={dim}># set the three required settings</span>
+              <span style={dim}># set the three required settings; if Statewave runs on this machine, use STATEWAVE_URL=http://host.docker.internal:8000</span>
               {'\n'}
               <span style={kw}>docker</span> build -t statewave-openrouter .{'\n'}
               <span style={kw}>docker</span> run --rm -p <span style={str}>8080:8080</span>{' '}
