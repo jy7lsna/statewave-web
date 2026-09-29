@@ -80,7 +80,7 @@ The alternatives are grouped by the capability a team wants to simplify or move 
 
 | Alternative | Best reason to switch | Memory model | Self-hosted core | Main tradeoff |
 | ----- | ----- | ----- | ----- | ----- |
-| **Statewave** | retrieval policy, provenance, and context receipts | episodes plus typed memories | Apache-2.0 on Postgres | no mental models or built-in reflect operation |
+| **Statewave** | retrieval policy, provenance, and opt-in context receipts | episodes plus typed memories | Apache-2.0 on Postgres | no mental models or built-in reflect operation |
 | **Mem0** | smaller general memory API | extracted user and agent memories | Apache-2.0 | fewer native learning structures |
 | **Graphiti** | temporal entities without Hindsight's observation layer | episode and time-aware entity graph | Apache-2.0 | graph database and surrounding service work |
 | **LangMem** | in-process memory for LangGraph | semantic, episodic, procedural schemas | MIT Python SDK | not a standalone service |
@@ -119,8 +119,8 @@ Migration maps a Hindsight bank to a Statewave subject when the bank represents 
 Statewave is not the right replacement when reflect, evidence consolidation, and mental models are the product feature. It has no managed cloud, no entity-relationship graph (entities are extracted per memory to improve retrieval, but relationships between them are not modeled or traversable), and no equivalent to Hindsight's four memory networks. Choose it when [audit trails and retrieval policy](/blog/agent-memory-provenance-audit-trails) are the stronger requirements.
 
 <figure className="my-8">
-<img src="/images/blog/hindsight-alternatives/image4.png" alt="A five-step migration map: scope a bank to a subject, replay facts and experiences as episodes, compile typed memories, decide whether to keep or rebuild mental models, and control access with policy and receipts." width="1600" height="909" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
-<figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">How a Hindsight bank maps to Statewave episodes, compiled memories, policy, and context receipts.</figcaption>
+<img src="/images/blog/hindsight-alternatives/image4.png" alt="A five-step migration map: scope a bank to a subject, replay facts and experiences as episodes, compile typed memories, decide whether to keep or rebuild mental models, and control access with policy and opt-in receipts." width="1600" height="909" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">How a Hindsight bank maps to Statewave episodes, compiled memories, policy, and opt-in context receipts.</figcaption>
 </figure>
 
 ### 2. Mem0: best for a smaller general-purpose memory API
@@ -145,7 +145,7 @@ Choose Mem0 when the desired architecture is "memory as a service" but not "lear
 
 Compared with Hindsight, you give up observations, mental models, and reflect, and take on an Apache-2.0 engine that runs on a separate graph database (Neo4j, FalkorDB, or Neptune).
 
-Choose Graphiti for dynamic entity facts, relationship histories, and graph traversal. Keep Hindsight for higher-order observations, or choose Statewave for subject memory with policy and receipts.
+Choose Graphiti for dynamic entity facts, relationship histories, and graph traversal. Keep Hindsight for higher-order observations, or choose Statewave for subject memory with policy and opt-in receipts.
 
 ### 4. LangMem: best for LangGraph-native memory primitives
 
@@ -179,7 +179,7 @@ Choose Letta when you are willing to move the agent runtime as well as memory. I
 
 [Supermemory](https://github.com/supermemoryai/supermemory) combines conversational memory, a fact graph, user profiles, hybrid search, document RAG, connectors, coding-agent plugins, and a local server. That makes it a strong Hindsight alternative when the missing feature is document context rather than reflection.
 
-Its MIT repository, managed API, capped local binary, and supported self-hosted offers have different boundaries. Release notes since server v0.0.7 describe a 10,000-document cap for the local release, while supported self-hosting appears on Scale and Enterprise pricing.
+Its MIT repository, managed API, capped local binary, and supported self-hosted offers have different boundaries. The server v0.0.7 release notes first stated a 10,000-document cap for the local release, while supported self-hosting appears on Scale and Enterprise pricing.
 
 Choose Supermemory when one context platform should own profiles, RAG, and memory. Choose Hindsight when learned observations and reflect are central, or Statewave when policy-bound interaction context is central.
 
@@ -210,7 +210,7 @@ Create private user memory, shared team memory, and agent-only memory. Test read
 
 ## Which Hindsight alternative should you pick?
 
-Statewave fits deterministic context assembly with policy, provenance, and receipts. Mem0 is the smaller general memory API; Graphiti handles temporal entity relationships. LangMem stays inside LangGraph, Letta supplies a complete self-editing runtime, and Supermemory combines memory with profiles and RAG.
+Statewave fits deterministic context assembly with policy, provenance, and opt-in receipts. Mem0 is the smaller general memory API; Graphiti handles temporal entity relationships. LangMem stays inside LangGraph, Letta supplies a complete self-editing runtime, and Supermemory combines memory with profiles and RAG.
 
 Keep Hindsight when observations, mental models, and reflection are the value. Replacing it with a simpler store will reduce both cost and capability, so the product must decide which side of that trade-off it wants.
 

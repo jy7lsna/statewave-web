@@ -15,7 +15,7 @@ tags:
 
 When a small Python memory SDK has to grow into a framework-neutral production service with persistence, policy, provenance, and controlled context assembly, Statewave is the LangMem alternative that fits. Native LangGraph stores are the closest option when you want to stay in LangGraph but remove LangMem's model-driven memory managers.
 
-LangMem is intentionally small. It extracts and updates memories, gives agents search and write tools, runs background reflection, and optimizes prompts. It does not try to be a database, multi-tenant API, admin product, or independent memory service.
+LangMem is intentionally small. It extracts and updates memories, gives agents search and write tools, runs background reflection, and optimizes prompts. It does not try to be a database, multi-tenant API, admin product, or independent memory service. The last PyPI release was 0.0.30 in October 2025.
 
 We build Statewave, so weigh the first entry accordingly. Every competitor claim below links to the vendor's own page so you can check it.
 
@@ -111,9 +111,9 @@ Statewave is first for applications that want memory to behave like infrastructu
 
 [Statewave](https://github.com/smaramwbc/statewave) exposes memory over REST, Python, TypeScript, and MCP. Any framework can append an episode, trigger compilation, and request a ranked context bundle for a subject. Postgres with pgvector stores both the records and vectors.
 
-The critical difference from LangMem is the record model. Raw interactions stay append-only as episodes, and the typed memories compiled from them keep their source and conflict state. The [architecture overview](https://github.com/smaramwbc/statewave-docs/blob/main/architecture/overview.md) walks through the pipeline. If extraction logic changes, the application can recompile from the original episodes without silently rewriting history.
+The critical difference from LangMem is the record model. Raw interactions stay append-only as episodes, and the typed memories compiled from them keep their source and conflict state. The [architecture overview](https://github.com/smaramwbc/statewave-docs/blob/main/architecture/overview.md) walks through the pipeline. Because the original episodes are kept, every compiled memory can be traced to the events it came from.
 
-This comparison does not need a borrowed Mem0 benchmark. Statewave's relevant evidence is the behavior it tests: **55 evaluation assertions** across provenance, idempotent compilation, token budgets, session-aware ranking, repeat-issue detection, and support handoff. Context assembly is bounded by a token budget the caller supplies on each request.
+This comparison does not need a borrowed Mem0 benchmark. Statewave's relevant evidence is the behavior it tests: **55 evaluation assertions** across provenance, idempotent compilation, token budgets, session-aware ranking, repeat-issue detection, and support handoff. Context assembly is bounded by a token budget the caller can set per request (4,000 tokens by default).
 
 A low-risk migration keeps LangGraph unchanged:
 
@@ -126,7 +126,7 @@ A low-risk migration keeps LangGraph unchanged:
 The separation also makes multi-agent sharing explicit. Statewave's [shared-context reference](https://github.com/smaramwbc/statewave-multi-agent-shared-context) scopes memory around a common subject rather than one graph process. The tradeoff is another service, and Statewave does not provide a managed cloud, an entity-relationship graph, or a workflow checkpointer. It extracts entities per memory to improve retrieval, but it does not model relationships between them or support graph traversal. Read [token-bounded context assembly](/blog/token-bounded-context-assembly) for the retrieval contract.
 
 <figure className="my-8">
-<img src="/images/blog/langmem-alternatives/image10.png" alt="A side-by-side architecture: the LangMem path has the graph node call the SDK with the store and jobs living in the application, while the Statewave path has the graph node call an API backed by a Postgres memory service with policy and receipts built in." width="1600" height="912" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
+<img src="/images/blog/langmem-alternatives/image10.png" alt="A side-by-side architecture: the LangMem path has the graph node call the SDK with the store and jobs living in the application, while the Statewave path has the graph node call an API backed by a Postgres memory service with policy and opt-in receipts built in." width="1600" height="912" loading="lazy" className="w-full rounded-2xl border border-brand-500/20 bg-white" />
 <figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">A side-by-side architecture showing LangGraph with LangMem versus LangGraph with Statewave.</figcaption>
 </figure>
 
