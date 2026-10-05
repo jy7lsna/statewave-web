@@ -17,6 +17,7 @@ const StatewaveVsSupermemoryPage = lazy(() => import('./pages/StatewaveVsSuperme
 const AlternativesPage = lazy(() => import('./pages/AlternativesPage').then(m => ({ default: m.AlternativesPage })))
 const ConnectorsPage = lazy(() => import('./pages/ConnectorsPage').then(m => ({ default: m.ConnectorsPage })))
 const DevelopersPage = lazy(() => import('./pages/DevelopersPage').then(m => ({ default: m.DevelopersPage })))
+const OpenRouterPage = lazy(() => import('./pages/OpenRouterPage').then(m => ({ default: m.OpenRouterPage })))
 const CookiesPage = lazy(() => import('./pages/CookiesPage').then(m => ({ default: m.CookiesPage })))
 const LaunchPage = lazy(() => import('./pages/LaunchPage').then(m => ({ default: m.LaunchPage })))
 const BenchmarksPage = lazy(() => import('./pages/BenchmarksPage').then(m => ({ default: m.BenchmarksPage })))
@@ -29,6 +30,7 @@ const ImpressumPage = lazy(() => import('./pages/ImpressumPage').then(m => ({ de
 const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })))
 const BlogIndexPage = lazy(() => import('./pages/BlogIndexPage').then(m => ({ default: m.BlogIndexPage })))
 const BlogPostPage = lazy(() => import('./pages/BlogPostPage').then(m => ({ default: m.BlogPostPage })))
+const GuideJourneyPage = lazy(() => import('./pages/GuideJourneyPage').then(m => ({ default: m.GuideJourneyPage })))
 const FaqPage = lazy(() => import('./pages/FaqPage').then(m => ({ default: m.FaqPage })))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })))
 
@@ -52,6 +54,7 @@ export default function App() {
           <Route path="/vs" element={<AlternativesPage />} />
           <Route path="/connectors" element={<ConnectorsPage />} />
           <Route path="/developers" element={<DevelopersPage />} />
+          <Route path="/openrouter" element={<OpenRouterPage />} />
           <Route path="/launch" element={<LaunchPage />} />
           <Route path="/benchmarks" element={<BenchmarksPage />} />
           <Route path="/press" element={<PressPage />} />
@@ -63,6 +66,10 @@ export default function App() {
           <Route path="/cookies" element={<CookiesPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/blog" element={<BlogIndexPage />} />
+          {/* Static series index — declared before /blog/:slug so the
+              Journey Index owns the URL rather than falling through to
+              the post route (which would redirect to /blog). */}
+          <Route path="/blog/statewave-guide" element={<GuideJourneyPage />} />
           <Route path="/blog/:slug" element={<BlogPostPage />} />
           <Route path="/faq" element={<FaqPage />} />
           <Route path="*" element={<NotFoundPage />} />
