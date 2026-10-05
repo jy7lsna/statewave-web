@@ -205,7 +205,7 @@ function HeroStatStrip() {
   const stats = [
     { value: '0.905', label: 'LoCoMo, n=1,540' },
     { value: '4', label: 'ranking signals, deterministic' },
-    { value: '708', label: 'unit tests · 55 evals' },
+    { value: '708', label: 'unit tests · 56 evals' },
     { value: '0', label: 'API keys to run' },
   ]
 
