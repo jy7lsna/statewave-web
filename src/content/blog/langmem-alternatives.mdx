@@ -1,7 +1,7 @@
 ---
 title: "6 Best Open-Source LangMem Alternatives (2026)"
 slug: langmem-alternatives
-date: "2026-09-28T09:30:00+02:00"
+date: "2026-10-13T09:30:00+02:00"
 description: Compare six LangMem alternatives for production memory services, native LangGraph stores, reflection, managed APIs, and temporal graphs.
 author: Saber Maram
 category: Guides
@@ -113,7 +113,7 @@ Statewave is first for applications that want memory to behave like infrastructu
 
 The critical difference from LangMem is the record model. Raw interactions stay append-only as episodes, and the typed memories compiled from them keep their source and conflict state. The [architecture overview](https://github.com/smaramwbc/statewave-docs/blob/main/architecture/overview.md) walks through the pipeline. Because the original episodes are kept, every compiled memory can be traced to the events it came from.
 
-This comparison does not need a borrowed Mem0 benchmark. Statewave's relevant evidence is the behavior it tests: **55 evaluation assertions** across provenance, idempotent compilation, token budgets, session-aware ranking, repeat-issue detection, and support handoff. Context assembly is bounded by a token budget the caller can set per request (4,000 tokens by default).
+This comparison does not need a borrowed Mem0 benchmark. Statewave's relevant evidence is the behavior it tests: **56 evaluation assertions** across provenance, idempotent compilation, token budgets, session-aware ranking, repeat-issue detection, and support handoff. Context assembly is bounded by a token budget the caller can set per request (4,000 tokens by default).
 
 A low-risk migration keeps LangGraph unchanged:
 
