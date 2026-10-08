@@ -113,7 +113,7 @@ This architecture replaces Zep's episode ingestion and context delivery without 
 
 The target-specific reason to rank Statewave first is operational evidence. It runs as one Python service plus Postgres with pgvector, rather than a memory service plus a graph database.
 
-The published eval suite runs 55 assertions across provenance, idempotent compilation, token budgets, session-aware ranking, repeat-issue detection, and support handoff, and context assembly is bounded by a token budget the caller can set per request (4,000 tokens by default). Retrieval policy, sensitivity labels, provenance, subject deletion, and state-assembly receipts are first-class parts of the same runtime.
+The published eval suite runs 56 assertions across provenance, idempotent compilation, token budgets, session-aware ranking, repeat-issue detection, and support handoff, and context assembly is bounded by a token budget the caller can set per request (4,000 tokens by default). Retrieval policy, sensitivity labels, provenance, subject deletion, and state-assembly receipts are first-class parts of the same runtime.
 
 A practical migration maps each Zep Episode to a Statewave episode. Preserve the user, thread, or account as subject_id; keep timestamps and external IDs; store message or event type in metadata; then compile in the background. Run Zep and Statewave side by side until the new path passes four tests: changed facts, cross-session recall, denied sensitive context, and subject deletion.
 
