@@ -87,7 +87,7 @@
 .sw-valid span:last-child { flex: 1; height: 4px; border-radius: 999px; background: var(--sw-blue); }
 
 /* illustration panels: softer texture, parallax between backdrop and card */
-.sw-bento .sw-vis > .sw-vis__bg { position: absolute; inset: -28px; background-size: cover; background-position: center; opacity: 0.5; transform: translate3d(calc(var(--mx, 0) * -14px), calc(var(--my, 0) * -14px), 0); will-change: transform; pointer-events: none; }
+.sw-bento .sw-vis > .sw-vis__bg { position: absolute; inset: -28px; background-size: cover; background-position: center; transform: translate3d(calc(var(--mx, 0) * -14px), calc(var(--my, 0) * -14px), 0); will-change: transform; pointer-events: none; }
 .sw-bento .sw-vis > .sw-vis__card { position: relative; transform: translate3d(calc(var(--mx, 0) * 6px), calc(var(--my, 0) * 6px), 0); will-change: transform; }
 
 /* self-hosted: hover feedback (transitions, so it also works with reduced motion) */
