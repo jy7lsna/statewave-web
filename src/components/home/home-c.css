@@ -108,7 +108,7 @@
 .sw-pc__avatar { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 12px; display: grid; place-items: center; background: #eef2ff; }
 .sw-pc__title { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .sw-pc__title b { font-size: 16px; line-height: 22px; color: var(--sw-navy); }
-.sw-pc__title i { font-style: normal; font-size: 13px; line-height: 18px; color: var(--sw-ink-3); font-family: var(--sw-mono); }
+.sw-pc__title i { font-style: normal; font-size: 13px; line-height: 18px; color: var(--sw-ink-3); font-family: var(--sw-font-label); }
 .sw-pc__status { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 600; background: #fef2f2; color: #b91c1c; transition: background 0.4s, color 0.4s; white-space: nowrap; }
 .sw-pc__status[data-ok] { background: rgba(16, 185, 129, 0.13); color: var(--sw-ok); }
 .sw-pc__grid { display: grid; grid-template-columns: minmax(0, 1fr); }
@@ -141,7 +141,7 @@
 .sw-pc__src { margin-top: 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; opacity: 0; transform: translateY(6px); transition: opacity 0.45s 0.15s, transform 0.45s 0.15s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .sw-pc__src[data-on] { opacity: 1; transform: none; }
 .sw-pc__srcl { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sw-ink-3); font-weight: 600; }
-.sw-pc__chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; background: #fff; border: 1px solid var(--sw-line); font-family: var(--sw-mono); font-size: 12.5px; color: var(--sw-ink-2); }
+.sw-pc__chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; background: #fff; border: 1px solid var(--sw-line); font-family: var(--sw-font-label); font-size: 12.5px; color: var(--sw-ink-2); }
 .sw-pc__stats { margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--sw-line); }
 .sw-pc__stats > div { padding: 14px 24px; display: flex; flex-direction: column; gap: 2px; }
 .sw-pc__stats > div + div { border-left: 1px solid var(--sw-line); }
