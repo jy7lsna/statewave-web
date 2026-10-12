@@ -1,31 +1,8 @@
-/* Homepage v8 (claude.ai/design export). Everything is scoped under .sw-home so
- * it can't leak into the rest of the site, which is still on the older theme
- * tokens. The page is light-on-navy by design and deliberately ignores the
- * dark/light theme switch until the rest of the site is redesigned to match. */
+/* Homepage v8 (claude.ai/design export). Rules are scoped under .sw-home so they
+ * can't leak into the rest of the site. Design tokens live in src/styles/tokens.css.
+ * The page is light-on-navy by design and deliberately ignores the dark/light theme switch. */
 
 .sw-home {
-  --sw-navy: #0a1233;
-  --sw-navy-deep: #070d26;
-  --sw-blue: #2f5bf0;
-  --sw-sky: #4a8cff;
-  --sw-link: #2563eb;
-  --sw-bg: #f4f5f9;
-  --sw-bg-2: #edf0f7;
-  --sw-ink-2: #4a5578;
-  --sw-ink-3: #5b6783;
-  --sw-ink-4: #606c88; /* AA text on every light surface */
-  --sw-dim: #78839e; /* large display text only (3:1) */
-  --sw-line: #e3e9f5;
-  --sw-line-2: #d5dbe8;
-  --sw-ok: #047857;
-  /* section-header rhythm, used by every section: eyebrow → title → lede → body */
-  --sw-gap-title: 28px;
-  --sw-gap-lede: 24px;
-  --sw-gap-body: 44px;
-  --sw-pad: calc(var(--sw-gutter) + clamp(16px, 4vw, 32px));
-  --sw-display: Fustat, Geist, system-ui, sans-serif;
-  --sw-mono: Geist, system-ui, sans-serif; /* no monospace anywhere, by request */
-
   position: relative;
   font-family: Geist, system-ui, sans-serif;
   color: var(--sw-navy);
@@ -63,7 +40,7 @@
 .sw-h2--xl { font-size: clamp(44px, 5.6vw, 84px); line-height: 1.05; letter-spacing: -0.035em; }
 .sw-h3 { font-family: var(--sw-display); font-weight: 700; font-size: 28px; line-height: 34px; letter-spacing: -0.02em; color: var(--sw-navy); }
 .sw-lede { margin: var(--sw-gap-lede) 0 0; max-width: 600px; font-size: 17px; line-height: 26px; color: var(--sw-ink-2); text-wrap: pretty; }
-.sw-mono { font-family: var(--sw-mono); font-variant-numeric: tabular-nums; }
+.sw-mono { font-family: var(--sw-font-label); font-variant-numeric: tabular-nums; }
 .sw-more { font-size: 17px; line-height: 26px; font-weight: 500; color: var(--sw-blue) !important; }
 
 /* word-by-word reveal. Armed by a mount effect so server HTML stays visible. */
@@ -127,7 +104,7 @@
 .sw-claim { position: relative; cursor: help; border-radius: 4px; outline: none; text-decoration: underline dotted rgba(47, 91, 240, 0.75) 1.5px; text-underline-offset: 5px; transition: background 0.3s; }
 .sw-claim:focus-visible { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--sw-blue); }
 .sw-claim[data-lit] { background: rgba(74, 140, 255, 0.14); }
-.sw-tip { position: absolute; left: 0; bottom: calc(100% + 8px); white-space: nowrap; padding: 6px 10px; border-radius: 8px; background: var(--sw-navy); color: #fff; font-family: var(--sw-mono); font-size: 13px; line-height: 18px; box-shadow: 0 8px 20px -8px rgba(10, 18, 51, 0.5); z-index: 5; }
+.sw-tip { position: absolute; left: 0; bottom: calc(100% + 8px); white-space: nowrap; padding: 6px 10px; border-radius: 8px; background: var(--sw-navy); color: #fff; font-family: var(--sw-font-label); font-size: 13px; line-height: 18px; box-shadow: 0 8px 20px -8px rgba(10, 18, 51, 0.5); z-index: 5; }
 .sw-qchip { height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--sw-line-2); background: #fff; color: var(--sw-navy); font-size: 14px; line-height: 20px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: background 0.25s, color 0.25s, border-color 0.25s; }
 .sw-qchip[aria-pressed='true'] { background: var(--sw-navy); color: #fff; border-color: var(--sw-navy); }
 .sw-input { margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 52px; padding: 0 6px 0 16px; border-radius: 10px; background: #f4f5f9; border: 1px solid #e3e7f0; transition: border-color 0.3s; }
@@ -143,7 +120,7 @@
 .sw-seg button { height: 40px; padding: 0 18px; border-radius: 999px; border: 0; cursor: pointer; font-size: 14px; font-weight: 500; white-space: nowrap; background: transparent; color: #3d4a66; transition: background 0.3s, color 0.3s; }
 .sw-seg button[aria-selected='true'] { background: var(--sw-navy); color: #fff; }
 .sw-session { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 10px; background: #fff; border: 1px solid var(--sw-line); transition: opacity 0.5s; }
-.sw-evidence { display: inline-flex; align-items: center; height: 28px; padding: 0 10px; border-radius: 999px; background: #fff; border: 1px solid var(--sw-line); font-family: var(--sw-mono); font-size: 13px; color: #3d4a66; white-space: nowrap; }
+.sw-evidence { display: inline-flex; align-items: center; height: 28px; padding: 0 10px; border-radius: 999px; background: #fff; border: 1px solid var(--sw-line); font-family: var(--sw-font-label); font-size: 13px; color: #3d4a66; white-space: nowrap; }
 
 /* ── how it works ─────────────────────────────────────── */
 .sw-dark-panel { position: relative; overflow: clip; max-width: var(--sw-max); margin: 0 auto; background: var(--sw-navy); padding: clamp(48px, 7vw, 96px) clamp(16px, 4vw, 32px); color: #fff; }
@@ -228,9 +205,9 @@
 .sw-code__tab { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid transparent; cursor: pointer; background: transparent; color: var(--sw-ink-3); font-size: 13px; font-weight: 500; white-space: nowrap; }
 .sw-code__tab[aria-selected='true'] { background: #fff; color: var(--sw-navy); border-color: var(--sw-line); }
 .sw-copy-btn { flex: 0 0 auto; height: 32px; padding: 0 13px; border-radius: 999px; border: 1px solid var(--sw-line); background: #fff; color: #3d4a66; font-size: 13px; cursor: pointer; white-space: nowrap; }
-.sw-code pre { flex: 1; padding: 18px 20px 22px; font-family: var(--sw-mono); font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.sw-code pre { flex: 1; padding: 18px 20px 22px; font-family: var(--sw-font-label); font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
 .sw-install { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 8px 8px 8px 14px; border-radius: 10px; background: #fff; border: 1px solid var(--sw-line); box-shadow: 0 1px 2px rgba(15, 30, 80, 0.06), 0 12px 32px -12px rgba(15, 30, 80, 0.12); }
-.sw-install code { flex: 1; min-width: 0; font-family: var(--sw-mono); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sw-install code { flex: 1; min-width: 0; font-family: var(--sw-font-label); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sw-res-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 32px; }
 @media (min-width: 640px) { .sw-res-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1100px) { .sw-res-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
@@ -240,7 +217,7 @@
 .sw-res p { flex: 1; font-size: 14px; line-height: 20px; color: var(--sw-ink-2); text-wrap: pretty; }
 .sw-res a.sw-res__link { font-size: 14px; line-height: 20px; font-weight: 500; }
 .sw-res__cmd { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 4px 0 12px; border-radius: 10px; background: #f4f5f9; border: 1px solid #e3e7f0; }
-.sw-res__cmd code { flex: 1; min-width: 0; font-family: var(--sw-mono); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sw-res__cmd code { flex: 1; min-width: 0; font-family: var(--sw-font-label); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sw-res__cmd button { flex: 0 0 auto; height: 32px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--sw-line); background: #fff; color: var(--sw-ink-2); font-size: 13px; cursor: pointer; }
 
 /* ── benchmarks ───────────────────────────────────────── */
