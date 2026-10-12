@@ -1,20 +1,8 @@
 /* Site header + footer, restyled to the v8 design. Unlike home.css these are
- * global (they render on every page), so they declare the tokens they use
- * instead of inheriting them from .sw-home. Dark on every page, regardless of
+ * global (they render on every page); tokens come from styles/tokens.css. Dark on every page, regardless of
  * the theme switch, like the design. */
 
-/* single source for the page width system: content/panel max width, side gutter and the
- * rail (viewport edge to content edge). home.css derives everything from these. */
-:root {
-  --sw-max: clamp(1440px, 84vw, 1700px);
-  --sw-gutter: clamp(16px, 2.5vw, 32px);
-  --sw-rail: max(var(--sw-gutter), calc(50% - var(--sw-max) / 2));
-}
-
 .sw-nav, .sw-foot {
-  --sw-navy: #0a1233;
-  --sw-mono: Geist, system-ui, sans-serif;
-  --sw-display: Fustat, Geist, system-ui, sans-serif;
   font-family: Geist, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -80,9 +68,9 @@
 .sw-foot__top { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; padding-bottom: 44px; }
 .sw-foot__logo { display: inline-flex; align-items: center; min-height: 44px; }
 .sw-foot__blurb { margin-top: 16px; max-width: 420px; line-height: 24px; }
-.sw-foot__meta { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 0 10px; font-size: 13px; line-height: 20px; font-family: var(--sw-mono); }
+.sw-foot__meta { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 0 10px; font-size: 13px; line-height: 20px; font-family: var(--sw-font-label); }
 .sw-foot__side { display: flex; flex-direction: column; gap: 24px; }
-.sw-foot__cmd { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 4px 0 16px; border-radius: 999px; background: rgba(0, 0, 0, 0.22); border: 1px solid rgba(255, 255, 255, 0.12); font-size: 13px; font-family: var(--sw-mono); }
+.sw-foot__cmd { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 4px 0 16px; border-radius: 999px; background: rgba(0, 0, 0, 0.22); border: 1px solid rgba(255, 255, 255, 0.12); font-size: 13px; font-family: var(--sw-font-label); }
 .sw-foot__cmd code { flex: 1; min-width: 0; overflow: hidden; color: #fff; white-space: nowrap; text-overflow: ellipsis; font-family: inherit; }
 .sw-foot__copy { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; border-radius: 999px; background: rgba(255, 255, 255, 0.1); border: 0; color: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
 .sw-foot__copy:hover { background: rgba(255, 255, 255, 0.18); }
