@@ -116,6 +116,9 @@ export interface ChatWidgetActions {
    * suppressed by the consumer.
    */
   openWidget: (persona?: string, personaLabel?: string, mode?: 'demo' | 'support') => void
+  /** Pin the docs-grounded support channel without opening the floating
+   *  widget (embedded chats). */
+  enterSupportChannel: () => void
   closeWidget: () => void
   minimizeWidget: () => void
   expandWidget: () => void
