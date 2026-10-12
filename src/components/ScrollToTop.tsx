@@ -60,6 +60,15 @@ export function ScrollToTop() {
         const el = document.getElementById(id)
         if (el) {
           el.scrollIntoView({ behavior, block: 'start' })
+          // <Section> reveals with a 40px translateY. scrollIntoView aligns the
+          // still-translated box, so once the reveal finishes the target sits 40px
+          // higher than html's scroll-padding-top intends (and under the navbar).
+          // Re-align once the reveal has settled.
+          window.setTimeout(() => {
+            const want = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0
+            const off = el.getBoundingClientRect().top - want
+            if (Math.abs(off) > 4) window.scrollBy({ top: off, behavior: 'instant' as ScrollBehavior })
+          }, 900)
           return true
         }
         return false
