@@ -341,6 +341,21 @@ export function ChatWidgetProvider({ children }: { children: ReactNode }) {
     })()
   }, [refreshState, seedFromPersona])
 
+  /** Pin the support channel (docs-grounded persona, single column) without
+   *  opening the floating widget — used by the embedded homepage chat so each
+   *  message costs one backend call instead of the demo's two. */
+  const enterSupportChannel = useCallback(() => {
+    setMode('support')
+    setTourStep(0)
+    if (persona !== 'statewave-support') {
+      setPersona('statewave-support')
+      setPersonaLabel('Statewave Support')
+      setStatelessMessages([])
+      setStatewaveMessages([])
+      setLastContext(null)
+    }
+  }, [persona])
+
   const clearChat = useCallback(() => {
     setStatelessMessages([])
     setStatewaveMessages([])
@@ -609,6 +624,7 @@ export function ChatWidgetProvider({ children }: { children: ReactNode }) {
     availablePersonas,
     mode,
     openWidget,
+    enterSupportChannel,
     closeWidget,
     minimizeWidget,
     expandWidget,
