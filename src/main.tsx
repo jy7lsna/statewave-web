@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router'
 import { ThemeProvider } from './lib/theme'
 import { ChatWidgetProvider } from './lib/widget-context'
 import './index.css'
+import './components/home/home.css'
 import App from './App'
 
 const container = document.getElementById('root')!
