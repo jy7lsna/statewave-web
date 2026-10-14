@@ -119,7 +119,7 @@ For anyone selling into an enterprise, it is the question that often stops the d
 
 ### Deletion has to reap more than the obvious two tables
 
-A memory store accumulates derived rows that no foreign key cascade will clean up for you. Reading Statewave's delete path, a single DELETE /v1/subjects/{id} reaps six row types: episodes, memories, resolutions, the subject health cache, subject entities, and supersession records. The source comments explain why each one is explicit, including that subject_entities has no foreign key because N entities can point at M memories and neither owns the other.
+A memory store accumulates derived rows that no foreign key cascade will clean up for you. Reading Statewave's delete path, a single `DELETE /v1/subjects/{id}` reaps six row types: episodes, memories, resolutions, the subject health cache, subject entities, and supersession records. The source comments explain why each one is explicit, including that subject_entities has no foreign key because N entities can point at M memories and neither owns the other.
 
 The failure modes called out in those comments are the useful part for anyone building this themselves. A leftover health-cache row lets a deleted subject's sessions keep looking live and can suppress or forge alerts if the subject ID is later reused. The purge also retries once on a Postgres deadlock, since the multi-row deletes can cross lock order with a still-draining compile batch.
 
