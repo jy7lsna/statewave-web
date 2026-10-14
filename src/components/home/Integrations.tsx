@@ -86,9 +86,9 @@ export function Integrations() {
           <div className="sw-orb-side sw-orb-side--r">
             <div className="sw-orb-side__t">Feeds memory from</div>
             <p className="sw-orb-side__p">
-              GitHub, Slack, Zendesk, Jira, Notion, Intercom, Gmail and Discord on the outer ring. Jira is in preview.
+              GitHub, Slack, Zendesk, Jira, Notion, Intercom, Gmail and Discord on the outer ring.
             </p>
-            <Ln to="/connectors" className="sw-orb-side__a">+10 more connectors →</Ln>
+            <Ln to="/connectors" className="sw-orb-side__a">All connectors →</Ln>
           </div>
         </div>
 

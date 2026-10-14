@@ -37,9 +37,9 @@ export function Problem() {
         <div ref={ref} className="sw-cmp">
           <div className="sw-p-wrap">
             <div className="sw-seg">
-              <div role="tablist" aria-label="Agent" className="sw-seg__tabs">
-                <button role="tab" type="button" aria-selected={!on} onClick={pick(false)}>Without memory</button>
-                <button role="tab" type="button" aria-selected={on} onClick={pick(true)}>With Statewave</button>
+              <div role="group" aria-label="Agent" className="sw-seg__tabs">
+                <button type="button" aria-pressed={!on} onClick={pick(false)}>Without memory</button>
+                <button type="button" aria-pressed={on} onClick={pick(true)}>With Statewave</button>
               </div>
               <Ln to="/demo" className="sw-btn sw-btn--outline sw-seg__cta">
                 Try both agents live →
