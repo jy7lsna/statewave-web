@@ -103,7 +103,7 @@
 .sw-home .sw-node:hover .sw-node__icons, .sw-home .sw-node:hover .sw-node__icon { transform: scale(1.12); }
 .sw-home .sw-boundary__llm { transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s; }
 .sw-home .sw-boundary__llm:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba(10, 18, 51, 0.06), 0 16px 36px -12px rgba(10, 18, 51, 0.28); }
-.sw-home .sw-code__tab:hover:not([aria-selected='true']) { background: #fff; color: var(--sw-navy); border-color: var(--sw-line); }
+.sw-home .sw-code__tab:hover:not([aria-pressed='true']) { background: #fff; color: var(--sw-navy); border-color: var(--sw-line); }
 .sw-home .sw-code { transition: box-shadow 0.35s, transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .sw-home .sw-code:hover { transform: translateY(-3px); box-shadow: 0 1px 2px rgba(15, 30, 80, 0.06), 0 22px 44px -16px rgba(15, 30, 80, 0.22); }
 .sw-home .sw-copy-btn:hover { background: var(--sw-navy); border-color: var(--sw-navy); color: #fff; }

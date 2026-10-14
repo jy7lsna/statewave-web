@@ -64,6 +64,7 @@ export function ClosingCta() {
           ))}
         </div>
 
+        <p className="sr-only">Example receipt, signed.</p>
         <div aria-hidden="true" className="sw-cta__receipt">
           <div className="sw-cta__rh">
             <span className="sw-eyebrow">Receipt</span>
@@ -92,9 +93,9 @@ export function ClosingCta() {
               {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
             </button>
           </div>
-          <div role="tablist" aria-label="Install method" className="sw-cta__tabs">
+          <div role="group" aria-label="Install method" className="sw-cta__tabs">
             {CMDS.map((c, i) => (
-              <button key={c.tab} type="button" role="tab" aria-selected={tab === i} onClick={() => setTab(i)} className="sw-mono sw-cta__tab">
+              <button key={c.tab} type="button" aria-pressed={tab === i} onClick={() => setTab(i)} className="sw-mono sw-cta__tab">
                 {c.tab}
               </button>
             ))}
