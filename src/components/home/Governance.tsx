@@ -40,6 +40,7 @@ export function Governance() {
 
   useEffect(() => {
     if (!pinned) return
+    let last = -1
     const onScroll = () => {
       const el = pin.current
       if (!el) return
@@ -49,7 +50,7 @@ export function Governance() {
       const p = Math.min(0.999, Math.max(0, -r.top / total)) * ITEMS.length
       const i = Math.floor(p)
       if (bar.current) bar.current.style.height = `${(p - i) * 100}%`
-      setSpot(i)
+      if (i !== last) { last = i; setSpot(i) }
     }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -94,11 +95,11 @@ export function Governance() {
         <div ref={pin} className={`sw-gov-pin${pinned ? ' sw-gov-pin--on' : ''}`}>
         <div className="sw-gov">
           <div className="sw-gov__col">
-            <div role="tablist" aria-label="Governance controls" className="sw-gov__tabs">
+            <div role="group" aria-label="Governance controls" className="sw-gov__tabs">
               {ITEMS.map((it, i) => {
                 const on = spot === i
                 return (
-                  <button key={it.t} type="button" role="tab" className="sw-gov__item" aria-selected={on} onClick={() => pick(i)}>
+                  <button key={it.t} type="button" className="sw-gov__item" aria-pressed={on} onClick={() => pick(i)}>
                     {on && (
                       <span aria-hidden="true" className="sw-gov__bar" data-manual={(!pinned && (!auto || rm)) || undefined}>
                         <i ref={(el) => { bar.current = el }} />
