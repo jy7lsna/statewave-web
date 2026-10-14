@@ -106,7 +106,7 @@ describe('Navbar mobile drawer', () => {
     fireEvent.click(screen.getByRole('button', { name: /open menu/i }))
     const dialog = await screen.findByRole('dialog', { name: /site navigation/i })
 
-    fireEvent.click(within(dialog).getByText('Product'))
+    fireEvent.click(within(dialog).getByText('How it works'))
 
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: /site navigation/i })).not.toBeInTheDocument()

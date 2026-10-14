@@ -151,9 +151,9 @@ export function SelfHosted() {
 
           <div className="sw-code">
             <div className="sw-code__tabs">
-              <div role="tablist" aria-label="Language" className="sw-code__langs">
+              <div role="group" aria-label="Language" className="sw-code__langs">
                 {CODE.map((c, i) => (
-                  <button key={c.lang} type="button" role="tab" className="sw-code__tab" aria-selected={tab === i} onClick={() => setTab(i)}>
+                  <button key={c.lang} type="button" className="sw-code__tab" aria-pressed={tab === i} onClick={() => setTab(i)}>
                     <Icon name={c.icon} size={c.size} />{c.lang}
                   </button>
                 ))}

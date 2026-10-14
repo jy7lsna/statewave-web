@@ -1,8 +1,8 @@
-import { FAQ_ENTRIES } from '../../lib/faq'
+import { HOME_FAQ_ENTRIES } from '../../lib/faq'
 import { Eyebrow, H2, Ln } from './ui'
 import './home-c.css'
 
-/** Same entries the FAQPage JSON-LD emits. Native <details>, with the answer
+/** First five entries, the same ones the homepage FAQPage JSON-LD emits. Native <details>, with the answer
  *  directly after the question heading and the "+" ordered last visually, so
  *  crawlers pair each question with its answer. */
 export function HomeFaq() {
@@ -16,7 +16,7 @@ export function HomeFaq() {
         </div>
 
         <div className="sw-faq">
-          {FAQ_ENTRIES.map((e, i) => (
+          {HOME_FAQ_ENTRIES.map((e, i) => (
             <details key={e.question} {...(i === 0 ? { open: true } : {})}>
               <summary>
                 <span aria-hidden="true" className="sw-plus">+</span>

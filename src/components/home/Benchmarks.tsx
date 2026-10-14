@@ -17,7 +17,10 @@ const fmt = (v: number, b: number) => (v * b).toFixed(3)
 
 /** Scores count up from zero once the section scrolls into view. Every score
  *  here travels with its harness, opponents, retrieval-budget asymmetry and a
- *  link to the full methodology — see /benchmarks. */
+ *  link to the full methodology — see /benchmarks.
+ *
+ *  The figures below are hard-coded. /benchmarks (src/pages/BenchmarksPage.tsx)
+ *  is the source of truth: change both together. */
 export function Benchmarks() {
   const [ref, seen] = useSeen<HTMLElement>()
   const b = useTween(1, 1400, seen, 100)

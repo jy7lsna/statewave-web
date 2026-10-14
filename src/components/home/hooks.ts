@@ -29,12 +29,13 @@ export function useSeen<T extends HTMLElement>() {
 }
 
 /** Ease 0 → `to` over `ms` once `active`. Reads as `to` until then, so
- *  server-rendered HTML carries the real figure. A short count-up is not
- *  vestibular motion, so it plays regardless of reduced-motion. */
+ *  server-rendered HTML carries the real figure. Under reduced motion it
+ *  never animates and always reads as `to`. */
 export function useTween(to: number, ms: number, active: boolean, delay = 0) {
   const [p, setP] = useState(1)
+  const rm = usePrefersReducedMotion()
   useEffect(() => {
-    if (!active) return
+    if (!active || rm) return
     let raf = 0
     const t0 = performance.now() + delay
     const tick = (now: number) => {
@@ -44,8 +45,8 @@ export function useTween(to: number, ms: number, active: boolean, delay = 0) {
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [active, ms, delay])
-  return to * p
+  }, [active, ms, delay, rm])
+  return to * (rm ? 1 : p)
 }
 
 /** Clipboard copy with a short "Copied" confirmation. */
