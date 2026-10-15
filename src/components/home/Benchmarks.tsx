@@ -29,7 +29,7 @@ export function Benchmarks() {
     <section ref={ref} className="sw-section sw-bench-sec" aria-label="Benchmarks">
       <div className="sw-wrap">
         <Eyebrow>Benchmarks</Eyebrow>
-        <H2 a="Matches Mem0's paid cloud" b="on Mem0's own harness." />
+        <H2 a="On par with Mem0's paid cloud" b="on Mem0's own harness." />
         <p className="sw-lede">
           Statewave's memory runtime scored on LoCoMo and LongMemEval with a fork of Mem0's harness, judge and scoring
           code unchanged.
