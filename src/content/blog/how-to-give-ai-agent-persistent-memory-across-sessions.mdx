@@ -53,7 +53,7 @@ Before writing code, work out how much machinery the problem deserves. A single 
 <figcaption className="mt-3 text-[14px] leading-6 text-theme-secondary/70">Four persistence layers, and the two questions that decide which one your agent needs.</figcaption>
 </figure>
 
-The honest version of the left-hand branch: a memory.md file loaded into every prompt works, and coding agents use it daily. It stops working for specific reasons. The first limits to test are concurrent writes and tenant isolation.
+The honest version of the left-hand branch: a `memory.md` file loaded into every prompt works, and coding agents use it daily. It stops working for specific reasons. The first limits to test are concurrent writes and tenant isolation.
 
 Scale and security are the two thresholds. One process reading one file is fine. Several agents writing the same file concurrently is a data race, and a flat file has no way to keep one tenant's facts away from another's.
 
@@ -71,7 +71,7 @@ Because importance is computed once at creation rather than per query, it costs 
 
 Keep two layers. Raw events go in append-only and are never edited, which is what makes provenance possible later. Derived facts carry a type and a confidence score and can be replaced as newer events arrive.
 
-[Statewave](https://github.com/smaramwbc/statewave) calls these episodes and memories and runs the derivation as an explicit compile step rather than at query time, so the same subject queried twice at the same point in time returns the same bytes. Deciding which facts belong in which layer is its own problem, and Statewave's write-up on [episodic versus semantic memory](https://www.statewave.ai/blog/episodic-vs-semantic-memory) covers when an event should graduate into a standing fact.
+[Statewave](https://github.com/smaramwbc/statewave) calls these episodes and memories and runs the derivation as an explicit compile step rather than at query time, so the same subject queried twice at the same point in time returns the same bytes. Deciding which facts belong in which layer is its own problem, and Statewave's write-up on [episodic versus semantic memory](/blog/episodic-vs-semantic-memory) covers when an event should graduate into a standing fact.
 
 ### Consolidate on a threshold, not a timer
 
@@ -98,7 +98,7 @@ MemGPT's queue manager gives a clear worked example with three configurable numb
 
 Evicted messages are not deleted. They move to a searchable store the agent can query later. Keep eviction and deletion as separate operations.
 
-In practice, you also want a hard ceiling on what retrieval returns. POST /v1/context takes an optional [max_tokens](https://github.com/smaramwbc/statewave/blob/b05d539/server/schemas/requests.py) between 1 and 128,000. Leave it out and the server uses its [default of 4,000](https://github.com/smaramwbc/statewave/blob/b05d539/server/core/config.py). The reference client sets 800, well under the default, because the rest of the prompt needs room. Assembly adds candidates in rank order until the next one would breach that budget. The mechanics of that selection are covered in [token-bounded context assembly](https://www.statewave.ai/blog/token-bounded-context-assembly).
+In practice, you also want a hard ceiling on what retrieval returns. `POST /v1/context` takes an optional [`max_tokens`](https://github.com/smaramwbc/statewave/blob/b05d539/server/schemas/requests.py) between 1 and 128,000. Leave it out and the server uses its [default of 4,000](https://github.com/smaramwbc/statewave/blob/b05d539/server/core/config.py). The reference client sets 800, well under the default, because the rest of the prompt needs room. Assembly adds candidates in rank order until the next one would breach that budget. The mechanics of that selection are covered in [token-bounded context assembly](/blog/token-bounded-context-assembly).
 
 ## What happens when a stored fact stops being true?
 
@@ -106,7 +106,7 @@ This is the operation teams skip, and it is the one that produces confidently wr
 
 A user tells your agent in January that they are on the Pro plan. In April they downgrade. If your write path only ever appends, the agent now holds two contradictory facts and the retrieval score decides which one it sees, which means the answer depends on cosine similarity rather than on the calendar.
 
-If several agents write to the same store, test that a newer value supersedes the old one before the next retrieval. Our companion guide, [How to Stop AI Agents Forgetting Between Sessions](https://www.statewave.ai/blog/how-to-stop-ai-agents-forgetting-between-sessions), covers the Stripe claim-key example, shared-agent collisions, deletion and receipts in detail.
+If several agents write to the same store, test that a newer value supersedes the old one before the next retrieval. Our companion guide, [How to Stop AI Agents Forgetting Between Sessions](/blog/how-to-stop-ai-agents-forgetting-between-sessions), covers the Stripe claim-key example, shared-agent collisions, deletion and receipts in detail.
 
 ## How do you wire this into an agent you already have?
 
@@ -114,20 +114,20 @@ The integration is smaller than the design work. The [personal assistant referen
 
 Four steps, and the first three fit in an afternoon.
 
-**1. Run the store.** npx @statewavedev/statewave boots the API, the admin console, and Postgres locally, with no account. The API runs on localhost:8100. The default boot is demo mode — stub hash-based embeddings and the heuristic compiler — which gives you a working loop but no real semantic search. Set STATEWAVE_COMPILER_TYPE=llm and STATEWAVE_EMBEDDING_PROVIDER=litellm with a key, then check GET /readyz. Docker Compose and a Helm chart are in the repo for the deploy after this one, and there is no managed cloud, so events are stored on infrastructure you control.
+**1. Run the store.** `npx @statewavedev/statewave` boots the API, the admin console, and Postgres locally, with no account. The API runs on `localhost:8100`. The default boot is demo mode (stub hash-based embeddings and the heuristic compiler), which gives you a working loop but no real semantic search. Set `STATEWAVE_COMPILER_TYPE=llm` and `STATEWAVE_EMBEDDING_PROVIDER=litellm` with a key, then check `GET /readyz`. Docker Compose and a Helm chart are in the repo for the deploy after this one, and there is no managed cloud, so events are stored on infrastructure you control.
 
-**2. Write every turn as an event.** One call after the model replies, keyed to a subject. The Python snippets below assume client is an [AsyncStatewaveClient](https://github.com/smaramwbc/statewave-py#async-client) inside an async function:
+**2. Write every turn as an event.** One call after the model replies, keyed to a subject. The Python snippets below assume `client` is an [`AsyncStatewaveClient`](https://github.com/smaramwbc/statewave-py#async-client) inside an async function:
 
 ```python
 await client.create_episode(
-     subject_id=user_id,
-     source="chat",
-     type="conversation",
-     payload={"messages": [
-         {"role": "user", "content": user_message},
-         {"role": "assistant", "content": assistant_reply},
-     ]},
- )
+    subject_id=user_id,
+    source="chat",
+    type="conversation",
+    payload={"messages": [
+        {"role": "user", "content": user_message},
+        {"role": "assistant", "content": assistant_reply},
+    ]},
+)
 ```
 
 **3. Compile, then retrieve.** Compilation turns events into typed facts:
@@ -142,7 +142,7 @@ Then fetch a bounded bundle and prepend it to your system prompt:
 
 ```python
 bundle = await client.get_context(user_id, message, max_tokens=800)
- system = f"{base_prompt}\n\n## What you know about this user\n{bundle.assembled_context}"
+system = f"{base_prompt}\n\n## What you know about this user\n{bundle.assembled_context}"
 ```
 
 **4. Make memory failures non-fatal.** This is the step people add after their first outage, and it belongs in the first version.
@@ -156,7 +156,7 @@ bundle = await client.get_context(user_id, message, max_tokens=800)
 
 Reading Statewave's [personal assistant reference implementation](https://github.com/smaramwbc/statewave-personal-assistant), three defensive choices are worth lifting, whatever store you use.
 
-In [statewave_integration.py](https://github.com/smaramwbc/statewave-personal-assistant/blob/main/statewave_integration.py), memory retrieval is wrapped so a failure logs a warning and returns an empty string. That wrapper lets the agent degrade to stateless rather than returning an error. The FastAPI app takes the other path: [app/api/routes.py](https://github.com/smaramwbc/statewave-personal-assistant/blob/main/app/api/routes.py) returns HTTP 502 when the context call fails. Choose the behaviour your agent needs explicitly.
+In [`statewave_integration.py`](https://github.com/smaramwbc/statewave-personal-assistant/blob/main/statewave_integration.py), memory retrieval is wrapped so a failure logs a warning and returns an empty string. That wrapper lets the agent degrade to stateless rather than returning an error. The FastAPI app takes the other path: [`app/api/routes.py`](https://github.com/smaramwbc/statewave-personal-assistant/blob/main/app/api/routes.py) returns HTTP 502 when the context call fails. Choose the behaviour your agent needs explicitly.
 
 The prompt is token-counted before the call, and if memory context would push it past the limit, the memory is dropped rather than the request failing. Note the default budget there is 800 tokens, well under the server's own 4,000, because the rest of the prompt needs room.
 
@@ -172,7 +172,7 @@ Four failure modes, in the order you are likely to hit them.
 
 **More stored memories stop helping:** This is the counterintuitive one, and the Stanford paper names it as a limitation of its own system: as the memory set grew, retrieval got harder and the agents' behaviour drifted. Growth in a memory store is not free, which is why the forgetting operation exists.
 
-**Nobody can explain an answer:** Once memory drives output, "why did it say that" becomes a support question. Keeping provenance from each fact back to its source event is what makes that answerable, and Statewave's piece on [memory provenance and audit trails](https://www.statewave.ai/blog/agent-memory-provenance-audit-trails) covers what the record needs to contain.
+**Nobody can explain an answer:** Once memory drives output, "why did it say that" becomes a support question. Keeping provenance from each fact back to its source event is what makes that answerable, and Statewave's piece on [memory provenance and audit trails](/blog/agent-memory-provenance-audit-trails) covers what the record needs to contain.
 
 ## Start with one subject
 
@@ -195,7 +195,7 @@ The [core runtime](https://github.com/smaramwbc/statewave) is Apache 2.0 and sel
 </summary>
 <div className="px-7 pb-7">
 <div className="h-px bg-theme-primary/10 mb-6" />
-<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">No. RAG augments a single inference from a mostly static corpus, while agent memory accumulates and revises state about a specific subject across many interactions. They share retrieval machinery and solve different problems. Statewave covers the distinction in <a href="https://www.statewave.ai/blog/ai-agent-memory-vs-rag" className="text-accent hover:underline">AI agent memory vs RAG</a>.</p>
+<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">No. RAG augments a single inference from a mostly static corpus, while agent memory accumulates and revises state about a specific subject across many interactions. They share retrieval machinery and solve different problems. Statewave covers the distinction in <a href="/blog/ai-agent-memory-vs-rag" className="text-accent hover:underline">AI agent memory vs RAG</a>.</p>
 </div>
 </details>
 
@@ -221,7 +221,7 @@ The [core runtime](https://github.com/smaramwbc/statewave) is Apache 2.0 and sel
 </summary>
 <div className="px-7 pb-7">
 <div className="h-px bg-theme-primary/10 mb-6" />
-<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">Start in the 800–4,000-token range and tune by what retrieval drops. Statewave's server default is 4,000; POST /v1/context accepts max_tokens from 1 to 128,000. Its reference client sets 800 to leave room for the rest of the prompt. Set it by what you can spare, not by what the store can return.</p>
+<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">Start in the 800 to 4,000 token range and tune by what retrieval drops. Statewave's server default is 4,000; <code>POST /v1/context</code> accepts <code>max_tokens</code> from 1 to 128,000. Its reference client sets 800 to leave room for the rest of the prompt. Set it by what you can spare, not by what the store can return.</p>
 </div>
 </details>
 
@@ -234,7 +234,7 @@ The [core runtime](https://github.com/smaramwbc/statewave) is Apache 2.0 and sel
 </summary>
 <div className="px-7 pb-7">
 <div className="h-px bg-theme-primary/10 mb-6" />
-<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">Not necessarily. Statewave runs on Postgres with the pgvector extension and no separate vector store, which keeps memory under the same backup, access control and residency rules as the rest of your data. The reasoning is in <a href="https://www.statewave.ai/blog/self-hosted-memory-postgres-pgvector" className="text-accent hover:underline">self-hosted memory with Postgres and pgvector</a>.</p>
+<p className="text-[16px] leading-8 text-theme-secondary/80 !m-0">Not necessarily. Statewave runs on Postgres with the pgvector extension and no separate vector store, which keeps memory under the same backup, access control and residency rules as the rest of your data. The reasoning is in <a href="/blog/self-hosted-memory-postgres-pgvector" className="text-accent hover:underline">self-hosted memory with Postgres and pgvector</a>.</p>
 </div>
 </details>
 
