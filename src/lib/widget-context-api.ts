@@ -30,6 +30,9 @@ export interface ChatMessage {
   /** The original user input that produced this error bubble. Used by the
    *  retry path to re-issue the exchange without making the visitor retype. */
   retryText?: string
+  /** The server answered non-2xx (rate limit, demo cap, 5xx): `content` is
+   *  the server's error text, not a reply. */
+  failed?: boolean
 }
 
 export interface MemoryItem {
