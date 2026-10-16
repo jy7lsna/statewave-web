@@ -1,12 +1,40 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useChatWidget } from '../../lib/widget-context-api'
-import type { DocSource } from '../../lib/widget-context-api'
+import type { ChatMessage, DocSource } from '../../lib/widget-context-api'
 import { MarkdownMessage } from '../chat/MarkdownMessage'
 import { safeUrl } from '../chat/safe-url'
 import { SUGGESTIONS } from '../chat/suggestions'
 
 const ROUNDS = SUGGESTIONS['statewave-support']
+
+/** Past this, a pending reply gives way to the recorded conversation. */
+const SLOW_MS = 8000
+
+/** Shown when the live agent is slow or failing, so the hero never shows an
+ *  error or a long spinner. Facts mirror the statewave README. */
+const RECORDED: ChatMessage[] = [
+  { role: 'user', content: 'How do I get started with Statewave?', timestamp: 0 },
+  {
+    role: 'assistant',
+    timestamp: 1,
+    content: [
+      'One line gets you a running server:',
+      '',
+      '```bash',
+      'npx @statewavedev/statewave',
+      '```',
+      '',
+      'Prefer to run it yourself? Clone the repo and run `docker compose up -d`. That brings up Postgres (pgvector) and the API at `http://localhost:8100`, with migrations applied on start.',
+      '',
+      'Then install an SDK: `pip install statewave` for Python or `npm install @statewavedev/sdk` for TypeScript.',
+    ].join('\n'),
+    sources: [
+      { doc_path: 'README.md', breadcrumb: 'Statewave › Run the server', url: 'https://github.com/smaramwbc/statewave#run-the-server' },
+      { doc_path: 'getting-started.md', breadcrumb: 'Docs › Getting started', url: 'https://github.com/smaramwbc/statewave-docs/blob/main/getting-started.md' },
+    ],
+  },
+]
 
 function Sources({ sources }: { sources: DocSource[] }) {
   return (
@@ -29,30 +57,41 @@ function Sources({ sources }: { sources: DocSource[] }) {
  *  widget), embedded in the hero. Shares conversation state with the floating
  *  widget, so a chat started here carries on there. */
 export function HeroChat() {
-  const { statewaveMessages, isLoading, sendMessage, retryLast, clearChat, enterSupportChannel } = useChatWidget()
+  const { statewaveMessages, isLoading, sendMessage, clearChat, enterSupportChannel } = useChatWidget()
   const [text, setText] = useState('')
   const [round, setRound] = useState(0)
+  const [slow, setSlow] = useState(false)
   const scroller = useRef<HTMLDivElement>(null)
 
   useEffect(() => { enterSupportChannel() }, [enterSupportChannel])
+
+  useEffect(() => {
+    if (!isLoading) return
+    const t = setTimeout(() => setSlow(true), SLOW_MS)
+    return () => clearTimeout(t)
+  }, [isLoading])
+
+  const last = statewaveMessages[statewaveMessages.length - 1]
+  const recorded = slow || !!(last?.error || last?.failed)
+  const messages = recorded ? RECORDED : statewaveMessages
+  const empty = messages.length === 0
 
   // Keep the newest message in view without scrolling the whole page.
   useEffect(() => {
     const el = scroller.current
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
-  }, [statewaveMessages.length, isLoading])
+  }, [messages.length, isLoading])
 
   const send = (raw: string) => {
     const t = raw.trim()
     if (!t || isLoading) return
     setText('')
+    // Leaving the recorded view: drop the failed exchange so it never shows.
+    if (recorded) { clearChat(); setSlow(false) }
     void sendMessage(t)
   }
   const onSubmit = (e: FormEvent) => { e.preventDefault(); send(text) }
   const pick = (t: string) => { send(t); setRound((r) => (r + 1) % ROUNDS.length) }
-  const last = statewaveMessages[statewaveMessages.length - 1]
-  const empty = statewaveMessages.length === 0
-
   return (
     <div className="sw-chat">
       <div className="sw-chat__head">
@@ -62,7 +101,7 @@ export function HeroChat() {
             <b>Statewave Support</b>
           </span>
         </span>
-        {!empty && <button type="button" className="sw-chat__clear" onClick={clearChat}>New chat</button>}
+        {!empty && !recorded && <button type="button" className="sw-chat__clear" onClick={clearChat}>New chat</button>}
       </div>
 
       <div className="sw-chat__body" ref={scroller} role="log" aria-live="polite" aria-label="Chat with Statewave Support">
@@ -80,19 +119,16 @@ export function HeroChat() {
             </ul>
           </div>
         ) : (
-          statewaveMessages.map((m, i) => (
-            <div key={`${m.timestamp}-${i}`} className={`sw-chat__msg sw-chat__msg--${m.role}${m.error ? ' is-error' : ''}`}>
+          messages.map((m, i) => (
+            <div key={`${m.timestamp}-${i}`} className={`sw-chat__msg sw-chat__msg--${m.role}`}>
               <div className="sw-chat__bubble">
                 {m.role === 'user' ? m.content : <div className="sw-chat__md"><MarkdownMessage content={m.content} /></div>}
               </div>
-              {m.error && i === statewaveMessages.length - 1 && (
-                <button type="button" className="sw-chat__retry" onClick={() => void retryLast()}>Retry</button>
-              )}
               {m.sources && m.sources.length > 0 && <Sources sources={m.sources} />}
             </div>
           ))
         )}
-        {isLoading && (
+        {isLoading && !recorded && (
           <div className="sw-chat__msg sw-chat__msg--assistant" aria-label="Statewave Support is typing">
             <div className="sw-chat__bubble sw-chat__typing"><i /><i /><i /></div>
           </div>
@@ -118,7 +154,7 @@ export function HeroChat() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
           </button>
         </form>
-        {last?.error && <p className="sw-chat__note">Something went wrong. Try again.</p>}
+        {recorded && <p className="sw-chat__note">A recorded answer from Statewave Support.</p>}
       </div>
     </div>
   )
